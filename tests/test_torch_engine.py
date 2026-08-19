@@ -245,3 +245,73 @@ def test_paged_decode_matches_gather_decode():
     got = eng.decode_batch_paged(toks, pos, tables, np.array(lens), alloc)
 
     np.testing.assert_allclose(want, got, rtol=1e-3, atol=1e-3)
+
+
+# ---------------------------------------------------------------------------
+# v2 kernel: the online-softmax algorithm, then the kernel itself
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("n,amp", [(1, 1.0), (37, 1.0), (512, 1.0), (200, 25.0)])
+def test_online_softmax_matches_dense_attention(n, amp):
+    """The recurrence the v2 kernel runs must equal ordinary softmax attention.
+
+    `amp=25` pushes the scores far enough that a naive exp() would overflow —
+    the running-max rescale is exactly what stops that, so this case is the
+    point of the algorithm, not an edge case.
+    """
+    from heteroserve.model.paged_attn_v2 import online_softmax_reference
+
+    rng = np.random.default_rng(n)
+    H, D = 4, 64
+    q = (rng.standard_normal((H, D)) * amp).astype(np.float32)
+    k = (rng.standard_normal((n, H, D)) * amp).astype(np.float32)
+    v = rng.standard_normal((n, H, D)).astype(np.float32)
+    scale = 1.0 / np.sqrt(D)
+
+    got = online_softmax_reference(q, k, v, scale)
+
+    s = np.einsum("hd,nhd->hn", q, k) * scale
+    p = np.exp(s - s.max(-1, keepdims=True))
+    p /= p.sum(-1, keepdims=True)
+    want = np.einsum("hn,nhd->hd", p, v)
+
+    np.testing.assert_allclose(got, want, rtol=1e-4, atol=1e-4)
+
+
+@cuda_only
+def test_v2_kernel_matches_reference():
+    from heteroserve.model.paged_attn_v2 import build_error, is_available, paged_attention_v2
+
+    assert is_available(), f"v2 kernel did not compile: {build_error()}"
+    cfg, alloc, tables, truth, q = _build_paged_case("cuda:0")
+    lens = [t[0].shape[2] for t in truth]
+    bt = alloc.block_table_tensor(tables, pad_to=max(len(t) for t in tables))
+    ctx_lens = torch.tensor(lens, dtype=torch.int32, device="cuda:0")
+    scale = 1.0 / np.sqrt(cfg.head_dim)
+    qt = torch.as_tensor(q, device="cuda:0")
+
+    got = paged_attention_v2(qt, alloc.pool[0, 0], alloc.pool[0, 1], bt, ctx_lens, scale)
+    ref = paged_attention_torch(qt, alloc.pool[0, 0], alloc.pool[0, 1], bt, ctx_lens, scale)
+    np.testing.assert_allclose(
+        got.cpu().numpy(), ref.cpu().numpy(), rtol=1e-3, atol=1e-3
+    )
+
+
+@cuda_only
+def test_v2_matches_v1():
+    """Both kernels compute the same function by different routes."""
+    from heteroserve.model.paged_attn_v2 import is_available, paged_attention_v2
+
+    assert is_available()
+    assert which_backend() == "cuda"
+    cfg, alloc, tables, truth, q = _build_paged_case("cuda:0", seed=9)
+    lens = [t[0].shape[2] for t in truth]
+    bt = alloc.block_table_tensor(tables, pad_to=max(len(t) for t in tables))
+    ctx_lens = torch.tensor(lens, dtype=torch.int32, device="cuda:0")
+    scale = 1.0 / np.sqrt(cfg.head_dim)
+    qt = torch.as_tensor(q, device="cuda:0")
+
+    a = paged_attention(qt, alloc.pool[0, 0], alloc.pool[0, 1], bt, ctx_lens, scale)
+    b = paged_attention_v2(qt, alloc.pool[0, 0], alloc.pool[0, 1], bt, ctx_lens, scale)
+    np.testing.assert_allclose(a.cpu().numpy(), b.cpu().numpy(), rtol=1e-3, atol=1e-3)

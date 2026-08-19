@@ -1,19 +1,23 @@
-"""Does the fused paged-attention kernel actually pay for itself?
+"""How fast is paged attention, and how close is that to the hardware limit?
 
-Compares the two decode paths on identical data:
+Decode attention is memory-bandwidth bound: it must read every cached K and V
+exactly once and does almost no arithmetic per byte. So the only honest score is
+**achieved GB/s against the card's peak**, not a speedup over an arbitrary
+baseline. This reports both.
 
-  gather   host gathers each sequence's blocks into contiguous tensors, then
-           runs dense attention  (what every other engine here does)
-  fused    the CUDA kernel walks the block table inside the attention loop
+Three paths, same data:
 
-Correctness is checked before any timing is reported — a speedup from a kernel
-that computes the wrong thing is worth nothing, so this refuses to print one.
+  gather + dense   host materialises each sequence's context, then attends.
+                   What every non-CUDA engine in this repo does.
+  v1 kernel        naive fused kernel: scores in shared memory, scalar loads,
+                   shared-memory tree reduction.
+  v2 kernel        online softmax (no score vector at all), one warp per
+                   (sequence, head), coalesced per-lane slices, warp shuffles.
 
-Run on a CUDA box:
+Correctness is checked against the torch reference before any timing is printed,
+and a path that disagrees is reported as FAILED rather than timed.
+
     python scripts/bench_kernel.py --batch 16 --context 512
-
-On CPU it still runs, comparing gather against the *torch* paged implementation.
-That measures the algorithm, not the kernel, and it says so.
 """
 
 from __future__ import annotations
@@ -28,6 +32,7 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from heteroserve.config import KVConfig, ModelConfig
+from heteroserve.model import paged_attn_v2 as v2mod
 from heteroserve.model.paged_attn import (
     build_error,
     paged_attention,
@@ -52,33 +57,43 @@ def main() -> int:
     ap.add_argument("--batch", type=int, default=16)
     ap.add_argument("--context", type=int, default=512)
     ap.add_argument("--block-size", dest="block_size", type=int, default=16)
-    ap.add_argument("--iters", type=int, default=30)
+    ap.add_argument("--iters", type=int, default=50)
     ap.add_argument("--model", default="gpt2", choices=["gpt2", "tiny"])
+    ap.add_argument("--dtype", default="float16", choices=["float16", "float32"])
     args = ap.parse_args()
 
     try:
         import torch
     except ImportError:
-        print("torch is not installed — nothing to benchmark")
+        print("torch is not installed - nothing to benchmark")
         return 1
 
     from heteroserve.kv.torch_blocks import TorchBlockAllocator
 
     device = args.device or ("cuda:0" if torch.cuda.is_available() else "cpu")
-    backend = which_backend()
+    on_cuda = device.startswith("cuda")
 
-    print(f"device        : {device}")
-    print(f"kernel backend: {backend}")
-    if backend != "cuda":
-        print(f"  (fused CUDA kernel not active: {build_error()})")
-        print("  reporting the torch paged path instead — this measures the")
-        print("  algorithm, NOT the kernel. Numbers here are not a kernel result.")
-    print()
+    print("=" * 74)
+    if on_cuda:
+        p = torch.cuda.get_device_properties(0)
+        peak = v2mod.peak_bandwidth_gbs()
+        print(f"device : {p.name}  ({p.total_memory/1e9:.1f} GB, "
+              f"{p.multi_processor_count} SMs, sm_{p.major}{p.minor})")
+        print(f"peak BW: {peak:.0f} GB/s" if peak else "peak BW: unknown")
+    else:
+        print(f"device : {device}  -- NO GPU, so neither CUDA kernel can run.")
+        print("         Timings below compare host paths only and are NOT")
+        print("         kernel results. Run this on a CUDA box for real numbers.")
+    print(f"v1 kernel: {which_backend()}"
+          + ("" if which_backend() == "cuda" else f"  ({build_error()})"))
+    print(f"v2 kernel: {'ready' if v2mod.is_available() else 'unavailable'}"
+          + ("" if v2mod.is_available() else f"  ({v2mod.build_error()})"))
+    print("=" * 74)
 
     cfg = ModelConfig() if args.model == "gpt2" else ModelConfig.tiny()
+    blocks_needed = args.batch * (args.context // args.block_size + 4)
     kv = KVConfig(block_size=args.block_size,
-                  num_blocks=max(64, args.batch * (args.context // args.block_size + 4)),
-                  dtype="float16")
+                  num_blocks=max(64, blocks_needed), dtype=args.dtype)
     alloc = TorchBlockAllocator(kv, cfg, device=device)
 
     rng = np.random.default_rng(0)
@@ -87,55 +102,82 @@ def main() -> int:
         a = alloc.allocate([int(t) for t in rng.integers(1, 40000, size=args.context)])
         k = rng.standard_normal(
             (cfg.n_layer, cfg.n_head, args.context, cfg.head_dim)
-        ).astype(np.float16)
+        ).astype(np.float32)
         alloc.write_kv(a.block_ids, 0, k, k)
         tables.append(a.block_ids)
 
-    width = max(len(t) for t in tables)
-    bt = alloc.block_table_tensor(tables, pad_to=width)
+    bt = alloc.block_table_tensor(tables, pad_to=max(len(t) for t in tables))
     ctx_lens = torch.full((args.batch,), args.context, dtype=torch.int32, device=device)
     q = torch.randn(args.batch, cfg.n_head, cfg.head_dim, device=device)
     scale = 1.0 / np.sqrt(cfg.head_dim)
-
     k_pool, v_pool = alloc.pool[0, 0], alloc.pool[0, 1]
-    sync = torch.cuda.synchronize if device.startswith("cuda") else (lambda: None)
+    sync = torch.cuda.synchronize if on_cuda else (lambda: None)
 
-    # -- correctness first --------------------------------------------------
-    fused = paged_attention(q, k_pool, v_pool, bt, ctx_lens, scale)
-    ref = paged_attention_torch(q, k_pool, v_pool, bt, ctx_lens, scale)
-    diff = (fused.float() - ref.float()).abs().max().item()
-    print(f"max abs diff vs torch reference: {diff:.2e}")
-    if diff > 2e-2:
-        print("FAILED correctness check — refusing to report timings")
-        return 1
-    print("correctness OK\n")
+    ref = paged_attention_torch(q, k_pool, v_pool, bt, ctx_lens, scale).float()
 
-    # -- the two paths ------------------------------------------------------
     def gather_path():
-        """What the rest of the system does: materialise, then attend."""
         ks, vs = alloc.gather_kv_batch(tables, args.context, layer=0)
         s = torch.einsum("bhd,bkhd->bhk", q, ks.float()) * scale
         return torch.einsum("bhk,bkhd->bhd", torch.softmax(s, -1), vs.float())
 
-    def fused_path():
-        return paged_attention(q, k_pool, v_pool, bt, ctx_lens, scale)
+    candidates = [("gather + dense attention", gather_path)]
+    if which_backend() == "cuda":
+        candidates.append(
+            ("v1 kernel (naive fused)",
+             lambda: paged_attention(q, k_pool, v_pool, bt, ctx_lens, scale))
+        )
+    if v2mod.is_available():
+        candidates.append(
+            ("v2 kernel (online softmax)",
+             lambda: v2mod.paged_attention_v2(q, k_pool, v_pool, bt, ctx_lens, scale))
+        )
+    if not on_cuda:
+        candidates.append(
+            ("torch paged (not a kernel)",
+             lambda: paged_attention_torch(q, k_pool, v_pool, bt, ctx_lens, scale))
+        )
 
-    t_gather = _time(gather_path, args.iters, sync)
-    t_fused = _time(fused_path, args.iters, sync)
+    itemsize = 2 if args.dtype == "float16" else 4
+    moved = v2mod.bytes_moved(args.batch, args.context, cfg.n_head, cfg.head_dim, itemsize)
+    peak = v2mod.peak_bandwidth_gbs() if on_cuda else None
 
-    kv_mb = (args.batch * args.context * cfg.n_head * cfg.head_dim * 2 * 2) / 1e6
-    label = "fused CUDA kernel" if backend == "cuda" else "torch paged (NOT the kernel)"
+    print(f"\nmodel={cfg.name}  batch={args.batch}  context={args.context}  "
+          f"dtype={args.dtype}  one layer")
+    print(f"minimum traffic per call: {moved/1e6:.1f} MB (K and V, read once each)\n")
 
-    print(f"model={cfg.name}  batch={args.batch}  context={args.context}  "
-          f"one layer, {kv_mb:.1f} MB of KV")
-    print(f"{'path':32s} {'per call':>11s} {'speedup':>9s}")
-    print("-" * 55)
-    print(f"{'gather + dense attention':32s} {t_gather*1e3:9.3f}ms {'1.00x':>9s}")
-    print(f"{label:32s} {t_fused*1e3:9.3f}ms "
-          f"{t_gather/max(t_fused,1e-12):8.2f}x")
+    hdr = f"{'path':30s} {'per call':>10s} {'speedup':>8s} {'GB/s':>8s}"
+    if peak:
+        hdr += f" {'% peak':>7s}"
+    hdr += "   correctness"
+    print(hdr)
+    print("-" * len(hdr))
+
+    base = None
+    for name, fn in candidates:
+        got = fn().float()
+        err = (got - ref).abs().max().item()
+        ok = err < 2e-2
+        if not ok:
+            print(f"{name:30s} {'--':>10s} {'--':>8s} {'--':>8s}"
+                  + (f" {'--':>7s}" if peak else "")
+                  + f"   FAILED (max diff {err:.2e})")
+            continue
+
+        t = _time(fn, args.iters, sync)
+        base = base if base is not None else t
+        gbs = moved / t / 1e9
+        row = (f"{name:30s} {t*1e6:8.1f}us {base/t:7.2f}x {gbs:7.1f}")
+        if peak:
+            row += f" {100*gbs/peak:6.1f}%"
+        row += f"   ok ({err:.1e})"
+        print(row)
+
     print()
-    print(f"extrapolated over {cfg.n_layer} layers: "
-          f"{t_gather*cfg.n_layer*1e3:.1f}ms -> {t_fused*cfg.n_layer*1e3:.1f}ms per decode step")
+    if on_cuda and v2mod.is_available():
+        print("Attention decode is bandwidth bound, so '% peak' is the number that")
+        print("matters -- a kernel at 80% of peak has almost nothing left to win.")
+    else:
+        print("Run this on a CUDA device for the numbers that actually count.")
     return 0
 
 

@@ -4,6 +4,8 @@ A KV-cache-aware LLM serving scheduler that decides, per request, whether it is 
 to **ship a KV cache across the network** or to **recompute it from scratch** — with a
 paged KV cache, continuous batching, and a **fused CUDA paged-attention kernel**.
 
+[![Verify the CUDA kernels in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/mneha05/hetero-serve/blob/main/notebooks/verify_cuda_kernel.ipynb)
+
 Runs on NVIDIA (CUDA), on Intel Arc GPU / NPU / CPU (OpenVINO), or on nothing but numpy.
 Real GPT-2 weights, real worker processes, real TCP sockets, a real token-bucket
 bandwidth shaper. Every number below was measured, and where something is *not*
@@ -153,10 +155,46 @@ Three pieces make it work:
 |---|---|
 | `kv/torch_blocks.py` | KV pool as a CUDA tensor. All the allocator logic — refcounts, chain hashing, eviction, prefix matching — is inherited unchanged; only the five storage methods are overridden. `pool[layer, 0]` is exactly the `[num_blocks, block_size, H, D]` view the kernel indexes. |
 | `model/torch_engine.py` | GPT-2 on CUDA, with **both** decode paths: `decode_batch` (gather, the control) and `decode_batch_paged` (fused, the treatment). |
-| `model/paged_attn.py` | the kernel, a pure-torch paged reference, and `which_backend()` so nothing can silently report a torch number as a kernel result. |
+| `model/paged_attn.py` | **v1 kernel** (naive fused), a pure-torch paged reference, and `which_backend()` so nothing can silently report a torch number as a kernel result. |
+| `model/paged_attn_v2.py` | **v2 kernel** — online softmax, warp-per-head, coalesced loads, shuffle reductions — plus the bandwidth-roofline helpers. |
 
 Nothing else changed. The router, cost model, shaper, transport, migration and paged
 allocator are all device-agnostic, so `--devices cuda:0,cuda:1` just works.
+
+### Two kernels, because the first one was naive
+
+`paged_attn.py` (**v1**) is the straightforward fused kernel: it stores every attention
+score in shared memory, walks the context with scalar loads, and reduces through a
+shared-memory tree. Correct, and a fair first draft — but it caps context length by how
+much shared memory a block can hold, reads memory in close to the worst pattern, and
+leaves half the block idle in the phase that dominates.
+
+`paged_attn_v2.py` (**v2**) takes the hardware seriously:
+
+1. **Online softmax** — the algorithmic change. Instead of materialising the score
+   vector, v2 keeps a running max `m` and running sum `l` and rescales the accumulator
+   as it streams, exactly like FlashAttention:
+
+   ```
+   m_new = max(m, s)
+   l     = l * exp(m - m_new) + exp(s - m_new)
+   acc   = acc * exp(m - m_new) + exp(s - m_new) * v
+   ```
+
+   Shared memory becomes **O(1) in context length**, K and V are each read exactly
+   once, and the kernel stops caring how long the sequence is.
+2. **One warp per (sequence, head)** — 32 lanes cooperate on one 64-wide dot product,
+   so no lane idles.
+3. **Coalesced per-lane slices** — each lane owns a contiguous `head_dim/32` slice and
+   consecutive lanes own consecutive slices, so one warp reading one position issues a
+   single 128-byte transaction. v1 read one scalar at a time strided by `head_dim`.
+4. **Warp-shuffle reductions** — `__shfl_down_sync` instead of a shared-memory tree: no
+   `__syncthreads`, no shared traffic, no bank conflicts.
+
+Decode attention is **memory-bandwidth bound** — every cached K and V is read once and
+almost no arithmetic happens per byte. So the number worth reporting is not a speedup
+over an arbitrary baseline, it is **achieved GB/s against the card's peak**, and
+`scripts/bench_kernel.py` prints exactly that.
 
 ### What is verified, and what is not
 
@@ -179,13 +217,26 @@ table construction, in-place KV writes, paged attention, real worker processes, 
 sockets — and checks prefix reuse still works. On a CUDA box the identical code takes
 the fused kernel instead of the torch fallback.
 
-**Not verified — needs a GPU:** that the CUDA source compiles, and that the kernel
-agrees with the reference at speed. Two tests are written and skip cleanly without
-hardware:
+- **the online-softmax recurrence matches dense attention** — the v2 algorithm is
+  implemented in numpy as a scalar streaming loop mirroring the kernel line for line,
+  and checked at four context lengths including one with scores 25x amplified, where a
+  naive `exp()` would overflow and the running-max rescale is the entire point
+
+**Not verified — needs a GPU:** that the CUDA compiles, and that the kernels agree with
+the reference at speed. Four tests are written and skip cleanly without hardware.
+
+**Verify it yourself in about two minutes, free**, on a Colab T4 — no GPU required:
+
+[**`notebooks/verify_cuda_kernel.ipynb`**](notebooks/verify_cuda_kernel.ipynb) →
+open in Colab, set `Runtime → Change runtime type → T4 GPU`, `Run all`. It compiles
+both kernels, runs the correctness suite, prints the bandwidth roofline, and runs the
+whole serving system on the GPU.
+
+Or locally on any CUDA box:
 
 ```bash
-pytest tests/test_torch_engine.py -v     # the 2 skipped tests run on a CUDA box
-python scripts/bench_kernel.py --batch 16 --context 512
+pytest tests/test_torch_engine.py -v     # the 4 skipped tests run
+python scripts/bench_kernel.py --batch 16 --context 512 --dtype float16
 ```
 
 `bench_kernel.py` checks correctness **before** it prints any timing and refuses to
@@ -455,9 +506,9 @@ stop happening.
 
 ## Tests
 
-28 tests, no mocks — the distributed ones spawn real worker processes and talk over
-real sockets. On a bare clone **24 run and pass**; 2 more once GPT-2 weights are
-downloaded, and the final 2 need a CUDA device. Everything that cannot run skips
+34 tests, no mocks — the distributed ones spawn real worker processes and talk over
+real sockets. On a bare clone **30 run and pass**; 2 more once GPT-2 weights are
+downloaded, and the final 4 need a CUDA device. Everything that cannot run skips
 cleanly with a reason rather than failing.
 
 The load-bearing ones:
@@ -517,7 +568,8 @@ heteroserve/
     numpy_engine.py    reference transformer, paged KV
     ov_engine.py       OpenVINO graph for CPU / GPU / NPU
     torch_engine.py    CUDA engine: gather decode + fused paged decode
-    paged_attn.py      the CUDA kernel, a torch reference, and backend reporting
+    paged_attn.py      v1 CUDA kernel + torch reference + backend reporting
+    paged_attn_v2.py   v2 CUDA kernel: online softmax, warp-per-head, roofline
   net/
     shaper.py          token bucket + propagation delay
     transport.py       length-prefixed framing over TCP
