@@ -177,9 +177,16 @@ torch::Tensor paged_attention(
   return out;
 }
 
-PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
-  m.def("paged_attention", &paged_attention, "fused paged attention (CUDA)");
-}
+"""
+
+# load_inline(functions=[...]) generates its own pybind module, and that
+# generated main.cpp needs to *see* the function. The definition lives in
+# the .cu source, so the declaration has to be handed over as cpp_sources.
+_CPP_DECL = """
+#include <torch/extension.h>
+torch::Tensor paged_attention(
+    torch::Tensor q, torch::Tensor k_cache, torch::Tensor v_cache,
+    torch::Tensor block_tables, torch::Tensor context_lens, double scale);
 """
 
 _ext = None
@@ -211,7 +218,7 @@ def _try_build():
     try:
         _ext = load_inline(
             name="heteroserve_paged_attn",
-            cpp_sources="",
+            cpp_sources=_CPP_DECL,
             cuda_sources=_CUDA_SRC,
             functions=["paged_attention"],
             extra_cuda_cflags=["-O3", "--use_fast_math"],
@@ -220,7 +227,7 @@ def _try_build():
         _backend = "cuda"
     except Exception as exc:  # noqa: BLE001 - compilation is genuinely optional
         msg = str(exc)
-        if "ninja" in msg.lower():
+        if "ninja is required to load c++ extensions" in msg.lower():
             # By far the most common failure, and the message torch gives is easy
             # to misread as "the CUDA code is broken". It is not.
             msg = ("ninja is missing -- torch builds CUDA extensions through it. "
