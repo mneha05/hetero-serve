@@ -30,6 +30,7 @@ reproduce all of it on a free GPU.
 | 📊 **The measurements** | [T4 kernel results](#measured-on-a-tesla-t4) · [Nsight profile](#what-nsight-says-to-do-next) · [policy sweep](#results) · [raw data](results/) |
 | 🐛 **What I got wrong** | [four bugs, found by measuring](#what-went-wrong-the-useful-part) |
 | 🐳 **Reproduce it anywhere** | [`Dockerfile`](Dockerfile) (CPU) · [`Dockerfile.cuda`](Dockerfile.cuda) (kernels) · [CI](.github/workflows/ci.yml) |
+| 🕹 **Drive the scheduler in a browser** | [`web/`](web/) — send prompts, watch blocks fill and caches migrate |
 
 **The code, in the order it is worth reading:**
 
@@ -796,6 +797,44 @@ migration / cold, and a bandwidth slider. Drag the slider down and watch migrati
 stop happening.
 
 ---
+
+## The browser front end
+
+[`web/index.html`](web/index.html) is a self-contained page that runs the scheduler's
+real logic in the browser: 16-token paged blocks, chain-hashed prefix matching, refcounts
+and LRU eviction, continuous batching, all four routing policies, and the
+contention-aware migrate-vs-recompute cost model priced against a token-bucket link.
+Device timings are the ones measured on real hardware.
+
+Send a prompt, then send another starting the same way, and the prefix hits the cache
+while you watch. Drag the interconnect down and the scheduler stops migrating.
+
+What it does **not** do is run GPT-2 — a 124M-parameter model will not run in a browser
+tab, so generated text is a stand-in. The page says so plainly rather than implying
+otherwise; the Python system it mirrors runs the real model on real CUDA.
+
+### Deploying it
+
+Static HTML with no build step, so any host works.
+
+**Vercel** — import the GitHub repo at [vercel.com/new](https://vercel.com/new). It reads
+[`vercel.json`](vercel.json) and serves `web/` automatically; every push to `main`
+redeploys. Or from the CLI:
+
+```bash
+npm i -g vercel
+vercel --prod
+```
+
+**Anything else** — `web/` is one file plus a Google Fonts link:
+
+```bash
+python -m http.server -d web 8080     # locally
+npx serve web                         # or this
+```
+
+GitHub Pages works too: Settings → Pages → deploy from `main`, folder `/docs`, after
+copying `web/index.html` there.
 
 ## Tests
 
