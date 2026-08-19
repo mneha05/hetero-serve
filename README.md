@@ -1,12 +1,13 @@
 # hetero-serve
 
-A KV-cache-aware LLM serving scheduler that runs across three *different* accelerators
-at once — an Intel Arc GPU, an NPU, and CPU cores — and decides, per request, whether
-it is cheaper to **ship a KV cache across the network** or to **recompute it from scratch**.
+A KV-cache-aware LLM serving scheduler that decides, per request, whether it is cheaper
+to **ship a KV cache across the network** or to **recompute it from scratch** — with a
+paged KV cache, continuous batching, and a **fused CUDA paged-attention kernel**.
 
-Real GPT-2 weights. Real worker processes. Real TCP sockets with a real token-bucket
-bandwidth shaper. Every number in this README was measured on the laptop it was
-written on.
+Runs on NVIDIA (CUDA), on Intel Arc GPU / NPU / CPU (OpenVINO), or on nothing but numpy.
+Real GPT-2 weights, real worker processes, real TCP sockets, a real token-bucket
+bandwidth shaper. Every number below was measured, and where something is *not*
+verified I say so.
 
 ---
 
@@ -127,6 +128,79 @@ really did sit there for 2.3 s.
 **The scheduler.** The router picks *where*; each worker decides *when*, with
 prefill-priority chunked continuous batching and recompute-preemption when it runs out
 of blocks.
+
+---
+
+## Running on NVIDIA, and a fused paged-attention kernel
+
+The Intel path above is what I had on my desk. The CUDA path is the one that matters
+for the interesting version of the problem, and it exists because of a number this
+project measured about itself:
+
+> A third of a GPU decode step was **not accelerator time**. It was the host gathering
+> each sequence's KV blocks into contiguous tensors so the engine could read them —
+> overhead created entirely by paging the cache.
+
+So I wrote the kernel that deletes it. `heteroserve/model/paged_attn.py` holds a CUDA
+kernel that walks each sequence's **block table inside the attention loop**, reading K
+and V straight out of the paged pool. One CUDA block per (sequence, head); the block
+indirection happens per position, so the contiguous copy never exists. Same idea as
+vLLM's paged attention.
+
+Three pieces make it work:
+
+| file | what it does |
+|---|---|
+| `kv/torch_blocks.py` | KV pool as a CUDA tensor. All the allocator logic — refcounts, chain hashing, eviction, prefix matching — is inherited unchanged; only the five storage methods are overridden. `pool[layer, 0]` is exactly the `[num_blocks, block_size, H, D]` view the kernel indexes. |
+| `model/torch_engine.py` | GPT-2 on CUDA, with **both** decode paths: `decode_batch` (gather, the control) and `decode_batch_paged` (fused, the treatment). |
+| `model/paged_attn.py` | the kernel, a pure-torch paged reference, and `which_backend()` so nothing can silently report a torch number as a kernel result. |
+
+Nothing else changed. The router, cost model, shaper, transport, migration and paged
+allocator are all device-agnostic, so `--devices cuda:0,cuda:1` just works.
+
+### What is verified, and what is not
+
+I do not own an NVIDIA GPU, so I will be precise about this rather than imply more
+than I ran:
+
+**Verified on CPU torch** (7 tests in `tests/test_torch_engine.py`, plus one
+end-to-end distributed run):
+
+- the CUDA engine's prefill, chunked prefill and decode all match the numpy oracle to 1e-4
+- the GPU-resident allocator round-trips KV, shares prefixes and migrates identically to the numpy one
+- **the paged-attention algorithm matches dense attention over the true context** — exact, `0.00e+00` max diff, with shuffled non-contiguous block tables and three different sequence lengths
+
+That last one is the important one: it proves the block-table walk is correct. The
+kernel only has to match that reference.
+
+`test_torch_paged_decode_path_serves_requests` then runs the **whole system** through
+the torch engine with the paged decode path forced on — GPU-resident allocator, block
+table construction, in-place KV writes, paged attention, real worker processes, real
+sockets — and checks prefix reuse still works. On a CUDA box the identical code takes
+the fused kernel instead of the torch fallback.
+
+**Not verified — needs a GPU:** that the CUDA source compiles, and that the kernel
+agrees with the reference at speed. Two tests are written and skip cleanly without
+hardware:
+
+```bash
+pytest tests/test_torch_engine.py -v     # the 2 skipped tests run on a CUDA box
+python scripts/bench_kernel.py --batch 16 --context 512
+```
+
+`bench_kernel.py` checks correctness **before** it prints any timing and refuses to
+report a speedup if the kernel disagrees with the reference. On a machine without CUDA
+it says so in as many words rather than quietly benchmarking the fallback:
+
+```
+kernel backend: torch
+  (fused CUDA kernel not active: no CUDA device)
+  reporting the torch paged path instead — this measures the
+  algorithm, NOT the kernel. Numbers here are not a kernel result.
+```
+
+Expect to spend one session on a rented box shaking out compile errors. That is the
+honest state of it.
 
 ---
 
@@ -342,6 +416,10 @@ request, a warm one, the migrate-vs-recompute decision at two bandwidths, and a 
 migration verified to produce byte-identical output.
 
 ```bash
+# on an NVIDIA box
+python -m heteroserve.bench.sweep --devices cuda:0,cuda:1 --repeats 3
+python scripts/bench_kernel.py --batch 16 --context 512   # gather vs fused kernel
+
 # what can this machine actually do?
 python scripts/probe_devices.py
 
@@ -370,8 +448,8 @@ stop happening.
 
 ## Tests
 
-18 tests, no mocks — the distributed ones spawn real worker processes and talk over
-real sockets.
+28 tests, no mocks — the distributed ones spawn real worker processes and talk over
+real sockets. 26 run anywhere; 2 need a CUDA device and skip cleanly without one.
 
 The load-bearing ones:
 
@@ -387,6 +465,9 @@ The load-bearing ones:
 - **`test_migrate_vs_recompute_flips_with_bandwidth`** — same prompt, same cluster
   state, 50 Mbps vs 10 Gbps, opposite decisions.
 - **`test_oversized_prompt_fails_fast_instead_of_hanging`** — regression for bug #3.
+- **`test_paged_attention_torch_matches_dense_attention`** — the block-table walk
+  equals attention over the real context, with shuffled non-contiguous blocks. This is
+  what the CUDA kernel is checked against.
 
 ---
 
@@ -404,6 +485,9 @@ The load-bearing ones:
   ratio is what drives the trade, and it grows with model depth.
 - **p99 on 144 samples** is still only the second-worst request. Treat p50 and p95 as
   solid and p99 as directional.
+- **KV migration bounces through host memory.** `export_blocks` copies GPU -> CPU ->
+  socket -> CPU -> GPU. A real deployment would use GPUDirect RDMA and skip both hops,
+  which would move the migrate-vs-recompute crossover further in migration's favour.
 - **The control plane is unshaped** — only worker-to-worker KV transfers pay the link
   budget. That isolates the variable under study but is not what a real deployment
   would experience.
@@ -417,11 +501,14 @@ heteroserve/
   config.py            models, KV geometry, link budgets, cluster shape
   metrics.py           TTFT / TPOT / E2E percentiles
   kv/blocks.py         paged allocator, chain hashing, eviction, migration I/O
+  kv/torch_blocks.py   the same allocator with the pool resident on a GPU
   model/
     fetch.py           HuggingFace download + a dependency-free safetensors reader
     tokenizer.py       GPT-2 byte-level BPE, from scratch
     numpy_engine.py    reference transformer, paged KV
     ov_engine.py       OpenVINO graph for CPU / GPU / NPU
+    torch_engine.py    CUDA engine: gather decode + fused paged decode
+    paged_attn.py      the CUDA kernel, a torch reference, and backend reporting
   net/
     shaper.py          token bucket + propagation delay
     transport.py       length-prefixed framing over TCP

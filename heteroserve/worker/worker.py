@@ -106,9 +106,10 @@ class Worker:
         self.eos_token_id = eos_token_id
 
         self.link = ShapedLink(link or LinkConfig())
-        self.alloc = BlockAllocator(cfg.kv, model_cfg)
+        self.alloc = self._new_allocator()
         self.engine = None
         self.engine_name = "?"
+        self.paged_decode = False        # set by build_engine on the CUDA path
 
         self.seqs: dict[str, Sequence] = {}
         self.order: list[Sequence] = []
@@ -137,6 +138,28 @@ class Worker:
         self.bytes_migrated_out = 0
         self.bytes_migrated_in = 0
 
+    def _new_allocator(self):
+        """KV lives on the accelerator for CUDA, in host RAM otherwise.
+
+        A GPU-resident pool is what lets the fused paged-attention kernel index
+        the block table directly instead of having the host gather each
+        sequence into a contiguous buffer first.
+        """
+        if self._wants_torch():
+            from ..kv.torch_blocks import TorchBlockAllocator
+
+            return TorchBlockAllocator(self.cfg.kv, self.model_cfg, device=self._torch_device())
+        return BlockAllocator(self.cfg.kv, self.model_cfg)
+
+    def _wants_torch(self) -> bool:
+        return self.cfg.device.lower().startswith("cuda") or self.cfg.engine == "torch"
+
+    def _torch_device(self) -> str:
+        """`engine=torch` on a non-CUDA device means torch-on-CPU, which is how
+        the whole CUDA code path gets exercised without a GPU."""
+        d = self.cfg.device.lower()
+        return d if d.startswith("cuda") else "cpu"
+
     # -- engine -------------------------------------------------------------
 
     def build_engine(self) -> None:
@@ -151,6 +174,26 @@ class Worker:
 
         want = self.cfg.engine
         dev = self.cfg.device.upper()
+
+        if self._wants_torch():
+            import os
+
+            from ..model.paged_attn import which_backend
+            from ..model.torch_engine import TorchEngine
+
+            tdev = self._torch_device()
+            self.engine = TorchEngine(weights, self.model_cfg, device=tdev)
+            backend = which_backend()
+            # Take the fused path only when the kernel really compiled. The torch
+            # fallback is correct but slower than gathering, so defaulting to it
+            # would quietly make things worse and still look like "paged". The
+            # env var forces it anyway, which is how the CPU tests cover this
+            # code path end to end.
+            self.paged_decode = backend == "cuda" or bool(
+                os.environ.get("HETEROSERVE_FORCE_PAGED")
+            )
+            self.engine_name = f"torch:{tdev}[{backend}]"
+            return
 
         if want in ("auto", "openvino") and dev in ("GPU", "NPU", "CPU"):
             try:
@@ -516,14 +559,24 @@ class Worker:
 
         toks = np.array([s.ctx[s.n_kv] for s in keep], dtype=np.int64)
         pos = np.array([s.n_kv for s in keep], dtype=np.int64)
-        pasts = [self.alloc.gather_kv(s.block_ids, s.n_kv) for s in keep]
-        past_ks = [p[0] for p in pasts]
-        past_vs = [p[1] for p in pasts]
 
-        logits, k_new, v_new = self.engine.decode_batch(toks, pos, past_ks, past_vs)
+        if self.paged_decode:
+            # Fused path: attention walks each sequence's block table inside the
+            # kernel and the new K/V is written straight into the pool, so there
+            # is no gather and nothing to write back here.
+            logits = self.engine.decode_batch_paged(
+                toks, pos, [s.block_ids for s in keep], pos, self.alloc
+            )
+            k_new = v_new = None
+        else:
+            pasts = [self.alloc.gather_kv(s.block_ids, s.n_kv) for s in keep]
+            logits, k_new, v_new = self.engine.decode_batch(
+                toks, pos, [p[0] for p in pasts], [p[1] for p in pasts]
+            )
 
         for i, seq in enumerate(keep):
-            self.alloc.write_kv(seq.block_ids, seq.n_kv, k_new[i], v_new[i])
+            if k_new is not None:
+                self.alloc.write_kv(seq.block_ids, seq.n_kv, k_new[i], v_new[i])
             seq.n_kv += 1
             rng = np.random.default_rng(seq.seed + seq.n_kv)
             tok = sample_token(logits[i], seq.temperature, seq.top_k, rng)
@@ -608,7 +661,7 @@ class Worker:
             self._release(seq)
         self.order.clear()
         self.seqs.clear()
-        self.alloc = BlockAllocator(self.cfg.kv, self.model_cfg)
+        self.alloc = self._new_allocator()
         self.steps = self.prefill_steps = self.decode_steps = 0
         self.device_busy_s = 0.0
         self.prefill_busy_s = 0.0

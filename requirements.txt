@@ -1,8 +1,13 @@
-# Core — the scheduler, KV cache and reference engine need only numpy.
+# Core: the scheduler, KV cache and reference engine need only numpy.
 numpy>=2.0
 
-# Accelerator backends (Intel Arc GPU / NPU / optimised CPU).
-# Optional: without it everything still runs on the numpy reference engine.
+# NVIDIA path: CUDA engine + the fused paged-attention kernel.
+# Optional. Install the CUDA build for your driver from pytorch.org; the
+# kernel is compiled on first use via torch.utils.cpp_extension (needs nvcc).
+torch>=2.4
+
+# Intel path: Arc GPU / NPU / optimised CPU.
+# Optional. Without either backend everything still runs on the numpy engine.
 openvino>=2025.0
 
 # Exact GPT-2 pre-tokenisation (\p{L} classes). Optional; there is a stdlib

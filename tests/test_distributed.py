@@ -316,3 +316,51 @@ def test_request_reroutes_when_first_worker_is_full():
     # 20 blocks = 320 tokens: enough for one of these but not both.
     rec = asyncio.run(_with_router(make_cluster(num_blocks=20), scenario))
     assert rec.generated_tokens == 4
+
+
+# ---------------------------------------------------------------------------
+# 7. the CUDA code path, exercised end to end on CPU torch
+# ---------------------------------------------------------------------------
+
+
+def test_torch_paged_decode_path_serves_requests():
+    """Run the whole system through the torch engine + paged decode.
+
+    Forces the paged path on CPU (`HETEROSERVE_FORCE_PAGED`), so the GPU-resident
+    allocator, block-table construction, in-place KV writes and the paged
+    attention call all get exercised by a real distributed run. Only the CUDA
+    kernel itself is left unverified — on a CUDA box the same code takes the
+    fused kernel instead of the torch fallback.
+    """
+    pytest.importorskip("torch")
+    import os
+
+    kv = KVConfig(block_size=16, num_blocks=128)
+    cluster = ClusterConfig(
+        model=ModelConfig.tiny(),
+        workers=[
+            WorkerConfig("w0", device="cpu", engine="torch", kv=kv, max_batch=4),
+            WorkerConfig("w1", device="cpu", engine="torch", kv=kv, max_batch=4),
+        ],
+        policy="prefix_affinity",
+    )
+
+    async def scenario(router: Router):
+        shared = list(range(3300, 3300 + 96))
+        cold = await router.submit(Request(prompt_ids=shared + [1, 2], max_new_tokens=6))
+        warm = await router.submit(Request(prompt_ids=shared + [3, 4], max_new_tokens=6))
+        return cold, warm
+
+    prev = os.environ.get("HETEROSERVE_FORCE_PAGED")
+    os.environ["HETEROSERVE_FORCE_PAGED"] = "1"
+    try:
+        cold, warm = asyncio.run(_with_router(cluster, scenario))
+    finally:
+        if prev is None:
+            os.environ.pop("HETEROSERVE_FORCE_PAGED", None)
+        else:
+            os.environ["HETEROSERVE_FORCE_PAGED"] = prev
+
+    assert cold.generated_tokens == 6
+    assert warm.generated_tokens == 6
+    assert warm.cached_prefix_tokens == 96      # paging + prefix reuse still work

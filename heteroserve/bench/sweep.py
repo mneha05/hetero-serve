@@ -41,6 +41,15 @@ WEIGHTS = REPO / "weights" / "gpt2"
 
 
 def detect_devices() -> list[str]:
+    # NVIDIA first when present: it is the interesting hardware, and the fused
+    # paged-attention kernel only exists on that path.
+    try:
+        import torch
+
+        if torch.cuda.is_available():
+            return [f"cuda:{i}" for i in range(torch.cuda.device_count())]
+    except ImportError:
+        pass
     try:
         import openvino as ov
 
