@@ -29,7 +29,8 @@ reproduce all of it on a free GPU.
 
 | file | what it is |
 |---|---|
-| [`model/paged_attn_v2.py`](heteroserve/model/paged_attn_v2.py) | the **fused CUDA kernel** — online softmax, warp-per-head, coalesced loads |
+| [`model/paged_attn_v3.py`](heteroserve/model/paged_attn_v3.py) | the **fastest kernel** — context-split, written because the profiler said so |
+| [`model/paged_attn_v2.py`](heteroserve/model/paged_attn_v2.py) | the online-softmax kernel it builds on |
 | [`model/paged_attn.py`](heteroserve/model/paged_attn.py) | the naive v1 kernel it is measured against, plus the torch reference |
 | [`kv/blocks.py`](heteroserve/kv/blocks.py) | paged KV cache: chain hashing, refcounts, eviction, migration |
 | [`sched/router.py`](heteroserve/sched/router.py) | the migrate-vs-recompute cost model |
@@ -256,6 +257,11 @@ Both kernels compile and pass, and here is what they actually achieve. Decode
 attention must read every cached K and V exactly once, so the honest score is
 achieved bandwidth against the card's 320 GB/s peak:
 
+The benchmark also runs **PyTorch's `scaled_dot_product_attention`** (cuDNN /
+FlashAttention underneath) over the same gathered data. Beating my own einsum proves
+nothing; SDPA is what you would actually reach for without a paged kernel, so it is the
+baseline that counts.
+
 **batch 16, context 512** (25.2 MB of KV per call)
 
 | path | per call | speedup | GB/s | % of peak | max err |
@@ -305,17 +311,34 @@ sequences x 12 heads = 192 warps = 48 blocks, spread over a T4's 40 SMs, is *0.1
 waves*. There simply is not enough work in flight to keep the card busy, which caps
 everything else.
 
-That names v3 exactly: **split the context across blocks** (FlashDecoding, and what
-vLLM's own paged-attention v2 does). Each block handles a slice of the context and
-produces a partial `(m, l, acc)`; a small second pass merges them with the same
-online-softmax rescale the kernel already uses. With 8 splits the grid goes from 48
-blocks to 384 and the occupancy problem disappears.
+That named v3, and [`paged_attn_v3.py`](heteroserve/model/paged_attn_v3.py) implements
+it: **split the context across blocks** (FlashDecoding, and what vLLM's own
+paged-attention v2 kernel does). Each warp takes a slice and emits an un-normalised
+partial `(m, l, acc)`; a second pass merges them with the same online-softmax rescale:
+
+```
+m_g = max_s m_s
+l_g = sum_s l_s * exp(m_s - m_g)
+out = sum_s acc_s * exp(m_s - m_g) / l_g
+```
+
+A running softmax is associative, which is exactly why it can be split at all.
+`num_splits` comes from the device's SM count, so small batches split hard and large
+ones barely split. With 8 splits the grid goes from 48 blocks to 384.
+
+The merge is verified without a GPU: `split_merge_reference` implements both passes in
+numpy and is tested against dense attention across seven split configurations —
+including more splits than tokens (empty slices), a single token, and scores amplified
+25x where a naive `exp()` overflows.
 
 It is worth being precise about why this is the interesting finding: the obvious
 optimisations — vectorised loads, better reductions, avoiding shared memory — are all
 already in v2, and they bought a real 1.35-1.47x. The profiler says none of that is
 what is holding it back now. Guessing would have sent me to tune the inner loop; the
-measurement says restructure the grid.
+measurement said restructure the grid.
+
+**Run the notebook to get v3's numbers on your own card** — the benchmark sweeps the
+split count, so you can watch occupancy trade off against merge overhead directly.
 
 ### What is verified, and what is not
 
@@ -662,9 +685,9 @@ stop happening.
 
 ## Tests
 
-34 tests, no mocks — the distributed ones spawn real worker processes and talk over
-real sockets. On a bare clone **30 run and pass**; 2 more once GPT-2 weights are
-downloaded, and the final 4 need a CUDA device. Everything that cannot run skips
+44 tests, no mocks — the distributed ones spawn real worker processes and talk over
+real sockets. On a bare clone **38 run and pass**; 2 more once GPT-2 weights are
+downloaded, and the final 6 need a CUDA device. Everything that cannot run skips
 cleanly with a reason rather than failing.
 
 The load-bearing ones:
@@ -683,7 +706,13 @@ The load-bearing ones:
 - **`test_oversized_prompt_fails_fast_instead_of_hanging`** — regression for bug #3.
 - **`test_paged_attention_torch_matches_dense_attention`** — the block-table walk
   equals attention over the real context, with shuffled non-contiguous blocks. This is
-  what the CUDA kernel is checked against.
+  what the CUDA kernels are checked against.
+- **`test_split_merge_matches_dense_attention`** — v3's split-and-merge is exact across
+  seven split configurations, including empty slices and overflow-inducing scores.
+- **`test_paged_attention_fuzz_cpu`** — 40 random geometries: sequence counts, lengths,
+  block sizes, and shuffled non-contiguous block tables.
+- **`test_all_three_kernels_agree_under_fuzz`** *(GPU)* — 15 random trials asserting v1,
+  v2 and v3 all match the reference and each other.
 
 ---
 
@@ -727,6 +756,7 @@ Every file below is a link.
 | [`model/torch_engine.py`](heteroserve/model/torch_engine.py) | CUDA engine: gather decode + fused paged decode |
 | [`model/paged_attn.py`](heteroserve/model/paged_attn.py) | **v1 CUDA kernel** + torch reference + backend reporting |
 | [`model/paged_attn_v2.py`](heteroserve/model/paged_attn_v2.py) | **v2 CUDA kernel**: online softmax, warp-per-head, roofline |
+| [`model/paged_attn_v3.py`](heteroserve/model/paged_attn_v3.py) | **v3 CUDA kernel**: context split + merge (FlashDecoding) |
 | [`net/shaper.py`](heteroserve/net/shaper.py) | token bucket + propagation delay |
 | [`net/transport.py`](heteroserve/net/transport.py) | length-prefixed framing over TCP |
 | [`worker/worker.py`](heteroserve/worker/worker.py) | one device, one KV pool, continuous batching |
