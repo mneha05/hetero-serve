@@ -3,8 +3,12 @@ __pycache__/
 .pytest_cache/
 .ov_cache/
 weights/
+# Raw sweep output is regenerated per run and not worth versioning...
 results/*.csv
 results/*.json
+# ...except the two runs the README actually cites, so its numbers are checkable.
 !results/baseline-*.json
+!results/sweep-headline.json
+!results/requests-headline.csv
 .venv/
 venv/

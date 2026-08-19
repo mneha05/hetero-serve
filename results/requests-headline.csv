@@ -1,0 +1,1009 @@
+policy,bandwidth_mbps,req_id,worker_id,prompt_tokens,generated_tokens,cached_prefix_tokens,prefill_tokens_computed,preemptions,migrated,migration_bytes,migration_s,placement_reason,ttft,tpot,e2e,cache_hit_rate
+round_robin,50.0,415f9c8b8923,w0-gpu,280,16,0,280,0,False,0,0.0,round_robin,0.0796,0.02776,0.496,0.0
+round_robin,50.0,3916f3bac3c5,w1-npu,280,16,0,280,0,False,0,0.0,round_robin,0.1013,0.22629,3.4958,0.0
+round_robin,50.0,10a5fbe1f27c,w2-cpu,280,16,0,280,0,False,0,0.0,round_robin,0.2199,0.14835,2.4452,0.0
+round_robin,50.0,cd7e4e773709,w0-gpu,280,16,0,280,0,False,0,0.0,round_robin,0.1056,0.0584,0.9816,0.0
+round_robin,50.0,24d146c6b224,w1-npu,280,16,0,280,0,False,0,0.0,round_robin,0.2402,0.29945,4.7319,0.0
+round_robin,50.0,ff060e7a2837,w2-cpu,280,16,256,24,0,False,0,0.0,round_robin,0.095,0.18739,2.9058,0.9143
+round_robin,50.0,d774e6e7acab,w0-gpu,280,16,256,24,0,False,0,0.0,round_robin,0.0859,0.10363,1.6403,0.9143
+round_robin,50.0,8263269af828,w1-npu,280,16,256,24,0,False,0,0.0,round_robin,0.2001,0.30512,4.7769,0.9143
+round_robin,50.0,b3efa4d14e64,w2-cpu,280,16,0,280,0,False,0,0.0,round_robin,0.2908,0.18554,3.0739,0.0
+round_robin,50.0,25757e99bc6e,w0-gpu,280,16,0,280,0,False,0,0.0,round_robin,0.1462,0.10349,1.6985,0.0
+round_robin,50.0,95ce6e715362,w1-npu,280,16,256,24,0,False,0,0.0,round_robin,0.147,0.3085,4.7746,0.9143
+round_robin,50.0,fa9ef27e264e,w2-cpu,280,16,256,24,0,False,0,0.0,round_robin,0.1301,0.18389,2.8884,0.9143
+round_robin,50.0,d7ad4ed63524,w0-gpu,280,16,256,24,0,False,0,0.0,round_robin,0.0798,0.11382,1.787,0.9143
+round_robin,50.0,345acda241a8,w1-npu,280,16,0,280,0,False,0,0.0,round_robin,0.1372,0.30404,4.6978,0.0
+round_robin,50.0,33f437351f59,w2-cpu,280,16,0,280,0,False,0,0.0,round_robin,0.3385,0.19407,3.2496,0.0
+round_robin,50.0,1584992a1d29,w0-gpu,280,16,0,280,0,False,0,0.0,round_robin,0.1482,0.1089,1.7817,0.0
+round_robin,50.0,dd140090022f,w1-npu,280,16,256,24,0,False,0,0.0,round_robin,0.1189,0.30128,4.6381,0.9143
+round_robin,50.0,81643e6fde4f,w2-cpu,280,16,0,280,0,False,0,0.0,round_robin,0.3986,0.17272,2.9895,0.0
+round_robin,50.0,dbf4e7ef5561,w0-gpu,280,16,256,24,0,False,0,0.0,round_robin,0.0669,0.09842,1.5432,0.9143
+round_robin,50.0,4b587dc1feb7,w1-npu,280,16,0,280,0,False,0,0.0,round_robin,0.168,0.29693,4.6219,0.0
+round_robin,50.0,2dd9f3c6a0f5,w2-cpu,280,16,256,24,0,False,0,0.0,round_robin,0.1698,0.15314,2.4669,0.9143
+round_robin,50.0,3889df18b7b8,w0-gpu,280,16,256,24,0,False,0,0.0,round_robin,0.0928,0.06878,1.1245,0.9143
+round_robin,50.0,00712eaa8d66,w1-npu,280,16,0,280,0,False,0,0.0,round_robin,0.3212,0.28797,4.6408,0.0
+round_robin,50.0,cd332afc9d51,w2-cpu,280,16,256,24,0,False,0,0.0,round_robin,0.1864,0.10838,1.8122,0.9143
+round_robin,50.0,56aabf1589d9,w0-gpu,280,16,256,24,0,False,0,0.0,round_robin,0.0526,0.0566,0.9017,0.9143
+round_robin,50.0,a0363167dcaa,w1-npu,280,16,256,24,0,False,0,0.0,round_robin,0.0743,0.28311,4.321,0.9143
+round_robin,50.0,5d34f3931ffc,w2-cpu,280,16,0,280,0,False,0,0.0,round_robin,0.4105,0.06812,1.4324,0.0
+round_robin,50.0,7689ffbe235f,w0-gpu,280,16,0,280,0,False,0,0.0,round_robin,0.1324,0.04621,0.8256,0.0
+round_robin,50.0,7b5954cf0b3d,w1-npu,280,16,256,24,0,False,0,0.0,round_robin,0.1592,0.29666,4.609,0.9143
+round_robin,50.0,42b5310b001a,w2-cpu,280,16,256,24,0,False,0,0.0,round_robin,0.054,0.03646,0.6009,0.9143
+round_robin,50.0,5b5748b98e96,w0-gpu,280,16,256,24,0,False,0,0.0,round_robin,0.0513,0.03351,0.554,0.9143
+round_robin,50.0,a6217f237fd4,w1-npu,280,16,256,24,0,False,0,0.0,round_robin,0.2201,0.29434,4.6353,0.9143
+round_robin,50.0,40c0f10673ba,w2-cpu,280,16,256,24,0,False,0,0.0,round_robin,0.115,0.04764,0.8296,0.9143
+round_robin,50.0,1e6832910475,w0-gpu,280,16,256,24,0,False,0,0.0,round_robin,0.0417,0.04612,0.7335,0.9143
+round_robin,50.0,06c97641e067,w1-npu,280,16,256,24,0,False,0,0.0,round_robin,0.1436,0.28964,4.4883,0.9143
+round_robin,50.0,7107f75dd716,w2-cpu,280,16,256,24,0,False,0,0.0,round_robin,0.1225,0.05947,1.0146,0.9143
+round_robin,50.0,ff57840e1f6a,w0-gpu,280,16,256,24,0,False,0,0.0,round_robin,0.0816,0.04056,0.69,0.9143
+round_robin,50.0,095de68de3cd,w1-npu,280,16,256,24,0,False,0,0.0,round_robin,0.3016,0.27548,4.4338,0.9143
+round_robin,50.0,d7cc63eb1143,w2-cpu,280,16,256,24,0,False,0,0.0,round_robin,0.0901,0.05238,0.8758,0.9143
+round_robin,50.0,9a4dc296a864,w0-gpu,280,16,256,24,0,False,0,0.0,round_robin,0.0486,0.0592,0.9366,0.9143
+round_robin,50.0,6a148b9900f9,w1-npu,280,16,256,24,0,False,0,0.0,round_robin,0.19,0.25435,4.0052,0.9143
+round_robin,50.0,b47079f7e0e5,w2-cpu,280,16,256,24,0,False,0,0.0,round_robin,0.1438,0.07334,1.2439,0.9143
+round_robin,50.0,41ec491311f4,w0-gpu,280,16,256,24,0,False,0,0.0,round_robin,0.0637,0.06873,1.0946,0.9143
+round_robin,50.0,ed82cada6f07,w1-npu,280,16,256,24,0,False,0,0.0,round_robin,0.1284,0.24492,3.8022,0.9143
+round_robin,50.0,9369209de29a,w2-cpu,280,16,256,24,0,False,0,0.0,round_robin,0.0586,0.07918,1.2463,0.9143
+round_robin,50.0,a5a89e852dff,w0-gpu,280,16,256,24,0,False,0,0.0,round_robin,0.0922,0.05855,0.9705,0.9143
+round_robin,50.0,97a8813632ed,w1-npu,280,16,256,24,0,False,0,0.0,round_robin,0.1714,0.23163,3.6458,0.9143
+round_robin,50.0,fb91f9fd4e9e,w2-cpu,280,16,256,24,0,False,0,0.0,round_robin,0.098,0.06382,1.0553,0.9143
+round_robin,50.0,8b186c969281,w0-gpu,280,16,0,280,0,False,0,0.0,round_robin,0.0737,0.02659,0.4725,0.0
+round_robin,50.0,55e547f5da82,w1-npu,280,16,0,280,0,False,0,0.0,round_robin,0.1047,0.23198,3.5843,0.0
+round_robin,50.0,8d07f771fc9e,w2-cpu,280,16,0,280,0,False,0,0.0,round_robin,0.2414,0.16999,2.7912,0.0
+round_robin,50.0,cbc51f8e0075,w0-gpu,280,16,0,280,0,False,0,0.0,round_robin,0.1008,0.05878,0.9825,0.0
+round_robin,50.0,7d42b62a5bb8,w1-npu,280,16,0,280,0,False,0,0.0,round_robin,0.2208,0.33149,5.1932,0.0
+round_robin,50.0,f27ae11c87c9,w2-cpu,280,16,256,24,0,False,0,0.0,round_robin,0.0746,0.2089,3.2081,0.9143
+round_robin,50.0,83fdf1aff9cd,w0-gpu,280,16,256,24,0,False,0,0.0,round_robin,0.0601,0.09938,1.5508,0.9143
+round_robin,50.0,6520168622a7,w1-npu,280,16,256,24,0,False,0,0.0,round_robin,0.1917,0.35589,5.5301,0.9143
+round_robin,50.0,226a6f8938d7,w2-cpu,280,16,0,280,0,False,0,0.0,round_robin,0.3219,0.23135,3.7922,0.0
+round_robin,50.0,b593ad1d6077,w0-gpu,280,16,0,280,0,False,0,0.0,round_robin,0.1436,0.09988,1.6419,0.0
+round_robin,50.0,b009e00392b1,w1-npu,280,16,256,24,0,False,0,0.0,round_robin,0.1483,0.36499,5.6231,0.9143
+round_robin,50.0,d9b2e5e9a761,w2-cpu,280,16,256,24,0,False,0,0.0,round_robin,0.1375,0.23592,3.6763,0.9143
+round_robin,50.0,461a1031908c,w0-gpu,280,16,256,24,0,False,0,0.0,round_robin,0.076,0.11589,1.8144,0.9143
+round_robin,50.0,986c078ebe4d,w1-npu,280,16,0,280,0,False,0,0.0,round_robin,0.1333,0.3693,5.6728,0.0
+round_robin,50.0,7503d117f513,w2-cpu,280,16,0,280,0,False,0,0.0,round_robin,0.2551,0.23211,3.7367,0.0
+round_robin,50.0,12c6585a2733,w0-gpu,280,16,0,280,0,False,0,0.0,round_robin,0.1604,0.1094,1.8014,0.0
+round_robin,50.0,303bfd226721,w1-npu,280,16,256,24,0,False,0,0.0,round_robin,0.1341,0.37589,5.7725,0.9143
+round_robin,50.0,b5396b0d1a20,w2-cpu,280,16,0,280,0,False,0,0.0,round_robin,0.3957,0.21345,3.5975,0.0
+round_robin,50.0,1f3b0c7d4e07,w0-gpu,280,16,256,24,0,False,0,0.0,round_robin,0.0606,0.10099,1.5755,0.9143
+round_robin,50.0,113fdee21d17,w1-npu,280,16,0,280,0,False,0,0.0,round_robin,0.2201,0.37119,5.788,0.0
+round_robin,50.0,e3ec37b35731,w2-cpu,280,16,256,24,0,False,0,0.0,round_robin,0.0666,0.2108,3.2286,0.9143
+round_robin,50.0,2e3311a346fd,w0-gpu,280,16,256,24,0,False,0,0.0,round_robin,0.0669,0.07369,1.1723,0.9143
+round_robin,50.0,67f9cd92efd7,w1-npu,280,16,0,280,0,False,0,0.0,round_robin,0.1629,0.37218,5.7456,0.0
+round_robin,50.0,06161f4d5661,w2-cpu,280,16,256,24,0,False,0,0.0,round_robin,0.0834,0.17702,2.7387,0.9143
+round_robin,50.0,8166719fdff7,w0-gpu,280,16,256,24,0,False,0,0.0,round_robin,0.0931,0.06814,1.1152,0.9143
+round_robin,50.0,e6d27a50c11d,w1-npu,280,16,256,24,0,False,0,0.0,round_robin,0.3057,0.372,5.8856,0.9143
+round_robin,50.0,ffed6dd5f8c2,w2-cpu,280,16,0,280,0,False,0,0.0,round_robin,0.3638,0.1435,2.5163,0.0
+round_robin,50.0,1c90ec2bc530,w0-gpu,280,16,0,280,0,False,0,0.0,round_robin,0.135,0.05701,0.9902,0.0
+round_robin,50.0,c7ed0ef3822e,w1-npu,280,16,256,24,0,False,0,0.0,round_robin,0.1204,0.34762,5.3346,0.9143
+round_robin,50.0,c06977480b52,w2-cpu,280,16,256,24,0,False,0,0.0,round_robin,0.1645,0.09658,1.6133,0.9143
+round_robin,50.0,b76a8834278d,w0-gpu,280,16,256,24,0,False,0,0.0,round_robin,0.054,0.03845,0.6308,0.9143
+round_robin,50.0,b2c582fefd73,w1-npu,280,16,256,24,0,False,0,0.0,round_robin,0.1598,0.32719,5.0676,0.9143
+round_robin,50.0,c9b516475d6d,w2-cpu,280,16,256,24,0,False,0,0.0,round_robin,0.0723,0.08994,1.4214,0.9143
+round_robin,50.0,de94cb90650a,w0-gpu,280,16,256,24,0,False,0,0.0,round_robin,0.0537,0.0496,0.7976,0.9143
+round_robin,50.0,7374bed6e305,w1-npu,280,16,256,24,0,False,0,0.0,round_robin,0.2028,0.31692,4.9566,0.9143
+round_robin,50.0,b1cb4332866c,w2-cpu,280,16,256,24,0,False,0,0.0,round_robin,0.1116,0.08943,1.4531,0.9143
+round_robin,50.0,3c7ede10b95f,w0-gpu,280,16,256,24,0,False,0,0.0,round_robin,0.0997,0.04561,0.7839,0.9143
+round_robin,50.0,30282976b229,w1-npu,280,16,256,24,0,False,0,0.0,round_robin,0.1664,0.30525,4.7451,0.9143
+round_robin,50.0,d002951afd56,w2-cpu,280,16,256,24,0,False,0,0.0,round_robin,0.1073,0.0874,1.4182,0.9143
+round_robin,50.0,eaaf6162b302,w0-gpu,280,16,256,24,0,False,0,0.0,round_robin,0.0652,0.05693,0.9192,0.9143
+round_robin,50.0,e575dcd408af,w1-npu,280,16,256,24,0,False,0,0.0,round_robin,0.2694,0.27188,4.3476,0.9143
+round_robin,50.0,aebf795c7cde,w2-cpu,280,16,256,24,0,False,0,0.0,round_robin,0.1065,0.08917,1.444,0.9143
+round_robin,50.0,54c995544675,w0-gpu,280,16,256,24,0,False,0,0.0,round_robin,0.0806,0.06662,1.0799,0.9143
+round_robin,50.0,bf768ac65acf,w1-npu,280,16,256,24,0,False,0,0.0,round_robin,0.2584,0.25839,4.1343,0.9143
+round_robin,50.0,abae673439af,w2-cpu,280,16,256,24,0,False,0,0.0,round_robin,0.0767,0.0813,1.2962,0.9143
+round_robin,50.0,7524996369af,w0-gpu,280,16,256,24,0,False,0,0.0,round_robin,0.0953,0.05794,0.9645,0.9143
+round_robin,50.0,ff00b68d2f71,w1-npu,280,16,256,24,0,False,0,0.0,round_robin,0.3414,0.24205,3.9721,0.9143
+round_robin,50.0,6e5e852f7383,w2-cpu,280,16,256,24,0,False,0,0.0,round_robin,0.1275,0.0643,1.0919,0.9143
+round_robin,50.0,ba58a2723177,w0-gpu,280,16,0,280,0,False,0,0.0,round_robin,0.0773,0.02535,0.4575,0.0
+round_robin,50.0,ac70ea8a2da1,w1-npu,280,16,0,280,0,False,0,0.0,round_robin,0.1047,0.25564,3.9392,0.0
+round_robin,50.0,0fad583f9a97,w2-cpu,280,16,0,280,0,False,0,0.0,round_robin,0.2622,0.32651,5.1599,0.0
+round_robin,50.0,6af050f08628,w0-gpu,280,16,0,280,0,False,0,0.0,round_robin,0.108,0.0541,0.9194,0.0
+round_robin,50.0,dbcc7fe88cfe,w1-npu,280,16,0,280,0,False,0,0.0,round_robin,0.2733,0.36388,5.7315,0.0
+round_robin,50.0,106ed132bc13,w2-cpu,280,16,256,24,0,False,0,0.0,round_robin,0.0748,0.36464,5.5445,0.9143
+round_robin,50.0,24cc1221a6d9,w0-gpu,280,16,256,24,0,False,0,0.0,round_robin,0.0619,0.11493,1.7859,0.9143
+round_robin,50.0,a3ef869985f3,w1-npu,280,16,256,24,0,False,0,0.0,round_robin,0.223,0.3835,5.9756,0.9143
+round_robin,50.0,7c52a27da852,w2-cpu,280,16,0,280,0,False,0,0.0,round_robin,0.389,0.36838,5.9147,0.0
+round_robin,50.0,f1c344981029,w0-gpu,280,16,0,280,0,False,0,0.0,round_robin,0.1235,0.12832,2.0484,0.0
+round_robin,50.0,86a5d44a16af,w1-npu,280,16,256,24,0,False,0,0.0,round_robin,0.2138,0.39126,6.0828,0.9143
+round_robin,50.0,4f5609f16749,w2-cpu,280,16,256,24,0,False,0,0.0,round_robin,0.1279,0.36344,5.5795,0.9143
+round_robin,50.0,982f0297f006,w0-gpu,280,16,256,24,0,False,0,0.0,round_robin,0.0905,0.14864,2.3201,0.9143
+round_robin,50.0,95707ebae160,w1-npu,280,16,0,280,0,False,0,0.0,round_robin,0.2554,0.39263,6.1449,0.0
+round_robin,50.0,3d05fac03fec,w2-cpu,280,16,0,280,0,False,0,0.0,round_robin,0.4792,0.36811,6.0009,0.0
+round_robin,50.0,a6da989513f5,w0-gpu,280,16,0,280,0,False,0,0.0,round_robin,0.1122,0.14778,2.3288,0.0
+round_robin,50.0,de00accb8426,w1-npu,280,16,256,24,0,False,0,0.0,round_robin,0.306,0.39204,6.1866,0.9143
+round_robin,50.0,c40148ec8366,w2-cpu,280,16,0,280,0,False,0,0.0,round_robin,0.6872,0.33726,5.7461,0.0
+round_robin,50.0,9141322bb7b9,w0-gpu,280,16,256,24,0,False,0,0.0,round_robin,0.0514,0.15516,2.3788,0.9143
+round_robin,50.0,95706aeb22a1,w1-npu,280,16,0,280,0,False,0,0.0,round_robin,0.1489,0.38194,5.878,0.0
+round_robin,50.0,ba6f53821b39,w2-cpu,280,16,256,24,0,False,0,0.0,round_robin,0.2606,0.32995,5.2099,0.9143
+round_robin,50.0,82b47eed5bcc,w0-gpu,280,16,256,24,0,False,0,0.0,round_robin,0.0793,0.13305,2.075,0.9143
+round_robin,50.0,6efe5e3d2c4a,w1-npu,280,16,0,280,0,False,0,0.0,round_robin,0.2246,0.38118,5.9422,0.0
+round_robin,50.0,134d99fdcf11,w2-cpu,280,16,256,24,0,False,0,0.0,round_robin,0.1226,0.32176,4.9489,0.9143
+round_robin,50.0,34d4f7296da1,w0-gpu,280,16,256,24,0,False,0,0.0,round_robin,0.051,0.09839,1.5268,0.9143
+round_robin,50.0,afea27de1d77,w1-npu,280,16,256,24,0,False,0,0.0,round_robin,0.4317,0.37463,6.0511,0.9143
+round_robin,50.0,906a5a0a7488,w2-cpu,280,16,0,280,0,False,0,0.0,round_robin,0.4774,0.32148,5.2996,0.0
+round_robin,50.0,45c8944df821,w0-gpu,280,16,0,280,0,False,0,0.0,round_robin,0.1339,0.07855,1.3121,0.0
+round_robin,50.0,029da63c6d19,w1-npu,280,16,256,24,0,False,0,0.0,round_robin,0.2788,0.36933,5.8187,0.9143
+round_robin,50.0,da3f0afdee43,w2-cpu,280,16,256,24,0,False,0,0.0,round_robin,0.1894,0.28585,4.4772,0.9143
+round_robin,50.0,948c46a9f388,w0-gpu,280,16,256,24,0,False,0,0.0,round_robin,0.0437,0.03316,0.5411,0.9143
+round_robin,50.0,567ca5eab79c,w1-npu,280,16,256,24,0,False,0,0.0,round_robin,0.2291,0.35202,5.5093,0.9143
+round_robin,50.0,adb70c7a95c3,w2-cpu,280,16,256,24,0,False,0,0.0,round_robin,0.2029,0.25436,4.0183,0.9143
+round_robin,50.0,ae73ae77c9e1,w0-gpu,280,16,256,24,0,False,0,0.0,round_robin,0.0456,0.04265,0.6854,0.9143
+round_robin,50.0,2bee9211d9e2,w1-npu,280,16,256,24,0,False,0,0.0,round_robin,0.2516,0.34029,5.3559,0.9143
+round_robin,50.0,40c3cdb1984c,w2-cpu,280,16,256,24,0,False,0,0.0,round_robin,0.2068,0.22835,3.632,0.9143
+round_robin,50.0,d7eaf6cf16ed,w0-gpu,280,16,256,24,0,False,0,0.0,round_robin,0.0738,0.04085,0.6866,0.9143
+round_robin,50.0,3f8a3498355b,w1-npu,280,16,256,24,0,False,0,0.0,round_robin,0.2346,0.325,5.1096,0.9143
+round_robin,50.0,cd81464f4d35,w2-cpu,280,16,256,24,0,False,0,0.0,round_robin,0.1225,0.22211,3.4541,0.9143
+round_robin,50.0,61a3f386fb0e,w0-gpu,280,16,256,24,0,False,0,0.0,round_robin,0.0438,0.05643,0.8903,0.9143
+round_robin,50.0,54f3c93e5f4a,w1-npu,280,16,256,24,0,False,0,0.0,round_robin,0.3583,0.27673,4.5093,0.9143
+round_robin,50.0,e264dcd48c14,w2-cpu,280,16,256,24,0,False,0,0.0,round_robin,0.2033,0.17619,2.8462,0.9143
+round_robin,50.0,f5c1c83eee16,w0-gpu,280,16,256,24,0,False,0,0.0,round_robin,0.0728,0.0701,1.1243,0.9143
+round_robin,50.0,e32d72063960,w1-npu,280,16,256,24,0,False,0,0.0,round_robin,0.3797,0.26025,4.2834,0.9143
+round_robin,50.0,4c946d9fc75a,w2-cpu,280,16,256,24,0,False,0,0.0,round_robin,0.0968,0.1609,2.5103,0.9143
+round_robin,50.0,47c10a68625e,w0-gpu,280,16,256,24,0,False,0,0.0,round_robin,0.0555,0.06008,0.9566,0.9143
+round_robin,50.0,c517886bd5e2,w1-npu,280,16,256,24,0,False,0,0.0,round_robin,0.1216,0.26626,4.1155,0.9143
+round_robin,50.0,2a90b5835479,w2-cpu,280,16,256,24,0,False,0,0.0,round_robin,0.1855,0.13016,2.1378,0.9143
+least_loaded,50.0,a50bbf408edc,w0-gpu,280,16,0,280,0,False,0,0.0,least_loaded,0.0751,0.02453,0.443,0.0
+least_loaded,50.0,5fde0673b1e5,w1-npu,280,16,0,280,0,False,0,0.0,least_loaded,0.1046,0.21563,3.3391,0.0
+least_loaded,50.0,1249b68d2c68,w0-gpu,280,16,0,280,0,False,0,0.0,least_loaded,0.101,0.0398,0.698,0.0
+least_loaded,50.0,6ba0441c488d,w2-cpu,280,16,0,280,0,False,0,0.0,least_loaded,0.3767,0.2021,3.4082,0.0
+least_loaded,50.0,b92bb041031a,w1-npu,280,16,0,280,0,False,0,0.0,least_loaded,0.2676,0.28718,4.5752,0.0
+least_loaded,50.0,d7869919f7b9,w0-gpu,280,16,256,24,0,False,0,0.0,least_loaded,0.0528,0.08079,1.2647,0.9143
+least_loaded,50.0,ddf25877d4e8,w2-cpu,280,16,256,24,0,False,0,0.0,least_loaded,0.0756,0.20794,3.1948,0.9143
+least_loaded,50.0,113e128876e3,w2-cpu,280,16,256,24,0,False,0,0.0,least_loaded,0.1062,0.24951,3.8488,0.9143
+least_loaded,50.0,0b882784556b,w1-npu,280,16,0,280,0,False,0,0.0,least_loaded,0.2788,0.29266,4.6688,0.0
+least_loaded,50.0,92225921c6d5,w0-gpu,280,16,0,280,0,False,0,0.0,least_loaded,0.1155,0.10592,1.7043,0.0
+least_loaded,50.0,7cc5c61e097f,w0-gpu,280,16,256,24,0,False,0,0.0,least_loaded,0.0931,0.11661,1.8423,0.9143
+least_loaded,50.0,a06d9a58a346,w2-cpu,280,16,0,280,0,False,0,0.0,least_loaded,0.3111,0.25281,4.1033,0.0
+least_loaded,50.0,9421e9d334a6,w1-npu,280,16,0,280,0,False,0,0.0,least_loaded,0.189,0.29313,4.5859,0.0
+least_loaded,50.0,b1ae0aaca54b,w0-gpu,280,16,256,24,0,False,0,0.0,least_loaded,0.0606,0.13578,2.0973,0.9143
+least_loaded,50.0,0cc4aadb9ab4,w2-cpu,280,16,256,24,0,False,0,0.0,least_loaded,0.1439,0.25473,3.9649,0.9143
+least_loaded,50.0,0cda663d8129,w2-cpu,280,16,256,24,0,False,0,0.0,least_loaded,0.1721,0.25187,3.9501,0.9143
+least_loaded,50.0,29d0f9af0ab3,w1-npu,280,16,256,24,0,False,0,0.0,least_loaded,0.137,0.28998,4.4867,0.9143
+least_loaded,50.0,53ec712628e3,w0-gpu,280,16,256,24,0,False,0,0.0,least_loaded,0.0909,0.1454,2.2719,0.9143
+least_loaded,50.0,b438c3fc1663,w0-gpu,280,16,0,280,0,False,0,0.0,least_loaded,0.1749,0.14533,2.3549,0.0
+least_loaded,50.0,bee7cb83b326,w2-cpu,280,16,0,280,0,False,0,0.0,least_loaded,0.423,0.20934,3.5632,0.0
+least_loaded,50.0,e079fde0b9a2,w1-npu,280,16,256,24,0,False,0,0.0,least_loaded,0.1555,0.28266,4.3954,0.9143
+least_loaded,50.0,00cb850e0eb8,w0-gpu,280,16,256,24,0,False,0,0.0,least_loaded,0.0557,0.13972,2.1515,0.9143
+least_loaded,50.0,e0bd005ad773,w0-gpu,280,16,0,280,0,False,0,0.0,least_loaded,0.1983,0.12216,2.0308,0.0
+least_loaded,50.0,b385496ec88e,w1-npu,280,16,256,24,0,False,0,0.0,least_loaded,0.1408,0.27635,4.286,0.9143
+least_loaded,50.0,00d162287d71,w0-gpu,280,16,256,24,0,False,0,0.0,least_loaded,0.0882,0.10619,1.6811,0.9143
+least_loaded,50.0,5301d7e37378,w2-cpu,280,16,256,24,0,False,0,0.0,least_loaded,0.2574,0.1609,2.6708,0.9143
+least_loaded,50.0,832b808eb180,w2-cpu,280,16,0,280,0,False,0,0.0,least_loaded,0.3683,0.13778,2.435,0.0
+least_loaded,50.0,408815028bf5,w0-gpu,280,16,256,24,0,False,0,0.0,least_loaded,0.1088,0.09415,1.5211,0.9143
+least_loaded,50.0,d02a01722127,w0-gpu,280,16,256,24,0,False,0,0.0,least_loaded,0.0469,0.07801,1.2171,0.9143
+least_loaded,50.0,c26f92c91c98,w0-gpu,280,16,256,24,0,False,0,0.0,least_loaded,0.1124,0.07574,1.2484,0.9143
+least_loaded,50.0,ea98bf6f826f,w0-gpu,280,16,256,24,0,False,0,0.0,least_loaded,0.1086,0.07129,1.178,0.9143
+least_loaded,50.0,e305ed80953d,w2-cpu,280,16,256,24,0,False,0,0.0,least_loaded,0.1241,0.09881,1.6062,0.9143
+least_loaded,50.0,3df14cf21218,w1-npu,280,16,256,24,0,False,0,0.0,least_loaded,0.2254,0.2464,3.9215,0.9143
+least_loaded,50.0,572dabc23885,w2-cpu,280,16,256,24,0,False,0,0.0,least_loaded,0.0996,0.1135,1.802,0.9143
+least_loaded,50.0,80b82222fbbb,w2-cpu,280,16,256,24,0,False,0,0.0,least_loaded,0.1654,0.10912,1.8022,0.9143
+least_loaded,50.0,cc292582edca,w0-gpu,280,16,256,24,0,False,0,0.0,least_loaded,0.0727,0.0572,0.9308,0.9143
+least_loaded,50.0,33182cf60bb2,w1-npu,280,16,256,24,0,False,0,0.0,least_loaded,0.238,0.23551,3.7707,0.9143
+least_loaded,50.0,9c848ceedf7b,w1-npu,280,16,256,24,0,False,0,0.0,least_loaded,0.2925,0.23189,3.7709,0.9143
+least_loaded,50.0,6580f2a52222,w0-gpu,280,16,256,24,0,False,0,0.0,least_loaded,0.0764,0.06285,1.0192,0.9143
+least_loaded,50.0,0f6fe7c35d45,w0-gpu,280,16,256,24,0,False,0,0.0,least_loaded,0.0836,0.07645,1.2303,0.9143
+least_loaded,50.0,2531262308f8,w2-cpu,280,16,256,24,0,False,0,0.0,least_loaded,0.1483,0.16013,2.5503,0.9143
+least_loaded,50.0,eec877d82f12,w0-gpu,280,16,256,24,0,False,0,0.0,least_loaded,0.0804,0.07336,1.1808,0.9143
+least_loaded,50.0,ae8b5ef9276d,w2-cpu,280,16,256,24,0,False,0,0.0,least_loaded,0.0981,0.15615,2.4403,0.9143
+least_loaded,50.0,c1089c4e4752,w0-gpu,280,16,256,24,0,False,0,0.0,least_loaded,0.0761,0.06258,1.0148,0.9143
+least_loaded,50.0,a1e80e97aafb,w2-cpu,280,16,256,24,0,False,0,0.0,least_loaded,0.0726,0.14907,2.3086,0.9143
+least_loaded,50.0,9caae748e32d,w2-cpu,280,16,256,24,0,False,0,0.0,least_loaded,0.1535,0.14147,2.2755,0.9143
+least_loaded,50.0,92312a5c1c46,w1-npu,280,16,256,24,0,False,0,0.0,least_loaded,0.1253,0.19139,2.9961,0.9143
+least_loaded,50.0,ea52203aecce,w2-cpu,280,16,0,280,0,False,0,0.0,least_loaded,0.4957,0.09802,1.966,0.0
+least_loaded,50.0,b6297e627add,w0-gpu,280,16,0,280,0,False,0,0.0,least_loaded,0.0705,0.02404,0.4311,0.0
+least_loaded,50.0,49ea8293c5d3,w1-npu,280,16,0,280,0,False,0,0.0,least_loaded,0.099,0.21267,3.289,0.0
+least_loaded,50.0,bda0453436ec,w0-gpu,280,16,0,280,0,False,0,0.0,least_loaded,0.0902,0.035,0.6152,0.0
+least_loaded,50.0,378694d1a10f,w2-cpu,280,16,0,280,0,False,0,0.0,least_loaded,0.3125,0.22536,3.6929,0.0
+least_loaded,50.0,bbe89f6b9861,w1-npu,280,16,0,280,0,False,0,0.0,least_loaded,0.222,0.28181,4.4492,0.0
+least_loaded,50.0,79fdae02a0cc,w2-cpu,280,16,0,280,0,False,0,0.0,least_loaded,0.36,0.21345,3.5618,0.0
+least_loaded,50.0,783cd9ed71a9,w0-gpu,280,16,0,280,0,False,0,0.0,least_loaded,0.0921,0.08058,1.3008,0.0
+least_loaded,50.0,95f192acab13,w1-npu,280,16,256,24,0,False,0,0.0,least_loaded,0.1512,0.29405,4.5619,0.9143
+least_loaded,50.0,8edac948e790,w1-npu,280,16,0,280,0,False,0,0.0,least_loaded,0.2603,0.28679,4.5621,0.0
+least_loaded,50.0,bf7d849ca732,w0-gpu,280,16,0,280,0,False,0,0.0,least_loaded,0.111,0.09008,1.4621,0.0
+least_loaded,50.0,7f1a667050e5,w2-cpu,280,16,256,24,0,False,0,0.0,least_loaded,0.1282,0.24151,3.7508,0.9143
+least_loaded,50.0,c06aef553a4b,w0-gpu,280,16,256,24,0,False,0,0.0,least_loaded,0.0462,0.09972,1.542,0.9143
+least_loaded,50.0,05c7299efc3e,w2-cpu,280,16,0,280,0,False,0,0.0,least_loaded,0.3425,0.23742,3.9039,0.0
+least_loaded,50.0,efbb53a5889e,w0-gpu,280,16,256,24,0,False,0,0.0,least_loaded,0.103,0.12272,1.9437,0.9143
+least_loaded,50.0,feb530e23654,w1-npu,280,16,256,24,0,False,0,0.0,least_loaded,0.1803,0.28634,4.4754,0.9143
+least_loaded,50.0,ea6a83c53f03,w2-cpu,280,16,256,24,0,False,0,0.0,least_loaded,0.2129,0.2338,3.7198,0.9143
+least_loaded,50.0,75e041b16112,w0-gpu,280,16,256,24,0,False,0,0.0,least_loaded,0.1019,0.12862,2.0312,0.9143
+least_loaded,50.0,98e2abbbe6ad,w2-cpu,280,16,0,280,0,False,0,0.0,least_loaded,0.4816,0.20665,3.5813,0.0
+least_loaded,50.0,a2db8bac7be8,w1-npu,280,16,256,24,0,False,0,0.0,least_loaded,0.1064,0.28131,4.3261,0.9143
+least_loaded,50.0,ec0c6c86eef8,w0-gpu,280,16,0,280,0,False,0,0.0,least_loaded,0.1751,0.16635,2.6704,0.0
+least_loaded,50.0,85fd6947566d,w0-gpu,280,16,256,24,0,False,0,0.0,least_loaded,0.1452,0.1652,2.6232,0.9143
+least_loaded,50.0,2486151c24bc,w0-gpu,280,16,256,24,0,False,0,0.0,least_loaded,0.1482,0.16387,2.6063,0.9143
+least_loaded,50.0,2ba29fb0bcfd,w2-cpu,280,16,0,280,0,False,0,0.0,least_loaded,0.3685,0.18232,3.1033,0.0
+least_loaded,50.0,b4200b6a3cba,w0-gpu,280,16,256,24,0,False,0,0.0,least_loaded,0.0966,0.14587,2.2847,0.9143
+least_loaded,50.0,e479e51577a9,w1-npu,280,16,0,280,0,False,0,0.0,least_loaded,0.1281,0.26859,4.157,0.0
+least_loaded,50.0,76a1cfd19b0b,w0-gpu,280,16,256,24,0,False,0,0.0,least_loaded,0.0429,0.13714,2.1,0.9143
+least_loaded,50.0,6c01e1db8182,w2-cpu,280,16,256,24,0,False,0,0.0,least_loaded,0.215,0.15805,2.5857,0.9143
+least_loaded,50.0,3f5e8959a5bf,w0-gpu,280,16,0,280,0,False,0,0.0,least_loaded,0.1624,0.12189,1.9908,0.0
+least_loaded,50.0,64842001d788,w2-cpu,280,16,256,24,0,False,0,0.0,least_loaded,0.249,0.11696,2.0034,0.9143
+least_loaded,50.0,575ed1ab9498,w2-cpu,280,16,256,24,0,False,0,0.0,least_loaded,0.267,0.11323,1.9655,0.9143
+least_loaded,50.0,ea9444a94291,w0-gpu,280,16,256,24,0,False,0,0.0,least_loaded,0.0671,0.06211,0.9988,0.9143
+least_loaded,50.0,a426159aa87c,w0-gpu,280,16,256,24,0,False,0,0.0,least_loaded,0.0627,0.0797,1.2581,0.9143
+least_loaded,50.0,bf2234a3ba1b,w1-npu,280,16,0,280,0,False,0,0.0,least_loaded,0.308,0.25438,4.1238,0.0
+least_loaded,50.0,b594fae74cf4,w0-gpu,280,16,256,24,0,False,0,0.0,least_loaded,0.0708,0.07842,1.2471,0.9143
+least_loaded,50.0,0edeac1b952d,w0-gpu,280,16,256,24,0,False,0,0.0,least_loaded,0.0997,0.0765,1.2472,0.9143
+least_loaded,50.0,56773d8e7b24,w2-cpu,280,16,256,24,0,False,0,0.0,least_loaded,0.0772,0.09755,1.5405,0.9143
+least_loaded,50.0,8b39d019a6c4,w1-npu,280,16,256,24,0,False,0,0.0,least_loaded,0.0571,0.24834,3.7822,0.9143
+least_loaded,50.0,3eff9a7b0797,w1-npu,280,16,256,24,0,False,0,0.0,least_loaded,0.1032,0.24526,3.7821,0.9143
+least_loaded,50.0,55cbc25bf479,w2-cpu,280,16,256,24,0,False,0,0.0,least_loaded,0.1377,0.11644,1.8843,0.9143
+least_loaded,50.0,bf50fc668887,w2-cpu,280,16,256,24,0,False,0,0.0,least_loaded,0.1255,0.13459,2.1444,0.9143
+least_loaded,50.0,353bebe8165d,w0-gpu,280,16,256,24,0,False,0,0.0,least_loaded,0.043,0.08834,1.3681,0.9143
+least_loaded,50.0,541040cb4d45,w0-gpu,280,16,256,24,0,False,0,0.0,least_loaded,0.0674,0.09138,1.4381,0.9143
+least_loaded,50.0,8141efe7adf3,w0-gpu,280,16,256,24,0,False,0,0.0,least_loaded,0.0648,0.08915,1.4021,0.9143
+least_loaded,50.0,ae53bbf8a58d,w2-cpu,280,16,256,24,0,False,0,0.0,least_loaded,0.0792,0.12549,1.9616,0.9143
+least_loaded,50.0,04c027b8a250,w2-cpu,280,16,256,24,0,False,0,0.0,least_loaded,0.1316,0.11956,1.925,0.9143
+least_loaded,50.0,7bb1be7b1fcd,w1-npu,280,16,256,24,0,False,0,0.0,least_loaded,0.1536,0.20469,3.224,0.9143
+least_loaded,50.0,23dd7ee2afa8,w2-cpu,280,16,256,24,0,False,0,0.0,least_loaded,0.1188,0.10984,1.7664,0.9143
+least_loaded,50.0,6b267e7ad8db,w0-gpu,280,16,256,24,0,False,0,0.0,least_loaded,0.0894,0.05819,0.9623,0.9143
+least_loaded,50.0,06559859ffd2,w0-gpu,280,16,0,280,0,False,0,0.0,least_loaded,0.0754,0.02439,0.4413,0.0
+least_loaded,50.0,aa58d9b60522,w1-npu,280,16,0,280,0,False,0,0.0,least_loaded,0.0889,0.2023,3.1233,0.0
+least_loaded,50.0,2a08d33b4101,w0-gpu,280,16,0,280,0,False,0,0.0,least_loaded,0.0829,0.03851,0.6605,0.0
+least_loaded,50.0,12b04815d54f,w2-cpu,280,16,0,280,0,False,0,0.0,least_loaded,0.3501,0.29039,4.7059,0.0
+least_loaded,50.0,500658574bde,w1-npu,280,16,0,280,0,False,0,0.0,least_loaded,0.2249,0.26415,4.1872,0.0
+least_loaded,50.0,48f4f8700738,w0-gpu,280,16,256,24,0,False,0,0.0,least_loaded,0.0445,0.07758,1.2083,0.9143
+least_loaded,50.0,3b1c64da1362,w2-cpu,280,16,256,24,0,False,0,0.0,least_loaded,0.1059,0.3103,4.7604,0.9143
+least_loaded,50.0,ab8bdacf27a7,w2-cpu,280,16,256,24,0,False,0,0.0,least_loaded,0.0535,0.30724,4.6621,0.9143
+least_loaded,50.0,af7851539ee3,w2-cpu,280,16,0,280,0,False,0,0.0,least_loaded,0.366,0.28641,4.6622,0.0
+least_loaded,50.0,58b16bcae3fc,w0-gpu,280,16,0,280,0,False,0,0.0,least_loaded,0.104,0.10144,1.6256,0.0
+least_loaded,50.0,e9590fd0837b,w1-npu,280,16,256,24,0,False,0,0.0,least_loaded,0.2244,0.28705,4.5302,0.9143
+least_loaded,50.0,c417738bcd5b,w0-gpu,280,16,256,24,0,False,0,0.0,least_loaded,0.0785,0.11506,1.8044,0.9143
+least_loaded,50.0,2f59a12e044b,w1-npu,280,16,0,280,0,False,0,0.0,least_loaded,0.2155,0.2837,4.4711,0.0
+least_loaded,50.0,12f0023c3d75,w2-cpu,280,16,0,280,0,False,0,0.0,least_loaded,0.3241,0.27883,4.5066,0.0
+least_loaded,50.0,28a3b40c7e30,w0-gpu,280,16,0,280,0,False,0,0.0,least_loaded,0.151,0.13686,2.2039,0.0
+least_loaded,50.0,a20ca5f933c1,w1-npu,280,16,256,24,0,False,0,0.0,least_loaded,0.0759,0.28062,4.2853,0.9143
+least_loaded,50.0,d7b0d2944831,w0-gpu,280,16,256,24,0,False,0,0.0,least_loaded,0.1228,0.14029,2.2272,0.9143
+least_loaded,50.0,10b159e16450,w2-cpu,280,16,0,280,0,False,0,0.0,least_loaded,0.4068,0.25721,4.2649,0.0
+least_loaded,50.0,ba16199125ef,w0-gpu,280,16,256,24,0,False,0,0.0,least_loaded,0.0804,0.13698,2.1351,0.9143
+least_loaded,50.0,d58f14fe08e9,w2-cpu,280,16,0,280,0,False,0,0.0,least_loaded,0.4126,0.2272,3.8206,0.0
+least_loaded,50.0,fc37c8eac591,w1-npu,280,16,256,24,0,False,0,0.0,least_loaded,0.1943,0.27418,4.307,0.9143
+least_loaded,50.0,8fad9596ce6a,w0-gpu,280,16,256,24,0,False,0,0.0,least_loaded,0.0809,0.14455,2.2492,0.9143
+least_loaded,50.0,48847822b8f8,w0-gpu,280,16,0,280,0,False,0,0.0,least_loaded,0.1767,0.1346,2.1958,0.0
+least_loaded,50.0,126f23f7eae9,w1-npu,280,16,256,24,0,False,0,0.0,least_loaded,0.0985,0.27022,4.1517,0.9143
+least_loaded,50.0,89c70c778c0f,w0-gpu,280,16,256,24,0,False,0,0.0,least_loaded,0.1056,0.1272,2.0135,0.9143
+least_loaded,50.0,7c97281cedb6,w2-cpu,280,16,0,280,0,False,0,0.0,least_loaded,0.4706,0.16341,2.9218,0.0
+least_loaded,50.0,687e9acb763c,w0-gpu,280,16,256,24,0,False,0,0.0,least_loaded,0.1108,0.11933,1.9008,0.9143
+least_loaded,50.0,cdc176f92963,w0-gpu,280,16,256,24,0,False,0,0.0,least_loaded,0.108,0.1173,1.8676,0.9143
+least_loaded,50.0,203e12096fe3,w0-gpu,280,16,256,24,0,False,0,0.0,least_loaded,0.0736,0.05675,0.9248,0.9143
+least_loaded,50.0,a6a3d124420e,w2-cpu,280,16,256,24,0,False,0,0.0,least_loaded,0.1386,0.12692,2.0424,0.9143
+least_loaded,50.0,b573e2ca0251,w1-npu,280,16,256,24,0,False,0,0.0,least_loaded,0.2624,0.26156,4.1857,0.9143
+least_loaded,50.0,9ab75db0d2fa,w0-gpu,280,16,256,24,0,False,0,0.0,least_loaded,0.0752,0.0621,1.0067,0.9143
+least_loaded,50.0,b291d6e55840,w2-cpu,280,16,256,24,0,False,0,0.0,least_loaded,0.1437,0.11393,1.8526,0.9143
+least_loaded,50.0,43e1d974e400,w0-gpu,280,16,256,24,0,False,0,0.0,least_loaded,0.0577,0.07216,1.1402,0.9143
+least_loaded,50.0,45abbe1e526f,w0-gpu,280,16,256,24,0,False,0,0.0,least_loaded,0.0855,0.07032,1.1403,0.9143
+least_loaded,50.0,c548e0a842b7,w2-cpu,280,16,256,24,0,False,0,0.0,least_loaded,0.1223,0.13335,2.1225,0.9143
+least_loaded,50.0,045021a041a0,w1-npu,280,16,256,24,0,False,0,0.0,least_loaded,0.1398,0.25052,3.8976,0.9143
+least_loaded,50.0,8ee7a84bc2d2,w2-cpu,280,16,256,24,0,False,0,0.0,least_loaded,0.1266,0.12803,2.047,0.9143
+least_loaded,50.0,1569834b37ed,w1-npu,280,16,256,24,0,False,0,0.0,least_loaded,0.2269,0.2433,3.8763,0.9143
+least_loaded,50.0,33fa3c0162bc,w0-gpu,280,16,256,24,0,False,0,0.0,least_loaded,0.0376,0.08091,1.2512,0.9143
+least_loaded,50.0,2633db8458a0,w0-gpu,280,16,256,24,0,False,0,0.0,least_loaded,0.0686,0.09204,1.4493,0.9143
+least_loaded,50.0,8b38c773a59a,w0-gpu,280,16,256,24,0,False,0,0.0,least_loaded,0.095,0.08874,1.4261,0.9143
+least_loaded,50.0,f7aeef26e152,w2-cpu,280,16,256,24,0,False,0,0.0,least_loaded,0.1065,0.11648,1.8537,0.9143
+least_loaded,50.0,3b9f8a444489,w2-cpu,280,16,256,24,0,False,0,0.0,least_loaded,0.0962,0.10785,1.714,0.9143
+least_loaded,50.0,4197283398c9,w1-npu,280,16,256,24,0,False,0,0.0,least_loaded,0.2249,0.21386,3.4327,0.9143
+least_loaded,50.0,2662498d2c37,w2-cpu,280,16,256,24,0,False,0,0.0,least_loaded,0.1545,0.09802,1.6249,0.9143
+least_loaded,50.0,c55d17af47cf,w0-gpu,280,16,256,24,0,False,0,0.0,least_loaded,0.104,0.06474,1.0751,0.9143
+least_loaded,50.0,bd69ab4189f7,w1-npu,280,16,0,280,0,False,0,0.0,least_loaded,0.1065,0.20029,3.1109,0.0
+prefix_affinity,50.0,c7e03ec8a53d,w0-gpu,280,16,0,280,0,False,0,0.0,affinity hit=0blk,0.0698,0.02477,0.4414,0.0
+prefix_affinity,50.0,2b2b6009a6d9,w1-npu,280,16,0,280,0,False,0,0.0,affinity hit=0blk,0.0862,0.19385,2.994,0.0
+prefix_affinity,50.0,36d5714d2a30,w0-gpu,280,16,0,280,0,False,0,0.0,affinity hit=0blk,0.0789,0.06598,1.0685,0.0
+prefix_affinity,50.0,db91a2404d27,w1-npu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.1288,0.25483,3.9512,0.9143
+prefix_affinity,50.0,df6324747b1b,w0-gpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.0594,0.06739,1.0702,0.9143
+prefix_affinity,50.0,bb56a58373d9,w0-gpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.0345,0.12154,1.8576,0.9143
+prefix_affinity,50.0,1caa8c4c4166,w1-npu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.0937,0.26785,4.1114,0.9143
+prefix_affinity,50.0,519b42719736,w1-npu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.0475,0.26518,4.0252,0.9143
+prefix_affinity,50.0,153b9afe39eb,w2-cpu,280,16,0,280,0,False,0,0.0,affinity hit=0blk,0.3032,0.16167,2.7283,0.0
+prefix_affinity,50.0,29801d7ba4ea,w2-cpu,280,16,0,280,0,False,0,0.0,affinity hit=0blk,0.5492,0.13696,2.6035,0.0
+prefix_affinity,50.0,4b32c2c0b6a5,w0-gpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.0478,0.18899,2.8827,0.9143
+prefix_affinity,50.0,831e9b64e364,w0-gpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.0325,0.18746,2.8444,0.9143
+prefix_affinity,50.0,74b79f90ffee,w0-gpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.0617,0.21781,3.3288,0.9143
+prefix_affinity,50.0,fb2a7c93e407,w0-gpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.0652,0.21614,3.3072,0.9143
+prefix_affinity,50.0,390a5a7b36de,w1-npu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.1647,0.27384,4.2724,0.9143
+prefix_affinity,50.0,097750123351,w0-gpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.051,0.21798,3.3208,0.9143
+prefix_affinity,50.0,4a01ebed8400,w0-gpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.1542,0.2112,3.3221,0.9143
+prefix_affinity,50.0,6dff4450f34f,w2-cpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.0792,0.17076,2.6406,0.9143
+prefix_affinity,50.0,53b4913bd005,w1-npu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.1227,0.27027,4.1768,0.9143
+prefix_affinity,50.0,252363262505,w2-cpu,280,16,0,280,0,False,0,0.0,affinity hit=0blk,0.3254,0.18661,3.1246,0.0
+prefix_affinity,50.0,4bc9e0731c72,w0-gpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.0887,0.1934,2.9897,0.9143
+prefix_affinity,50.0,ef5ebfa09f5e,w2-cpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.2113,0.18964,3.0559,0.9143
+prefix_affinity,50.0,591b14d674a4,w2-cpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.1293,0.18614,2.9214,0.9143
+prefix_affinity,50.0,fdc6bbf3106b,w0-gpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.1145,0.16605,2.6052,0.9143
+prefix_affinity,50.0,e4fda9e8d5b6,w2-cpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.1026,0.17551,2.7352,0.9143
+prefix_affinity,50.0,e5397d0120e0,w0-gpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.2537,0.14744,2.4654,0.9143
+prefix_affinity,50.0,77cc70d1a2a2,w0-gpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.0441,0.14554,2.2273,0.9143
+prefix_affinity,50.0,cebaffb3d9a6,w2-cpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.2475,0.15691,2.6012,0.9143
+prefix_affinity,50.0,f834d17edabb,w1-npu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.1278,0.24639,3.8235,0.9143
+prefix_affinity,50.0,b35d955ff91f,w2-cpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.0912,0.09403,1.5018,0.9143
+prefix_affinity,50.0,874b7dd2a27c,w0-gpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.0924,0.18434,2.8575,0.9143
+prefix_affinity,50.0,d4d6eeff2ffb,w0-gpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.0714,0.19564,3.0059,0.9143
+prefix_affinity,50.0,083c60c3ba80,w0-gpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.0492,0.1928,2.9412,0.9143
+prefix_affinity,50.0,e960670e4630,w0-gpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.091,0.21007,3.242,0.9143
+prefix_affinity,50.0,035b8698e743,w1-npu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.0623,0.23115,3.5295,0.9143
+prefix_affinity,50.0,5dc4cdd48805,w0-gpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.1722,0.21473,3.3931,0.9143
+prefix_affinity,50.0,66bf4942fee7,w1-npu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.2122,0.21709,3.4686,0.9143
+prefix_affinity,50.0,c679c110ce6e,w0-gpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.1705,0.21371,3.3761,0.9143
+prefix_affinity,50.0,acdca2628b99,w0-gpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.1978,0.21166,3.3727,0.9143
+prefix_affinity,50.0,749a2e171ab6,w0-gpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.1619,0.20415,3.2242,0.9143
+prefix_affinity,50.0,dcc06a0d0064,w0-gpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.0609,0.22893,3.4949,0.9143
+prefix_affinity,50.0,62dbc1048d8a,w0-gpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.2095,0.2283,3.634,0.9143
+prefix_affinity,50.0,b8a7524237f0,w0-gpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.1338,0.2266,3.5328,0.9143
+prefix_affinity,50.0,29e187aa2d3b,w0-gpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.1671,0.22736,3.5776,0.9143
+prefix_affinity,50.0,3af4973a16fe,w0-gpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.1085,0.23357,3.612,0.9143
+prefix_affinity,50.0,575e29000414,w0-gpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.0858,0.23517,3.6133,0.9143
+prefix_affinity,50.0,af097618bf37,w0-gpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.1456,0.22224,3.4791,0.9143
+prefix_affinity,50.0,bea08bee1701,w2-cpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.0482,0.03964,0.6428,0.9143
+prefix_affinity,50.0,f43ac3d3b54e,w0-gpu,280,16,0,280,0,False,0,0.0,affinity hit=0blk,0.0827,0.027,0.4877,0.0
+prefix_affinity,50.0,bf61855304b1,w1-npu,280,16,0,280,0,False,0,0.0,affinity hit=0blk,0.0931,0.27428,4.2072,0.0
+prefix_affinity,50.0,45f7ea27637b,w0-gpu,280,16,0,280,0,False,0,0.0,affinity hit=0blk,0.0776,0.07172,1.1535,0.0
+prefix_affinity,50.0,c022668d3c5e,w1-npu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.1475,0.35019,5.4004,0.9143
+prefix_affinity,50.0,3b07368cc306,w2-cpu,280,16,0,280,0,False,0,0.0,affinity hit=0blk,0.5168,0.38763,6.3312,0.0
+prefix_affinity,50.0,23f4348789fe,w0-gpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.1072,0.19553,3.0401,0.9143
+prefix_affinity,50.0,26b3180b8218,w1-npu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.2737,0.36174,5.6998,0.9143
+prefix_affinity,50.0,60fb5b5006c1,w1-npu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.2178,0.35857,5.5963,0.9143
+prefix_affinity,50.0,ea06931db55e,w2-cpu,280,16,0,280,0,False,0,0.0,affinity hit=0blk,0.5044,0.35612,5.8462,0.0
+prefix_affinity,50.0,ce62006f3444,w0-gpu,280,16,0,280,0,False,0,0.0,affinity hit=0blk,0.1697,0.22704,3.5753,0.0
+prefix_affinity,50.0,6156b6f4d3ff,w2-cpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.2788,0.3515,5.5512,0.9143
+prefix_affinity,50.0,4fe173ecbf8d,w0-gpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.1231,0.2314,3.5942,0.9143
+prefix_affinity,50.0,252e4c69675b,w0-gpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.1331,0.24139,3.7539,0.9143
+prefix_affinity,50.0,b7ef6291abcc,w0-gpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.1487,0.23878,3.7304,0.9143
+prefix_affinity,50.0,a697ac117615,w1-npu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.0772,0.35678,5.4289,0.9143
+prefix_affinity,50.0,3de8e660cbd7,w2-cpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.1367,0.36495,5.6109,0.9143
+prefix_affinity,50.0,d90dd488fcd3,w2-cpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.3072,0.36266,5.7471,0.9143
+prefix_affinity,50.0,860a39f90943,w0-gpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.2209,0.22491,3.5945,0.9143
+prefix_affinity,50.0,f48917bea75d,w1-npu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.1323,0.35213,5.4142,0.9143
+prefix_affinity,50.0,14115c7d164e,w2-cpu,280,16,0,280,0,False,0,0.0,affinity hit=0blk,0.4917,0.34316,5.6391,0.0
+prefix_affinity,50.0,92d3d9e6476c,w2-cpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.386,0.33801,5.4561,0.9143
+prefix_affinity,50.0,726e87aba2ba,w0-gpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.214,0.19261,3.1031,0.9143
+prefix_affinity,50.0,a9b2b3ca33fd,w2-cpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.1486,0.3488,5.3807,0.9143
+prefix_affinity,50.0,1f6520685639,w2-cpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.2741,0.53316,8.2715,0.9143
+prefix_affinity,50.0,6105fc9e3ba5,w0-gpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.1809,0.15307,2.477,0.9143
+prefix_affinity,50.0,5bc7fac47acd,w2-cpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.1187,0.52657,8.0173,0.9143
+prefix_affinity,50.0,9fcb981bb169,w0-gpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.219,0.13715,2.2762,0.9143
+prefix_affinity,50.0,43b4ba84b2a7,w2-cpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.2623,0.49939,7.7531,0.9143
+prefix_affinity,50.0,218c53d5f5e7,w1-npu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.3121,0.3055,4.8946,0.9143
+prefix_affinity,50.0,d35d3506a5ee,w2-cpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.2977,0.42833,6.7228,0.9143
+prefix_affinity,50.0,884fef5df938,w0-gpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.1269,0.19423,3.0404,0.9143
+prefix_affinity,50.0,a6357e413492,w0-gpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.1321,0.23712,3.6889,0.9143
+prefix_affinity,50.0,52d6db3ac669,w0-gpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.1098,0.23509,3.6361,0.9143
+prefix_affinity,50.0,693cd2f04c06,w0-gpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.0577,0.24453,3.7257,0.9143
+prefix_affinity,50.0,d08093d8aba3,w1-npu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.1354,0.29032,4.4902,0.9143
+prefix_affinity,50.0,7452d0be39aa,w0-gpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.1267,0.24498,3.8014,0.9143
+prefix_affinity,50.0,037810173d14,w1-npu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.0494,0.28283,4.2919,0.9143
+prefix_affinity,50.0,ad6a50843b92,w0-gpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.1326,0.23928,3.7217,0.9143
+prefix_affinity,50.0,5f051dabdc40,w0-gpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.1862,0.23024,3.6397,0.9143
+prefix_affinity,50.0,aa23c778c4ce,w2-cpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.2701,0.30717,4.8777,0.9143
+prefix_affinity,50.0,01e22b731100,w0-gpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.1443,0.19718,3.102,0.9143
+prefix_affinity,50.0,2edb3658a9a7,w2-cpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.1253,0.30233,4.6603,0.9143
+prefix_affinity,50.0,e40f24016539,w2-cpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.0811,0.2986,4.5601,0.9143
+prefix_affinity,50.0,60ff89f2b476,w2-cpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.4184,0.2698,4.4654,0.9143
+prefix_affinity,50.0,ceaaf605fe73,w2-cpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.442,0.30481,5.0142,0.9143
+prefix_affinity,50.0,ca3eb5c7ca10,w2-cpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.483,0.2988,4.965,0.9143
+prefix_affinity,50.0,276d2d995544,w2-cpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.4142,0.2923,4.7986,0.9143
+prefix_affinity,50.0,e11f38575772,w0-gpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.108,0.1459,2.2964,0.9143
+prefix_affinity,50.0,df5ae482c85d,w0-gpu,280,16,0,280,0,False,0,0.0,affinity hit=0blk,0.0782,0.02543,0.4597,0.0
+prefix_affinity,50.0,bbcc5ac598a0,w1-npu,280,16,0,280,0,False,0,0.0,affinity hit=0blk,0.0961,0.24445,3.7629,0.0
+prefix_affinity,50.0,ee88972435f1,w0-gpu,280,16,0,280,0,False,0,0.0,affinity hit=0blk,0.0761,0.04044,0.6826,0.0
+prefix_affinity,50.0,cba9782bf946,w1-npu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.0549,0.31156,4.7283,0.9143
+prefix_affinity,50.0,ee26315a0f85,w2-cpu,280,16,0,280,0,False,0,0.0,affinity hit=0blk,0.3102,0.23452,3.828,0.0
+prefix_affinity,50.0,83339ea3248c,w0-gpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.0726,0.13156,2.046,0.9143
+prefix_affinity,50.0,f1b91c21512c,w1-npu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.0794,0.321,4.8944,0.9143
+prefix_affinity,50.0,2b8104705727,w1-npu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.2659,0.3255,5.1484,0.9143
+prefix_affinity,50.0,1e58fc70f7dd,w2-cpu,280,16,0,280,0,False,0,0.0,affinity hit=0blk,0.417,0.28934,4.7571,0.0
+prefix_affinity,50.0,f9c75a9f3d18,w0-gpu,280,16,0,280,0,False,0,0.0,affinity hit=0blk,0.1663,0.17195,2.7456,0.0
+prefix_affinity,50.0,a85dd59702f9,w0-gpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.1122,0.17351,2.7148,0.9143
+prefix_affinity,50.0,ce484dad90fe,w2-cpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.1479,0.285,4.4229,0.9143
+prefix_affinity,50.0,f967a3811ae5,w0-gpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.1101,0.20594,3.1992,0.9143
+prefix_affinity,50.0,3ef7fd26f3fb,w0-gpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.1072,0.20393,3.1662,0.9143
+prefix_affinity,50.0,936a35df01f4,w1-npu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.0847,0.31908,4.8709,0.9143
+prefix_affinity,50.0,b259fbd50f32,w2-cpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.0994,0.31527,4.8285,0.9143
+prefix_affinity,50.0,7fead27b3ba4,w2-cpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.1666,0.31728,4.9258,0.9143
+prefix_affinity,50.0,5d21b3ba32cf,w0-gpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.0789,0.19994,3.0781,0.9143
+prefix_affinity,50.0,bf64cdf84532,w1-npu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.0847,0.31097,4.7492,0.9143
+prefix_affinity,50.0,c78d97f44710,w2-cpu,280,16,0,280,0,False,0,0.0,affinity hit=0blk,0.5419,0.29754,5.0051,0.0
+prefix_affinity,50.0,ba3d8eadba3b,w2-cpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.4378,0.2923,4.8223,0.9143
+prefix_affinity,50.0,99f379040ab5,w0-gpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.1389,0.17627,2.7829,0.9143
+prefix_affinity,50.0,1cdf2af03c7e,w2-cpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.1594,0.28199,4.3892,0.9143
+prefix_affinity,50.0,417acb217089,w2-cpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.2404,0.2796,4.4344,0.9143
+prefix_affinity,50.0,86469a92a2c2,w0-gpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.1258,0.1414,2.2468,0.9143
+prefix_affinity,50.0,509d57513214,w0-gpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.1132,0.13938,2.2039,0.9143
+prefix_affinity,50.0,4e30f8242dd4,w0-gpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.1714,0.12741,2.0825,0.9143
+prefix_affinity,50.0,61adf2553b99,w2-cpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.1485,0.40772,6.2643,0.9143
+prefix_affinity,50.0,393b9b92f20c,w1-npu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.2024,0.27729,4.3618,0.9143
+prefix_affinity,50.0,a840ad4c2f6e,w2-cpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.1543,0.31183,4.8318,0.9143
+prefix_affinity,50.0,3fa107ae87fc,w0-gpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.1252,0.12538,2.006,0.9143
+prefix_affinity,50.0,9ba5e434c020,w0-gpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.0452,0.1657,2.5307,0.9143
+prefix_affinity,50.0,2dee5c3fb1aa,w0-gpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.1148,0.17541,2.7459,0.9143
+prefix_affinity,50.0,c3ca03cea19e,w0-gpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.1506,0.19967,3.1457,0.9143
+prefix_affinity,50.0,0b5b6b989a1e,w1-npu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.1689,0.27346,4.2708,0.9143
+prefix_affinity,50.0,a09e58b0c53a,w0-gpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.0871,0.1983,3.0617,0.9143
+prefix_affinity,50.0,1b063629a8ac,w1-npu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.2605,0.27177,4.3371,0.9143
+prefix_affinity,50.0,3db039f41051,w2-cpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.1296,0.30563,4.714,0.9143
+prefix_affinity,50.0,4fe999092fc0,w0-gpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.1741,0.19142,3.0455,0.9143
+prefix_affinity,50.0,c6310e87de56,w2-cpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.2896,0.28467,4.5597,0.9143
+prefix_affinity,50.0,39e9a8f68c12,w0-gpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.1573,0.1677,2.6728,0.9143
+prefix_affinity,50.0,6e84eb0cad32,w2-cpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.2182,0.27385,4.326,0.9143
+prefix_affinity,50.0,0fc001fa5cfb,w2-cpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.2808,0.26301,4.226,0.9143
+prefix_affinity,50.0,68c4bca736d7,w2-cpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.1763,0.25656,4.0247,0.9143
+prefix_affinity,50.0,d78369e0137f,w2-cpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.2201,0.24826,3.944,0.9143
+prefix_affinity,50.0,9b4c9b0f28cf,w2-cpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.2764,0.2536,4.0805,0.9143
+prefix_affinity,50.0,b85046e93756,w0-gpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.1504,0.14251,2.2881,0.9143
+prefix_affinity,50.0,babc9ee977ba,w0-gpu,280,16,256,24,0,False,0,0.0,affinity hit=16blk,0.2037,0.12551,2.0864,0.9143
+cache_aware,50.0,64671e7e0581,w0-gpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.0801,0.02498,0.4548,0.0
+cache_aware,50.0,b478db27dd8d,w1-npu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.0877,0.22177,3.4143,0.0
+cache_aware,50.0,6cd4aaaefc48,w0-gpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.0759,0.05974,0.972,0.0
+cache_aware,50.0,3cd9652d0462,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.158,0.3171,4.9146,0.9143
+cache_aware,50.0,837ad647f0cb,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0565,0.06438,1.0222,0.9143
+cache_aware,50.0,5d7827adf698,w2-cpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.3116,0.3036,4.8657,0.0
+cache_aware,50.0,7b9bca25caa0,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1407,0.32885,5.0734,0.9143
+cache_aware,50.0,3f4a49ba851c,w0-gpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.1214,0.12943,2.0628,0.0
+cache_aware,50.0,a25244e097b5,w2-cpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.5119,0.27814,4.6841,0.0
+cache_aware,50.0,58013d8654bb,w1-npu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.2245,0.32675,5.1257,0.0
+cache_aware,50.0,03822d8cca27,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.2831,0.27335,4.3834,0.9143
+cache_aware,50.0,a6162283dc1f,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1156,0.14618,2.3083,0.9143
+cache_aware,50.0,037b201057c8,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0754,0.1708,2.6373,0.9143
+cache_aware,50.0,3e45e4224297,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0786,0.16858,2.6074,0.9143
+cache_aware,50.0,029c57e998f5,w2-cpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.602,0.25626,4.446,0.0
+cache_aware,50.0,6abafcaf9dca,w1-npu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.1631,0.32353,5.016,0.0
+cache_aware,50.0,756f22ed337b,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1434,0.16701,2.6486,0.9143
+cache_aware,50.0,e8f12e922ea2,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.257,0.31852,5.0347,0.9143
+cache_aware,50.0,688340f1e856,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.2221,0.15542,2.5534,0.9143
+cache_aware,50.0,293d305efbf4,w2-cpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.4852,0.23132,3.9551,0.0
+cache_aware,50.0,aeaee57292df,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.3519,0.2274,3.7629,0.9143
+cache_aware,50.0,03de5763bcef,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0802,0.30341,4.6313,0.9143
+cache_aware,50.0,be034b3b5716,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1898,0.20893,3.3239,0.9143
+cache_aware,50.0,54b82f5e5e93,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0761,0.09515,1.5034,0.9143
+cache_aware,50.0,47afc441b2d7,w0-gpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.1374,0.08125,1.3562,0.0
+cache_aware,50.0,864d1fee2a5b,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1314,0.1989,3.1148,0.9143
+cache_aware,50.0,df964c2ac7d4,w1-npu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.2247,0.28324,4.4733,0.0
+cache_aware,50.0,a186df16cf8e,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.218,0.23393,3.727,0.9143
+cache_aware,50.0,309fa1367cb6,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0388,0.09175,1.415,0.9143
+cache_aware,50.0,76bc32eb9886,w0-gpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.0866,0.08593,1.3755,0.0
+cache_aware,50.0,14a2665b9934,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0566,0.10021,1.5597,0.9143
+cache_aware,50.0,7dcb0e690766,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1156,0.10008,1.6168,0.9143
+cache_aware,50.0,55cfb76f6859,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0638,0.28178,4.2905,0.9143
+cache_aware,50.0,7e53ee996a3c,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.132,0.16684,2.6346,0.9143
+cache_aware,50.0,75df6af9b3e2,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1826,0.16245,2.6194,0.9143
+cache_aware,50.0,2a0abbc44452,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1508,0.15889,2.5342,0.9143
+cache_aware,50.0,c6d25756f140,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0723,0.10558,1.6561,0.9143
+cache_aware,50.0,38db7385fccb,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1014,0.10365,1.6562,0.9143
+cache_aware,50.0,50b3ba854c1a,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.2029,0.27589,4.3412,0.9143
+cache_aware,50.0,d7a0bf6b3c2f,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1134,0.14519,2.2914,0.9143
+cache_aware,50.0,84b5e15681c7,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0709,0.09336,1.4713,0.9143
+cache_aware,50.0,7a7589d96a0a,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1661,0.2604,4.0722,0.9143
+cache_aware,50.0,cf16f76faa20,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1044,0.13531,2.134,0.9143
+cache_aware,50.0,2fa1d5f20d4d,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0998,0.08382,1.3571,0.9143
+cache_aware,50.0,6e1a174a87af,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0945,0.25031,3.8491,0.9143
+cache_aware,50.0,b82d011ea368,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1342,0.11763,1.8987,0.9143
+cache_aware,50.0,4e97fb1838dc,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.2122,0.23974,3.8082,0.9143
+cache_aware,50.0,83e3ee09dff8,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0795,0.06555,1.0628,0.9143
+cache_aware,50.0,57e54d0fb835,w0-gpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.0772,0.02723,0.4856,0.0
+cache_aware,50.0,08ce7486f8d3,w1-npu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.0895,0.23251,3.5772,0.0
+cache_aware,50.0,1f85ceeca918,w0-gpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.0794,0.04222,0.7126,0.0
+cache_aware,50.0,47660edf8ef6,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0656,0.31448,4.7827,0.9143
+cache_aware,50.0,0503c31e6158,w2-cpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.2643,0.17727,2.9233,0.0
+cache_aware,50.0,c05de41ece58,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0925,0.19534,3.0226,0.9143
+cache_aware,50.0,c5e5374353fa,w0-gpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.123,0.13255,2.1113,0.0
+cache_aware,50.0,5ad6eb4d6b74,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.2087,0.3387,5.2892,0.9143
+cache_aware,50.0,5e8c81d711e5,w2-cpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.2558,0.22148,3.5779,0.0
+cache_aware,50.0,e053a6082df1,w0-gpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.1331,0.13833,2.2081,0.0
+cache_aware,50.0,bf4348bd2632,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0456,0.14107,2.1616,0.9143
+cache_aware,50.0,33b2d3759803,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0562,0.22507,3.4323,0.9143
+cache_aware,50.0,04c335b25d61,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0719,0.17452,2.6897,0.9143
+cache_aware,50.0,1dace76d9f01,w1-npu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.3148,0.34866,5.5447,0.0
+cache_aware,50.0,3e39c16f4d68,w2-cpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.3383,0.21763,3.6027,0.0
+cache_aware,50.0,e03b73f5b7be,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1397,0.17753,2.8027,0.9143
+cache_aware,50.0,34998e2d0320,w1-npu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.1229,0.34116,5.2404,0.0
+cache_aware,50.0,476036fe15f0,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1053,0.17228,2.6895,0.9143
+cache_aware,50.0,fba48e75cd3a,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1896,0.212,3.3697,0.9143
+cache_aware,50.0,aca1f2a92a04,w1-npu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.1985,0.33443,5.215,0.0
+cache_aware,50.0,1d1392b3ef47,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.206,0.19149,3.0783,0.9143
+cache_aware,50.0,70b3d438f398,w1-npu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.3176,0.32191,5.1463,0.0
+cache_aware,50.0,e1f034415146,w0-gpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.2123,0.12089,2.0256,0.0
+cache_aware,50.0,3147ede267d9,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0564,0.1148,1.7784,0.9143
+cache_aware,50.0,5380f22928cb,w2-cpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.3667,0.12735,2.277,0.0
+cache_aware,50.0,52e6c0510dd2,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1418,0.0974,1.6028,0.9143
+cache_aware,50.0,6bff8fcb60d2,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.3695,0.32629,5.2639,0.9143
+cache_aware,50.0,bdfc6a0a01c5,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1135,0.12355,1.9668,0.9143
+cache_aware,50.0,b5d7e2850a24,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0581,0.0909,1.4216,0.9143
+cache_aware,50.0,0438ce5c8a81,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0373,0.0891,1.3739,0.9143
+cache_aware,50.0,d27fe2f0bb5e,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0631,0.09553,1.496,0.9143
+cache_aware,50.0,eb7e4f1b730a,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1059,0.24924,3.8444,0.9143
+cache_aware,50.0,f28d566b4e3b,w2-cpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.3801,0.22404,3.7408,0.0
+cache_aware,50.0,394516702c2a,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1845,0.21998,3.4843,0.9143
+cache_aware,50.0,45ae15714f05,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.2407,0.21624,3.4844,0.9143
+cache_aware,50.0,a3e029cb182c,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1064,0.10581,1.6935,0.9143
+cache_aware,50.0,26358de900ac,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0995,0.12102,1.9149,0.9143
+cache_aware,50.0,65fd921a62dc,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.2789,0.29648,4.7261,0.9143
+cache_aware,50.0,5b964af9d9c2,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.108,0.21061,3.2672,0.9143
+cache_aware,50.0,163834b48fa6,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0574,0.14445,2.2242,0.9143
+cache_aware,50.0,42479c4bff7e,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.3015,0.27181,4.3786,0.9143
+cache_aware,50.0,890c5b487ecb,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.2487,0.26822,4.2721,0.9143
+cache_aware,50.0,cc4105e469f8,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0924,0.13884,2.175,0.9143
+cache_aware,50.0,087deb3dd061,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.3045,0.25616,4.1469,0.9143
+cache_aware,50.0,f4e0281fc027,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1172,0.15555,2.4504,0.9143
+cache_aware,50.0,e82b25139df6,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0883,0.12787,2.0064,0.9143
+cache_aware,50.0,39c25d4b052f,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1169,0.11866,1.8968,0.9143
+cache_aware,50.0,7631a5ed0598,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1448,0.12859,2.0737,0.9143
+cache_aware,50.0,bf032436d463,w0-gpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.0672,0.02561,0.4514,0.0
+cache_aware,50.0,8796ce11c0d1,w1-npu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.0923,0.23145,3.564,0.0
+cache_aware,50.0,c54442d07925,w0-gpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.087,0.05535,0.9173,0.0
+cache_aware,50.0,844068b21964,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.055,0.30686,4.6579,0.9143
+cache_aware,50.0,6243fc13b56e,w2-cpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.2406,0.20098,3.2553,0.0
+cache_aware,50.0,20f1816df580,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0652,0.21801,3.3354,0.9143
+cache_aware,50.0,923c28c695a9,w0-gpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.1408,0.1507,2.4014,0.0
+cache_aware,50.0,f1d8b3113e6f,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.2043,0.32458,5.0729,0.9143
+cache_aware,50.0,47fee79edff9,w2-cpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.2791,0.2265,3.6765,0.0
+cache_aware,50.0,7bd40c718484,w0-gpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.142,0.15945,2.5338,0.0
+cache_aware,50.0,04182ec962c3,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1476,0.22748,3.5597,0.9143
+cache_aware,50.0,9278cbd5049b,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0777,0.15962,2.4719,0.9143
+cache_aware,50.0,5a953b722014,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.097,0.18157,2.8205,0.9143
+cache_aware,50.0,aa995dc3701d,w1-npu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.3367,0.32798,5.2564,0.0
+cache_aware,50.0,86440f6e5bc7,w2-cpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.4483,0.21859,3.7272,0.0
+cache_aware,50.0,6cf2271e77fd,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0723,0.18077,2.7839,0.9143
+cache_aware,50.0,9be540aae503,w1-npu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.1466,0.32096,4.961,0.0
+cache_aware,50.0,3877197ed782,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1467,0.17597,2.7862,0.9143
+cache_aware,50.0,c1bd23de23c7,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.2951,0.31539,5.0259,0.9143
+cache_aware,50.0,993bd0797644,w2-cpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.504,0.18549,3.2864,0.0
+cache_aware,50.0,63e0fc7022f0,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.3742,0.313,5.0691,0.9143
+cache_aware,50.0,87ae6ac7f82d,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1656,0.14651,2.3633,0.9143
+cache_aware,50.0,825fa8d61884,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1475,0.1675,2.66,0.9143
+cache_aware,50.0,b04cba3f249b,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1279,0.1126,1.8169,0.9143
+cache_aware,50.0,476c85a0c02e,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1381,0.10236,1.6735,0.9143
+cache_aware,50.0,cd4133f796d4,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.2332,0.13697,2.2877,0.9143
+cache_aware,50.0,301a59ba29e4,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.2748,0.30376,4.8312,0.9143
+cache_aware,50.0,8a7943e276d3,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.2325,0.1239,2.091,0.9143
+cache_aware,50.0,eb47e2874169,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0456,0.08841,1.3718,0.9143
+cache_aware,50.0,e718c007bc60,w0-gpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.1628,0.08315,1.4101,0.0
+cache_aware,50.0,537b7b3a2f7c,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.054,0.08554,1.3371,0.9143
+cache_aware,50.0,b798514c550e,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0503,0.19165,2.925,0.9143
+cache_aware,50.0,abbf579bea74,w2-cpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.5008,0.16749,3.0132,0.0
+cache_aware,50.0,db4a0f20d2b4,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.2584,0.16358,2.7121,0.9143
+cache_aware,50.0,f2cd8d2285b6,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.32,0.15949,2.7123,0.9143
+cache_aware,50.0,33abf99cc2d6,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.2211,0.29625,4.6648,0.9143
+cache_aware,50.0,e61b588437fe,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0944,0.09545,1.5261,0.9143
+cache_aware,50.0,8b03f28694a6,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1217,0.09317,1.5193,0.9143
+cache_aware,50.0,832883626d4d,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1568,0.29094,4.5209,0.9143
+cache_aware,50.0,c4b977bc54a9,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0968,0.1245,1.9642,0.9143
+cache_aware,50.0,2bc09c84eb03,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.269,0.27416,4.3814,0.9143
+cache_aware,50.0,26dd68dd07e8,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.139,0.11741,1.9001,0.9143
+cache_aware,50.0,9be963059f9c,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1241,0.11931,1.9138,0.9143
+cache_aware,50.0,dde5e8c10411,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.2082,0.26608,4.1993,0.9143
+cache_aware,50.0,7b6b79436e93,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1058,0.09933,1.5957,0.9143
+cache_aware,50.0,099ab407cbde,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1108,0.10806,1.7317,0.9143
+cache_aware,50.0,9d1f737aa755,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1054,0.10035,1.6107,0.9143
+cache_aware,50.0,5e5504070297,w1-npu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.3394,0.24434,4.0045,0.0
+cache_aware,200.0,d07b317d09a7,w0-gpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.0678,0.02881,0.5,0.0
+cache_aware,200.0,35ede4dfe792,w1-npu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.0994,0.25136,3.8698,0.0
+cache_aware,200.0,0772a1c3e372,w0-gpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.0872,0.07078,1.149,0.0
+cache_aware,200.0,c1264c858633,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1734,0.31477,4.8949,0.9143
+cache_aware,200.0,78cc62981718,w2-cpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.243,0.16183,2.6705,0.0
+cache_aware,200.0,fdedc31579c9,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.079,0.18659,2.8779,0.9143
+cache_aware,200.0,271de4d0c1d7,w0-gpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.135,0.14375,2.2913,0.0
+cache_aware,200.0,b17f30987f01,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1616,0.32275,5.0029,0.9143
+cache_aware,200.0,29cd453d9189,w2-cpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.2568,0.19357,3.1603,0.0
+cache_aware,200.0,df4e76b854b2,w0-gpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.1149,0.14078,2.2266,0.0
+cache_aware,200.0,0a965802fda8,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1041,0.19614,3.0462,0.9143
+cache_aware,200.0,2f5ca49171e8,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1306,0.15368,2.4357,0.9143
+cache_aware,200.0,499190390bfc,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1205,0.15313,2.4174,0.9143
+cache_aware,200.0,8b5db658251e,w1-npu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.3227,0.32311,5.1694,0.0
+cache_aware,200.0,31f55ea945e3,w2-cpu,280,16,256,24,0,True,9437184,1.2238,"migrate 16blk (9.4MB, est 379ms) from w0-gpu",1.4689,0.18697,4.2734,0.9143
+cache_aware,200.0,b7224ccc278e,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1337,0.2165,3.3812,0.9143
+cache_aware,200.0,d359b795e84f,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1818,0.21382,3.3891,0.9143
+cache_aware,200.0,9cf6d325d2e5,w1-npu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.3214,0.31473,5.0424,0.0
+cache_aware,200.0,8ad3f23aaf17,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0849,0.16651,2.5825,0.9143
+cache_aware,200.0,4bb2f110491d,w1-npu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.1618,0.30362,4.7161,0.0
+cache_aware,200.0,0fd9a072fabc,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1798,0.1974,3.1407,0.9143
+cache_aware,200.0,27feaed7367e,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.088,0.15321,2.3861,0.9143
+cache_aware,200.0,31bfd074dafc,w0-gpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.2035,0.13129,2.1727,0.0
+cache_aware,200.0,c2075b08eb1e,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.2081,0.1615,2.6306,0.9143
+cache_aware,200.0,0e7a841e5256,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1588,0.11801,1.929,0.9143
+cache_aware,200.0,4e2ffe02b83e,w1-npu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.1536,0.29737,4.6141,0.0
+cache_aware,200.0,75688f33d3ea,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0686,0.11054,1.7267,0.9143
+cache_aware,200.0,f7df00616d63,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.167,0.14507,2.3431,0.9143
+cache_aware,200.0,2b197757bdae,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1179,0.07305,1.2136,0.9143
+cache_aware,200.0,1135f6b3c4be,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0691,0.1193,1.8586,0.9143
+cache_aware,200.0,7dcb08cb2ab1,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0936,0.0873,1.403,0.9143
+cache_aware,200.0,363fa83a861a,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0738,0.11034,1.7289,0.9143
+cache_aware,200.0,13413c9e2c22,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1182,0.08292,1.362,0.9143
+cache_aware,200.0,5fe346642525,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0816,0.11298,1.7763,0.9143
+cache_aware,200.0,d41571c6f48c,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1367,0.10932,1.7764,0.9143
+cache_aware,200.0,19a4f6fb2486,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1223,0.06971,1.1679,0.9143
+cache_aware,200.0,c617a1a938cb,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1541,0.26729,4.1635,0.9143
+cache_aware,200.0,99f83a5fef3d,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1902,0.26386,4.1481,0.9143
+cache_aware,200.0,aaf152bc2640,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1044,0.25779,3.9712,0.9143
+cache_aware,200.0,8e1f4258b886,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0607,0.10886,1.6936,0.9143
+cache_aware,200.0,19afd261eba1,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0661,0.10678,1.6678,0.9143
+cache_aware,200.0,1682c086b86b,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0967,0.13007,2.0478,0.9143
+cache_aware,200.0,fba2607f990a,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0881,0.10216,1.6205,0.9143
+cache_aware,200.0,e6b903986cbe,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0627,0.12683,1.9651,0.9143
+cache_aware,200.0,d0824116afd0,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.12,0.12139,1.9409,0.9143
+cache_aware,200.0,300f34f29f39,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1296,0.11764,1.8942,0.9143
+cache_aware,200.0,26dc718707ee,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0543,0.21266,3.2441,0.9143
+cache_aware,200.0,5847aeef89ed,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1349,0.06922,1.1732,0.9143
+cache_aware,200.0,32510fcd9aa4,w0-gpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.0777,0.02793,0.4966,0.0
+cache_aware,200.0,059bd0ba7c1a,w1-npu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.0925,0.21452,3.3103,0.0
+cache_aware,200.0,14a66acdb870,w0-gpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.0796,0.05497,0.9041,0.0
+cache_aware,200.0,d21421aa5d0c,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0515,0.28205,4.2823,0.9143
+cache_aware,200.0,917f24252fff,w2-cpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.2296,0.13421,2.2428,0.0
+cache_aware,200.0,02a453ed017a,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0894,0.15008,2.3406,0.9143
+cache_aware,200.0,e62e867e26f9,w0-gpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.0931,0.12139,1.9139,0.0
+cache_aware,200.0,bc1ae405f2e3,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1984,0.29683,4.6508,0.9143
+cache_aware,200.0,7513a9d35f41,w0-gpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.1874,0.11685,1.9401,0.0
+cache_aware,200.0,bfc15f07da25,w2-cpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.259,0.16945,2.8007,0.0
+cache_aware,200.0,b04ef9b167e1,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0845,0.12755,1.9977,0.9143
+cache_aware,200.0,8f6f2c5fc3fa,w1-npu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.17,0.29256,4.5584,0.0
+cache_aware,200.0,62b51a93bf71,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0571,0.13528,2.0863,0.9143
+cache_aware,200.0,31df1f31b845,w2-cpu,280,16,256,24,0,True,9437184,1.3586,"migrate 16blk (9.4MB, est 379ms) from w0-gpu",1.568,0.1486,3.797,0.9143
+cache_aware,200.0,f1ea5ede8f17,w2-cpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.3333,0.19194,3.2124,0.0
+cache_aware,200.0,bfa9e9a3a66d,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.2156,0.28865,4.5454,0.9143
+cache_aware,200.0,5a098c485d92,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.074,0.14111,2.1907,0.9143
+cache_aware,200.0,12a8d76ec1f4,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1446,0.1881,2.9661,0.9143
+cache_aware,200.0,ab7f2770ab53,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.073,0.18486,2.8459,0.9143
+cache_aware,200.0,2a665d6d947b,w1-npu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.378,0.26482,4.3503,0.0
+cache_aware,200.0,0c7c70cfabd0,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.2201,0.15912,2.6069,0.9143
+cache_aware,200.0,36f817890743,w0-gpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.1404,0.13615,2.1827,0.0
+cache_aware,200.0,70b83336702b,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0606,0.1312,2.0286,0.9143
+cache_aware,200.0,44a389443349,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1101,0.12307,1.9561,0.9143
+cache_aware,200.0,863561e89373,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0708,0.118,1.8408,0.9143
+cache_aware,200.0,1c4dfa6ec296,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1293,0.10396,1.6888,0.9143
+cache_aware,200.0,e30199182d1a,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1058,0.10198,1.6356,0.9143
+cache_aware,200.0,634f89405e0f,w1-npu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.2437,0.24704,3.9493,0.0
+cache_aware,200.0,b725817224f4,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0779,0.03873,0.6589,0.9143
+cache_aware,200.0,c505e6407cca,w2-cpu,280,16,256,24,0,True,9437184,1.0852,"migrate 16blk (9.4MB, est 379ms) from w0-gpu",1.1918,0.07446,2.3087,0.9143
+cache_aware,200.0,ff1db75af5cf,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0579,0.03438,0.5736,0.9143
+cache_aware,200.0,cb2b67f46263,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0588,0.09037,1.4144,0.9143
+cache_aware,200.0,7984c5861a13,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0601,0.08675,1.3613,0.9143
+cache_aware,200.0,be75bd1027b6,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0478,0.06844,1.0745,0.9143
+cache_aware,200.0,a88770af953c,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0631,0.06666,1.0631,0.9143
+cache_aware,200.0,b79f51004497,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.156,0.2373,3.7154,0.9143
+cache_aware,200.0,9412fafedb54,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.2092,0.23183,3.6867,0.9143
+cache_aware,200.0,c3332076f6e8,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.2571,0.22864,3.6868,0.9143
+cache_aware,200.0,49eda0ed3b3a,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0625,0.04971,0.8081,0.9143
+cache_aware,200.0,ceeda1d1d847,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0584,0.09784,1.526,0.9143
+cache_aware,200.0,aca885ab2692,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0593,0.10338,1.61,0.9143
+cache_aware,200.0,2dbdd7a64e64,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0551,0.07493,1.1791,0.9143
+cache_aware,200.0,b08021309888,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0782,0.07572,1.214,0.9143
+cache_aware,200.0,ff6238f2bc60,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0826,0.10796,1.7021,0.9143
+cache_aware,200.0,ee2ac224a0ec,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0711,0.06659,1.07,0.9143
+cache_aware,200.0,52960c5646a4,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.08,0.10273,1.621,0.9143
+cache_aware,200.0,a9c9e4a0ade8,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0485,0.18771,2.8642,0.9143
+cache_aware,200.0,5e708a81576e,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0543,0.08377,1.3109,0.9143
+cache_aware,200.0,02a9e6eb7b13,w0-gpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.0703,0.02746,0.4823,0.0
+cache_aware,200.0,00e0fd4980f9,w1-npu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.1079,0.21912,3.3946,0.0
+cache_aware,200.0,58d21ba20c76,w0-gpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.094,0.0592,0.982,0.0
+cache_aware,200.0,9659a4ba5f08,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0555,0.27493,4.1794,0.9143
+cache_aware,200.0,eeee131fdbf3,w2-cpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.245,0.09986,1.7429,0.0
+cache_aware,200.0,eb36b63dd563,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0764,0.10812,1.6982,0.9143
+cache_aware,200.0,db470afd2c8f,w0-gpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.1252,0.09975,1.6215,0.0
+cache_aware,200.0,12297a40514e,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1887,0.28343,4.4402,0.9143
+cache_aware,200.0,3deed52f7076,w1-npu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.2913,0.27661,4.4405,0.0
+cache_aware,200.0,7b25e7e17048,w0-gpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.1474,0.09751,1.61,0.0
+cache_aware,200.0,4ce908e65e97,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.081,0.15077,2.3426,0.9143
+cache_aware,200.0,42ae1f2a2414,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0834,0.14808,2.3046,0.9143
+cache_aware,200.0,0386162f0c31,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0396,0.12459,1.9085,0.9143
+cache_aware,200.0,929b104971ce,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0279,0.1231,1.8745,0.9143
+cache_aware,200.0,216364d8aa52,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.2564,0.26877,4.288,0.9143
+cache_aware,200.0,30814a805812,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1222,0.14209,2.2535,0.9143
+cache_aware,200.0,0ce0157a0678,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1537,0.14051,2.2614,0.9143
+cache_aware,200.0,4ab9da1aaf17,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1169,0.11234,1.802,0.9143
+cache_aware,200.0,958688d43825,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.2145,0.26074,4.1256,0.9143
+cache_aware,200.0,a2868240ce83,w2-cpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.278,0.11209,1.9593,0.0
+cache_aware,200.0,b58244313839,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0929,0.10313,1.6399,0.9143
+cache_aware,200.0,825bd40ff1de,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1062,0.09832,1.5811,0.9143
+cache_aware,200.0,f622c88c31e4,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.131,0.24141,3.7521,0.9143
+cache_aware,200.0,dbaf9a401292,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1126,0.07873,1.2936,0.9143
+cache_aware,200.0,a6657dfda658,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0749,0.07016,1.1273,0.9143
+cache_aware,200.0,5142d6ca35aa,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1264,0.06681,1.1285,0.9143
+cache_aware,200.0,f8afb2c457dd,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0816,0.05832,0.9563,0.9143
+cache_aware,200.0,e730e5af68b8,w2-cpu,280,16,256,24,0,True,9437184,1.379,"migrate 16blk (9.4MB, est 379ms) from w1-npu",1.4253,0.06342,2.3766,0.9143
+cache_aware,200.0,817c7fa171f0,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0546,0.04477,0.7262,0.9143
+cache_aware,200.0,983e54739a82,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0581,0.06061,0.9671,0.9143
+cache_aware,200.0,b92a68a26572,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0543,0.05837,0.9298,0.9143
+cache_aware,200.0,ccea8ca8a30b,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0836,0.05723,0.9421,0.9143
+cache_aware,200.0,9b690e8650c0,w1-npu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.2581,0.22947,3.7001,0.0
+cache_aware,200.0,f6b1c306c39a,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0449,0.05649,0.8922,0.9143
+cache_aware,200.0,fff6884faa60,w2-cpu,280,16,256,24,0,True,9437184,1.0809,"migrate 16blk (9.4MB, est 379ms) from w0-gpu",1.1683,0.11405,2.8791,0.9143
+cache_aware,200.0,d2583fb3b8b6,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0812,0.06233,1.0162,0.9143
+cache_aware,200.0,36292831a787,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1808,0.22487,3.554,0.9143
+cache_aware,200.0,873a687ca030,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.062,0.06243,0.9984,0.9143
+cache_aware,200.0,0fb2b847dde3,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0403,0.06391,0.9989,0.9143
+cache_aware,200.0,95d833ba1f51,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0891,0.11814,1.8611,0.9143
+cache_aware,200.0,0c770c9e1077,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.096,0.20576,3.1824,0.9143
+cache_aware,200.0,1016b6d87276,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.075,0.08784,1.3925,0.9143
+cache_aware,200.0,c86ac06f8bf0,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0752,0.12119,1.8931,0.9143
+cache_aware,200.0,ddab2fe54949,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0562,0.09692,1.5099,0.9143
+cache_aware,200.0,a8267f188095,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.108,0.09283,1.5005,0.9143
+cache_aware,200.0,d4537524a0a0,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0885,0.1118,1.7656,0.9143
+cache_aware,200.0,c4a1c703e43c,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0874,0.10309,1.6337,0.9143
+cache_aware,200.0,ca2d7dbb40a7,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1135,0.0743,1.2281,0.9143
+cache_aware,1000.0,8b880ce216c1,w0-gpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.0765,0.02656,0.4749,0.0
+cache_aware,1000.0,11fd892d383b,w1-npu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.0867,0.20743,3.1982,0.0
+cache_aware,1000.0,e4affc56d575,w0-gpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.0819,0.04551,0.7646,0.0
+cache_aware,1000.0,629512561686,w2-cpu,280,16,256,24,0,True,9437184,0.3775,"migrate 16blk (9.4MB, est 77ms) from w1-npu",0.4489,0.11608,2.1902,0.9143
+cache_aware,1000.0,1311aa39b689,w2-cpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.2501,0.10241,1.7863,0.0
+cache_aware,1000.0,f6a68a7bd9dd,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.075,0.11901,1.8601,0.9143
+cache_aware,1000.0,5b4ca20a121b,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1952,0.28963,4.5396,0.9143
+cache_aware,1000.0,62bee6386dab,w0-gpu,280,16,256,24,0,True,9437184,0.6006,"migrate 16blk (9.4MB, est 77ms) from w1-npu",0.6781,0.10924,2.3167,0.9143
+cache_aware,1000.0,eec860cb49e7,w0-gpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.1274,0.11499,1.8522,0.0
+cache_aware,1000.0,a824cb9b285a,w1-npu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.2618,0.28681,4.564,0.0
+cache_aware,1000.0,5eb5dc2370e9,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0889,0.11978,1.8856,0.9143
+cache_aware,1000.0,1aa3fea774fe,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.116,0.11498,1.8407,0.9143
+cache_aware,1000.0,9e0b88795f55,w2-cpu,280,16,256,24,0,True,9437184,0.3649,"migrate 16blk (9.4MB, est 77ms) from w0-gpu",0.5384,0.16137,2.959,0.9143
+cache_aware,1000.0,12e3765e9e99,w2-cpu,280,16,256,24,0,True,9437184,0.5242,"migrate 16blk (9.4MB, est 153ms) from w0-gpu",0.6983,0.15477,3.0198,0.9143
+cache_aware,1000.0,822cd757c88d,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1191,0.16911,2.6557,0.9143
+cache_aware,1000.0,236fd9935624,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1422,0.16621,2.6352,0.9143
+cache_aware,1000.0,4f4058380c63,w1-npu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.1909,0.28325,4.4396,0.0
+cache_aware,1000.0,1c58c54f9ceb,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1558,0.28003,4.3563,0.9143
+cache_aware,1000.0,96f27f99f6e4,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.083,0.09315,1.4803,0.9143
+cache_aware,1000.0,1777a3d2a1f1,w1-npu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.2566,0.26239,4.1924,0.0
+cache_aware,1000.0,20eed8db214c,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0714,0.13634,2.1166,0.9143
+cache_aware,1000.0,132545caf44e,w2-cpu,280,16,256,24,0,True,9437184,0.5098,"migrate 16blk (9.4MB, est 77ms) from w1-npu",0.6839,0.09851,2.1615,0.9143
+cache_aware,1000.0,212c36ac5400,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0941,0.10359,1.6479,0.9143
+cache_aware,1000.0,7bb524b3766e,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0499,0.124,1.9099,0.9143
+cache_aware,1000.0,fac957b88cf2,w0-gpu,280,16,256,24,0,True,9437184,0.6813,"migrate 16blk (9.4MB, est 77ms) from w1-npu",0.7946,0.10758,2.4083,0.9143
+cache_aware,1000.0,83e2e89ada21,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1024,0.13312,2.0992,0.9143
+cache_aware,1000.0,445a1b1e84e5,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1295,0.12693,2.0335,0.9143
+cache_aware,1000.0,7bb2f4ea7991,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1261,0.12478,1.9977,0.9143
+cache_aware,1000.0,6c51755ddcf8,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0516,0.06532,1.0314,0.9143
+cache_aware,1000.0,e57164382f3f,w2-cpu,280,16,256,24,0,True,9437184,0.3996,"migrate 16blk (9.4MB, est 77ms) from w0-gpu",0.4848,0.08808,1.8061,0.9143
+cache_aware,1000.0,510fa7f33095,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1422,0.08342,1.3936,0.9143
+cache_aware,1000.0,295bc98ac80e,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0506,0.07396,1.16,0.9143
+cache_aware,1000.0,ae19cec8ae23,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0961,0.07159,1.1699,0.9143
+cache_aware,1000.0,d168b0c89c88,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0462,0.25332,3.8459,0.9143
+cache_aware,1000.0,49456e57ad54,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0931,0.2502,3.8461,0.9143
+cache_aware,1000.0,50f5a4f2cba8,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.111,0.08243,1.3476,0.9143
+cache_aware,1000.0,2d549a08849d,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1421,0.24398,3.8019,0.9143
+cache_aware,1000.0,b2189a14dcc3,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0931,0.05782,0.9604,0.9143
+cache_aware,1000.0,a48a1b979f3b,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1506,0.07772,1.3164,0.9143
+cache_aware,1000.0,1de28ec9600f,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0622,0.08814,1.3844,0.9143
+cache_aware,1000.0,4388865aa1ba,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0925,0.13052,2.0502,0.9143
+cache_aware,1000.0,c3060cac8e37,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0762,0.08633,1.3713,0.9143
+cache_aware,1000.0,9b1b229f420f,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1069,0.081,1.3219,0.9143
+cache_aware,1000.0,9c0d8aa0a116,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0614,0.13438,2.0771,0.9143
+cache_aware,1000.0,8f16245ac652,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1555,0.12786,2.0734,0.9143
+cache_aware,1000.0,82c3b704b9dd,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1435,0.20476,3.215,0.9143
+cache_aware,1000.0,9fc94b15cdd8,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0919,0.12171,1.9176,0.9143
+cache_aware,1000.0,28d8e7c958a8,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.142,0.10788,1.7603,0.9143
+cache_aware,1000.0,5fdc2a6f10f6,w0-gpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.0873,0.03025,0.5411,0.0
+cache_aware,1000.0,babb1f244686,w1-npu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.1043,0.22237,3.4399,0.0
+cache_aware,1000.0,a58e42490598,w0-gpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.0826,0.04956,0.826,0.0
+cache_aware,1000.0,5dde27c6f1ae,w2-cpu,280,16,256,24,0,True,9437184,0.4421,"migrate 16blk (9.4MB, est 77ms) from w1-npu",0.496,0.12291,2.3396,0.9143
+cache_aware,1000.0,98cd7cfc7670,w2-cpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.2635,0.12074,2.0745,0.0
+cache_aware,1000.0,45ed7690fe6e,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0735,0.12355,1.9268,0.9143
+cache_aware,1000.0,5e213fc9b70d,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0956,0.28381,4.3528,0.9143
+cache_aware,1000.0,6196380b5295,w0-gpu,280,16,256,24,0,True,9437184,0.3263,"migrate 16blk (9.4MB, est 77ms) from w1-npu",0.4122,0.12718,2.3199,0.9143
+cache_aware,1000.0,28df532ed1c6,w0-gpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.1185,0.11949,1.9108,0.0
+cache_aware,1000.0,f4982004edc5,w1-npu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.1907,0.28124,4.4094,0.0
+cache_aware,1000.0,2be11752f903,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0616,0.12934,2.0017,0.9143
+cache_aware,1000.0,8538debf7648,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1097,0.13607,2.1507,0.9143
+cache_aware,1000.0,683207a74204,w1-npu,280,16,256,24,0,True,9437184,0.48,"migrate 16blk (9.4MB, est 77ms) from w0-gpu",0.7733,0.27113,4.8402,0.9143
+cache_aware,1000.0,94cb10d760bd,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1364,0.13308,2.1327,0.9143
+cache_aware,1000.0,1b811b1d3838,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.259,0.28137,4.4796,0.9143
+cache_aware,1000.0,8e8735093c69,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1246,0.14179,2.2514,0.9143
+cache_aware,1000.0,4e413d2db794,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1722,0.13642,2.2186,0.9143
+cache_aware,1000.0,6547b7c0acf0,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0466,0.2783,4.2211,0.9143
+cache_aware,1000.0,531d01fe66be,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0932,0.12961,2.0373,0.9143
+cache_aware,1000.0,c046c2b9e996,w0-gpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.1639,0.11597,1.9035,0.0
+cache_aware,1000.0,e4dabcbc1b24,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1292,0.1166,1.8782,0.9143
+cache_aware,1000.0,7c373b0df76c,w2-cpu,280,16,256,24,0,True,9437184,0.618,"migrate 16blk (9.4MB, est 77ms) from w1-npu",0.7074,0.12498,2.582,0.9143
+cache_aware,1000.0,195395685a7e,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0455,0.09712,1.5022,0.9143
+cache_aware,1000.0,5030aceb453d,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1675,0.11886,1.9505,0.9143
+cache_aware,1000.0,5c60cc5bf210,w0-gpu,280,16,256,24,0,True,9437184,0.7462,"migrate 16blk (9.4MB, est 77ms) from w1-npu",0.8667,0.05362,1.6709,0.9143
+cache_aware,1000.0,531005caa1cd,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0921,0.08071,1.3027,0.9143
+cache_aware,1000.0,bb68d239fa02,w2-cpu,280,16,256,24,0,True,9437184,0.3322,"migrate 16blk (9.4MB, est 153ms) from w0-gpu",0.4936,0.10483,2.066,0.9143
+cache_aware,1000.0,0d52196d315d,w2-cpu,280,16,256,24,0,True,9437184,0.4986,"migrate 16blk (9.4MB, est 228ms) from w0-gpu",0.6264,0.09989,2.1248,0.9143
+cache_aware,1000.0,eab82ee4e5f6,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0574,0.06545,1.0391,0.9143
+cache_aware,1000.0,c6fbc5a51f23,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0584,0.06292,1.0022,0.9143
+cache_aware,1000.0,8bd01b5298eb,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1039,0.08267,1.344,0.9143
+cache_aware,1000.0,4c00ef1e5fa5,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.092,0.07742,1.2533,0.9143
+cache_aware,1000.0,3a3b24cdcd20,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0474,0.25984,3.945,0.9143
+cache_aware,1000.0,9622ef0040ab,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0556,0.08216,1.288,0.9143
+cache_aware,1000.0,24eae7524687,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0898,0.07989,1.2881,0.9143
+cache_aware,1000.0,0df30253f4c7,w1-npu,280,16,256,24,0,True,9437184,0.4534,"migrate 16blk (9.4MB, est 77ms) from w0-gpu",0.7168,0.25026,4.4707,0.9143
+cache_aware,1000.0,a49da0d75790,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.2597,0.25635,4.105,0.9143
+cache_aware,1000.0,14483ea7ba39,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1183,0.06514,1.0955,0.9143
+cache_aware,1000.0,35b3ff83b0b5,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0656,0.08461,1.3348,0.9143
+cache_aware,1000.0,5b8485c76ee7,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0607,0.14459,2.2295,0.9143
+cache_aware,1000.0,d9abd3e553b8,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0595,0.09027,1.4136,0.9143
+cache_aware,1000.0,1af76ea46adb,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1695,0.14645,2.3663,0.9143
+cache_aware,1000.0,ead75fe51b1d,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1341,0.14247,2.2711,0.9143
+cache_aware,1000.0,9097e08d1c3f,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0833,0.08607,1.3743,0.9143
+cache_aware,1000.0,18ddd1a59be5,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1103,0.13352,2.1131,0.9143
+cache_aware,1000.0,5a3b57c105b0,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.102,0.22105,3.4178,0.9143
+cache_aware,1000.0,66fc88cbf456,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0798,0.07473,1.2007,0.9143
+cache_aware,1000.0,bcb1db78ae9a,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1009,0.11104,1.7665,0.9143
+cache_aware,1000.0,4c1c89af1fbb,w0-gpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.0723,0.02702,0.4775,0.0
+cache_aware,1000.0,00c2a2ce59be,w1-npu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.0922,0.20071,3.1029,0.0
+cache_aware,1000.0,a6fc57cdd6d8,w0-gpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.0955,0.03372,0.6013,0.0
+cache_aware,1000.0,1c3393b46132,w2-cpu,280,16,256,24,0,True,9437184,0.3572,"migrate 16blk (9.4MB, est 77ms) from w1-npu",0.4408,0.12124,2.2594,0.9143
+cache_aware,1000.0,a03788a24776,w2-cpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.2354,0.10671,1.836,0.0
+cache_aware,1000.0,86d68fcd327d,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0644,0.12533,1.9444,0.9143
+cache_aware,1000.0,13c449a063a9,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1734,0.28526,4.4524,0.9143
+cache_aware,1000.0,bc8134ea5d65,w0-gpu,280,16,256,24,0,True,9437184,0.479,"migrate 16blk (9.4MB, est 77ms) from w1-npu",0.5694,0.11634,2.3145,0.9143
+cache_aware,1000.0,473885044c60,w0-gpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.1405,0.12962,2.0849,0.0
+cache_aware,1000.0,3542575a2f30,w0-gpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.1486,0.12028,1.9528,0.0
+cache_aware,1000.0,3129e702108b,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0794,0.11975,1.8757,0.9143
+cache_aware,1000.0,373a245d5939,w1-npu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.2491,0.28605,4.5398,0.0
+cache_aware,1000.0,090c3268e063,w2-cpu,280,16,256,24,0,True,9437184,0.4081,"migrate 16blk (9.4MB, est 77ms) from w0-gpu",0.5381,0.18916,3.3755,0.9143
+cache_aware,1000.0,ae6a862c6eb2,w2-cpu,280,16,256,24,0,True,9437184,0.5172,"migrate 16blk (9.4MB, est 153ms) from w0-gpu",0.7642,0.1805,3.4717,0.9143
+cache_aware,1000.0,df6880ac020d,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0943,0.19175,2.9705,0.9143
+cache_aware,1000.0,85049d749a9f,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.2668,0.28346,4.5186,0.9143
+cache_aware,1000.0,56be41fabe31,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1224,0.19342,3.0238,0.9143
+cache_aware,1000.0,40b6f9037529,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1302,0.09747,1.5922,0.9143
+cache_aware,1000.0,f9d7b6a417d4,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.215,0.27738,4.3757,0.9143
+cache_aware,1000.0,3acb01801499,w1-npu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.1726,0.2639,4.1312,0.0
+cache_aware,1000.0,843344265120,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1771,0.16189,2.6055,0.9143
+cache_aware,1000.0,e34a99d179ce,w2-cpu,280,16,256,24,0,True,9437184,0.3838,"migrate 16blk (9.4MB, est 77ms) from w0-gpu",0.5496,0.14013,2.6515,0.9143
+cache_aware,1000.0,0bec081b8f5d,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0856,0.10991,1.7343,0.9143
+cache_aware,1000.0,94a08dde351a,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0921,0.1219,1.9206,0.9143
+cache_aware,1000.0,96c7c49f213d,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.075,0.12091,1.8887,0.9143
+cache_aware,1000.0,cf5bda140381,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0451,0.11874,1.8261,0.9143
+cache_aware,1000.0,7fb41198f56c,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1042,0.1067,1.7046,0.9143
+cache_aware,1000.0,82c67028a092,w2-cpu,280,16,256,24,0,True,9437184,0.357,"migrate 16blk (9.4MB, est 77ms) from w0-gpu",0.5649,0.09224,1.9485,0.9143
+cache_aware,1000.0,4e6285ed27d8,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0618,0.08729,1.3711,0.9143
+cache_aware,1000.0,2ea7f5763bce,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0735,0.08385,1.3313,0.9143
+cache_aware,1000.0,400a14bf66c6,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0481,0.04652,0.746,0.9143
+cache_aware,1000.0,6996c1de9bd2,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0769,0.05727,0.936,0.9143
+cache_aware,1000.0,a034b85948f9,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0974,0.08397,1.357,0.9143
+cache_aware,1000.0,f6736a06fb1f,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0459,0.23691,3.5994,0.9143
+cache_aware,1000.0,41299377f985,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0917,0.23389,3.6,0.9143
+cache_aware,1000.0,d6aa755c3d9d,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0609,0.06052,0.9686,0.9143
+cache_aware,1000.0,70cd24756122,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1098,0.08981,1.457,0.9143
+cache_aware,1000.0,648c13e29dff,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1479,0.08639,1.4437,0.9143
+cache_aware,1000.0,1c84b9857a62,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0909,0.06686,1.0937,0.9143
+cache_aware,1000.0,a41f4521d7fa,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0756,0.08586,1.3635,0.9143
+cache_aware,1000.0,f7579b1b8204,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.052,0.11735,1.8122,0.9143
+cache_aware,1000.0,757de0d0dfb3,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1599,0.20631,3.2545,0.9143
+cache_aware,1000.0,6883bc202469,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0564,0.08176,1.2828,0.9143
+cache_aware,1000.0,2b9c83ac3cda,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0564,0.07418,1.1691,0.9143
+cache_aware,1000.0,d940e7f20f6c,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0858,0.11029,1.7401,0.9143
+cache_aware,1000.0,4b31ef850670,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1035,0.10676,1.7049,0.9143
+cache_aware,1000.0,03612f400381,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0696,0.09994,1.5687,0.9143
+cache_aware,1000.0,d392dfeaa625,w1-npu,280,16,256,24,0,True,9437184,0.3019,"migrate 16blk (9.4MB, est 77ms) from w0-gpu",0.5734,0.16971,3.119,0.9143
+cache_aware,10000.0,37ded336518b,w0-gpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.0703,0.02545,0.452,0.0
+cache_aware,10000.0,523252117c27,w1-npu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.0861,0.19758,3.0498,0.0
+cache_aware,10000.0,1f340c22bf34,w0-gpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.0736,0.03065,0.5333,0.0
+cache_aware,10000.0,67cd137f0123,w2-cpu,280,16,256,24,0,True,9437184,0.2926,"migrate 16blk (9.4MB, est 10ms) from w1-npu",0.3406,0.09004,1.6913,0.9143
+cache_aware,10000.0,3525e5b7f9af,w2-cpu,280,16,256,24,0,True,9437184,0.1408,"migrate 16blk (9.4MB, est 17ms) from w0-gpu",0.2063,0.07615,1.3486,0.9143
+cache_aware,10000.0,c4f7b601861b,w1-npu,280,16,256,24,0,True,9437184,0.159,"migrate 16blk (9.4MB, est 10ms) from w0-gpu",0.2379,0.25565,4.0727,0.9143
+cache_aware,10000.0,480cf84d583f,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1148,0.2583,3.9892,0.9143
+cache_aware,10000.0,4b48830ff8db,w0-gpu,280,16,256,24,0,True,9437184,0.2887,"migrate 16blk (9.4MB, est 10ms) from w1-npu",0.3738,0.08094,1.588,0.9143
+cache_aware,10000.0,51b0907394e3,w0-gpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.1289,0.09256,1.5174,0.0
+cache_aware,10000.0,af40784dbf60,w0-gpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.129,0.08483,1.4014,0.0
+cache_aware,10000.0,c49b69b7d0da,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1001,0.13006,2.051,0.9143
+cache_aware,10000.0,1ec9437b3294,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1157,0.12639,2.0115,0.9143
+cache_aware,10000.0,cf29152d7b95,w1-npu,280,16,256,24,0,True,9437184,0.3917,"migrate 16blk (9.4MB, est 10ms) from w0-gpu",0.6671,0.24834,4.3922,0.9143
+cache_aware,10000.0,b2c0d905e4e9,w1-npu,280,16,256,24,0,True,9437184,0.3581,"migrate 16blk (9.4MB, est 17ms) from w0-gpu",0.6784,0.2453,4.3578,0.9143
+cache_aware,10000.0,828f0bf24a0a,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.2154,0.25259,4.0042,0.9143
+cache_aware,10000.0,adf400b258ea,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1021,0.12037,1.9077,0.9143
+cache_aware,10000.0,02a499fb71e7,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1081,0.12365,1.9628,0.9143
+cache_aware,10000.0,9a99dfc2f8f6,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1004,0.09675,1.5517,0.9143
+cache_aware,10000.0,6a0a9ac8df28,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0914,0.11641,1.8376,0.9143
+cache_aware,10000.0,5a3f2bf7a285,w0-gpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.1282,0.08922,1.4665,0.0
+cache_aware,10000.0,a230e046eec5,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1014,0.08565,1.3862,0.9143
+cache_aware,10000.0,4db6a06005e2,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0939,0.07941,1.2851,0.9143
+cache_aware,10000.0,5d72cde25492,w2-cpu,280,16,256,24,0,True,9437184,0.2837,"migrate 16blk (9.4MB, est 10ms) from w0-gpu",0.3681,0.1163,2.1126,0.9143
+cache_aware,10000.0,5df1f0d417cc,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0711,0.11319,1.7689,0.9143
+cache_aware,10000.0,26b8292a32ad,w2-cpu,280,16,256,24,0,True,9437184,0.1757,"migrate 16blk (9.4MB, est 10ms) from w0-gpu",0.2661,0.09722,1.7245,0.9143
+cache_aware,10000.0,acac97ca3bce,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0733,0.10413,1.6353,0.9143
+cache_aware,10000.0,37c812e2cc61,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0377,0.05582,0.8749,0.9143
+cache_aware,10000.0,19bd73364c27,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0386,0.05371,0.8443,0.9143
+cache_aware,10000.0,b9f7b015cc3f,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1165,0.03649,0.6638,0.9143
+cache_aware,10000.0,a2b2224cea01,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1239,0.03947,0.7159,0.9143
+cache_aware,10000.0,0267e2667acd,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0448,0.22591,3.4334,0.9143
+cache_aware,10000.0,4b6f9e1cd214,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.04,0.03534,0.57,0.9143
+cache_aware,10000.0,dd10aed0a72e,w2-cpu,280,16,256,24,0,True,9437184,0.1267,"migrate 16blk (9.4MB, est 10ms) from w0-gpu",0.1782,0.08534,1.4583,0.9143
+cache_aware,10000.0,233c97f936b5,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0768,0.08864,1.4064,0.9143
+cache_aware,10000.0,1d9c9105a146,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1332,0.0849,1.4066,0.9143
+cache_aware,10000.0,2f902322bafe,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0431,0.05488,0.8663,0.9143
+cache_aware,10000.0,eed3152268d5,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1282,0.23625,3.672,0.9143
+cache_aware,10000.0,cfd34f4a605e,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0733,0.05156,0.8467,0.9143
+cache_aware,10000.0,35c457ed6e93,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1958,0.23064,3.6553,0.9143
+cache_aware,10000.0,c955207d73c2,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0755,0.07101,1.1407,0.9143
+cache_aware,10000.0,9cd934e01e03,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0565,0.07147,1.1286,0.9143
+cache_aware,10000.0,1d95558743eb,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.052,0.12567,1.9371,0.9143
+cache_aware,10000.0,0ea4aaa910cc,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0885,0.13085,2.0512,0.9143
+cache_aware,10000.0,f55149c32c66,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0741,0.1295,2.0166,0.9143
+cache_aware,10000.0,2faa5fa97925,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1119,0.05565,0.9467,0.9143
+cache_aware,10000.0,9793a08e6e50,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0943,0.12334,1.9444,0.9143
+cache_aware,10000.0,9bb1be37c1f5,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1796,0.19367,3.0846,0.9143
+cache_aware,10000.0,3ed99f81936a,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.076,0.10416,1.6384,0.9143
+cache_aware,10000.0,cac4c9b67404,w0-gpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.0836,0.02441,0.4497,0.0
+cache_aware,10000.0,38481536c3c1,w1-npu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.0859,0.19727,3.045,0.0
+cache_aware,10000.0,6c49a2884e74,w0-gpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.0733,0.03445,0.5901,0.0
+cache_aware,10000.0,343a02fe5818,w2-cpu,280,16,256,24,0,True,9437184,0.2703,"migrate 16blk (9.4MB, est 10ms) from w1-npu",0.3467,0.10065,1.8565,0.9143
+cache_aware,10000.0,68acd3850727,w2-cpu,280,16,256,24,0,True,9437184,0.107,"migrate 16blk (9.4MB, est 17ms) from w0-gpu",0.1734,0.07561,1.3075,0.9143
+cache_aware,10000.0,a4b65d8a391f,w1-npu,280,16,256,24,0,True,9437184,0.1404,"migrate 16blk (9.4MB, est 10ms) from w0-gpu",0.2268,0.26173,4.1527,0.9143
+cache_aware,10000.0,6fb186c85886,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0964,0.26495,4.0707,0.9143
+cache_aware,10000.0,58f336d48d42,w0-gpu,280,16,256,24,0,True,9437184,0.2706,"migrate 16blk (9.4MB, est 10ms) from w1-npu",0.3577,0.08198,1.5873,0.9143
+cache_aware,10000.0,57eef89b3a30,w0-gpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.1573,0.0903,1.5118,0.0
+cache_aware,10000.0,e958ba291257,w0-gpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.1243,0.08412,1.3861,0.0
+cache_aware,10000.0,5527bb9a5c5b,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0733,0.13407,2.0843,0.9143
+cache_aware,10000.0,c34cb16be8d0,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0906,0.13093,2.0546,0.9143
+cache_aware,10000.0,257092207dee,w1-npu,280,16,256,24,0,True,9437184,0.3343,"migrate 16blk (9.4MB, est 10ms) from w0-gpu",0.3918,0.25706,4.2477,0.9143
+cache_aware,10000.0,a7ea4ff6da92,w1-npu,280,16,256,24,0,True,9437184,0.3764,"migrate 16blk (9.4MB, est 17ms) from w0-gpu",0.6684,0.24982,4.4157,0.9143
+cache_aware,10000.0,d0876f708002,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1775,0.25994,4.0767,0.9143
+cache_aware,10000.0,4ad6831a4bb2,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0717,0.13201,2.0518,0.9143
+cache_aware,10000.0,fb55b0b50d05,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0844,0.12686,1.9873,0.9143
+cache_aware,10000.0,379947d5e0fc,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1145,0.097,1.5695,0.9143
+cache_aware,10000.0,a0f4a64d4540,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0624,0.11942,1.8536,0.9143
+cache_aware,10000.0,b749e06b7c07,w0-gpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.1423,0.09984,1.6399,0.0
+cache_aware,10000.0,7e4ae8260c4f,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0932,0.1015,1.6156,0.9143
+cache_aware,10000.0,59838609bea7,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.074,0.09839,1.5498,0.9143
+cache_aware,10000.0,9f6058ea0439,w2-cpu,280,16,256,24,0,True,9437184,0.2056,"migrate 16blk (9.4MB, est 10ms) from w0-gpu",0.3355,0.12995,2.2847,0.9143
+cache_aware,10000.0,c7f9f8144f56,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0683,0.0652,1.0463,0.9143
+cache_aware,10000.0,47893551c51a,w2-cpu,280,16,256,24,0,True,9437184,0.3027,"migrate 16blk (9.4MB, est 10ms) from w0-gpu",0.4355,0.13727,2.4945,0.9143
+cache_aware,10000.0,8cd83b0b7003,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0627,0.13465,2.0825,0.9143
+cache_aware,10000.0,6b2d7ee45c70,w2-cpu,280,16,256,24,0,True,9437184,0.1808,"migrate 16blk (9.4MB, est 17ms) from w0-gpu",0.2607,0.1294,2.2017,0.9143
+cache_aware,10000.0,7a38632eb944,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1667,0.1335,2.1692,0.9143
+cache_aware,10000.0,170f5235963f,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0455,0.0674,1.0565,0.9143
+cache_aware,10000.0,d0ae9b4a61f4,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0908,0.0647,1.0613,0.9143
+cache_aware,10000.0,0736f80fc5b8,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0482,0.24975,3.7944,0.9143
+cache_aware,10000.0,1f3fa57d4904,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.2043,0.24922,3.9425,0.9143
+cache_aware,10000.0,1a4af12b2549,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0635,0.06295,1.0076,0.9143
+cache_aware,10000.0,83e7c8bb0d26,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0651,0.07853,1.243,0.9143
+cache_aware,10000.0,b29d96851eda,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0981,0.07632,1.243,0.9143
+cache_aware,10000.0,e6ac5574addd,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0853,0.08606,1.3762,0.9143
+cache_aware,10000.0,71b5fa5473cb,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0947,0.09666,1.5447,0.9143
+cache_aware,10000.0,38a7b18f0462,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1094,0.24074,3.7205,0.9143
+cache_aware,10000.0,9e2b8f855df2,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1027,0.08259,1.3416,0.9143
+cache_aware,10000.0,e9e9671bb4bf,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0819,0.14273,2.2228,0.9143
+cache_aware,10000.0,d31cd467d6ca,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0791,0.0936,1.483,0.9143
+cache_aware,10000.0,4f8e082d4935,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1356,0.08948,1.4778,0.9143
+cache_aware,10000.0,8c09cfc81482,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0859,0.1423,2.2204,0.9143
+cache_aware,10000.0,e74541b01647,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0646,0.13659,2.1134,0.9143
+cache_aware,10000.0,d73f58565bb5,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1895,0.20214,3.2215,0.9143
+cache_aware,10000.0,044fad9bbdca,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1216,0.12808,2.0428,0.9143
+cache_aware,10000.0,16ea41f500cd,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.069,0.06916,1.1063,0.9143
+cache_aware,10000.0,bee7f5278585,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1341,0.10638,1.7298,0.9143
+cache_aware,10000.0,4697dbb574ae,w0-gpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.0738,0.0282,0.4968,0.0
+cache_aware,10000.0,67132677ceb5,w1-npu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.0908,0.21779,3.3577,0.0
+cache_aware,10000.0,663f0d928398,w0-gpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.0796,0.04572,0.7653,0.0
+cache_aware,10000.0,b56e8b80e26d,w2-cpu,280,16,256,24,0,True,9437184,0.3738,"migrate 16blk (9.4MB, est 10ms) from w1-npu",0.4789,0.14308,2.6251,0.9143
+cache_aware,10000.0,462ba09bcd27,w2-cpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.2943,0.14193,2.4232,0.0
+cache_aware,10000.0,d1d9eb0c5a79,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1131,0.14681,2.3153,0.9143
+cache_aware,10000.0,8543b79926cc,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1888,0.30707,4.7949,0.9143
+cache_aware,10000.0,ff4fe8d76cd9,w0-gpu,280,16,256,24,0,True,9437184,0.3065,"migrate 16blk (9.4MB, est 10ms) from w1-npu",0.3823,0.11415,2.0946,0.9143
+cache_aware,10000.0,307879ac99e6,w0-gpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.1227,0.08997,1.4722,0.0
+cache_aware,10000.0,c6763b691211,w1-npu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.2735,0.30767,4.8886,0.0
+cache_aware,10000.0,c4d967b2fdd6,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0496,0.11599,1.7894,0.9143
+cache_aware,10000.0,5e3ab21c9252,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0956,0.16447,2.5627,0.9143
+cache_aware,10000.0,439e2ef176fb,w1-npu,280,16,256,24,0,True,9437184,0.3628,"migrate 16blk (9.4MB, est 10ms) from w0-gpu",0.6315,0.31065,5.2912,0.9143
+cache_aware,10000.0,75273ed1abab,w1-npu,280,16,256,24,0,True,9437184,0.3261,"migrate 16blk (9.4MB, est 17ms) from w0-gpu",0.6525,0.30699,5.2572,0.9143
+cache_aware,10000.0,8e68e01f7d9f,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1118,0.31401,4.8219,0.9143
+cache_aware,10000.0,fc800b1dd8df,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1664,0.18496,2.9409,0.9143
+cache_aware,10000.0,1c7b15c1985d,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0687,0.10883,1.7012,0.9143
+cache_aware,10000.0,071390a2cb87,w2-cpu,280,16,256,24,0,True,9437184,0.5651,"migrate 16blk (9.4MB, est 10ms) from w1-npu",0.7022,0.1881,3.5237,0.9143
+cache_aware,10000.0,c19707547af9,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1622,0.19243,3.0487,0.9143
+cache_aware,10000.0,73acc815c246,w0-gpu,280,16,0,280,0,False,0,0.0,local hit 0tok,0.1748,0.10448,1.742,0.0
+cache_aware,10000.0,3204dbdcbfe1,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1537,0.10013,1.6556,0.9143
+cache_aware,10000.0,1786096bf734,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.2819,0.32117,5.0994,0.9143
+cache_aware,10000.0,9238e9ce7036,w2-cpu,280,16,256,24,0,True,9437184,0.2602,"migrate 16blk (9.4MB, est 10ms) from w0-gpu",0.3598,0.18367,3.1149,0.9143
+cache_aware,10000.0,20a20ac268f5,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0521,0.0832,1.3001,0.9143
+cache_aware,10000.0,281b4545837f,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1456,0.19991,3.1442,0.9143
+cache_aware,10000.0,f6f50aedbcc2,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1023,0.07223,1.1858,0.9143
+cache_aware,10000.0,1d8e39948ab8,w2-cpu,280,16,256,24,0,True,9437184,0.3591,"migrate 16blk (9.4MB, est 10ms) from w0-gpu",0.592,0.20497,3.6666,0.9143
+cache_aware,10000.0,1170c33f2e4f,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0781,0.19457,2.9966,0.9143
+cache_aware,10000.0,332222946e76,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0609,0.12191,1.8896,0.9143
+cache_aware,10000.0,5071a4a8a93a,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0567,0.11975,1.8529,0.9143
+cache_aware,10000.0,73af7365be41,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1243,0.11921,1.9124,0.9143
+cache_aware,10000.0,26d742d48621,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1844,0.20698,3.2892,0.9143
+cache_aware,10000.0,764ef429ab49,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1595,0.11758,1.9233,0.9143
+cache_aware,10000.0,9b8d323e8884,w1-npu,280,16,256,24,0,True,9437184,0.3678,"migrate 16blk (9.4MB, est 10ms) from w0-gpu",0.648,0.28976,4.9945,0.9143
+cache_aware,10000.0,b107a1eebc70,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1918,0.30536,4.7722,0.9143
+cache_aware,10000.0,c1166509b768,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.3454,0.29331,4.7451,0.9143
+cache_aware,10000.0,f201d2c46166,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1176,0.19116,2.985,0.9143
+cache_aware,10000.0,827e6df230cb,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1856,0.18663,2.985,0.9143
+cache_aware,10000.0,cbdb24122bd9,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0779,0.18162,2.8022,0.9143
+cache_aware,10000.0,2de81db70a81,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1041,0.12734,2.0142,0.9143
+cache_aware,10000.0,867d2a078771,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1291,0.12501,2.0042,0.9143
+cache_aware,10000.0,9f19974d48f5,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0816,0.26299,4.0265,0.9143
+cache_aware,10000.0,83e595775d0c,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1493,0.14064,2.2589,0.9143
+cache_aware,10000.0,00d40403fabb,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.1119,0.12353,1.9648,0.9143
+cache_aware,10000.0,9937d6ca256b,w0-gpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.0467,0.12135,1.867,0.9143
+cache_aware,10000.0,d8e268b29fed,w1-npu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.2759,0.24236,3.9112,0.9143
+cache_aware,10000.0,a71601533d3c,w2-cpu,280,16,256,24,0,False,0,0.0,local hit 256tok,0.2184,0.11277,1.91,0.9143
+cache_aware,10000.0,0dce8d78b182,w0-gpu,280,16,256,24,0,True,9437184,0.5017,"migrate 16blk (9.4MB, est 10ms) from w1-npu",0.6347,0.07475,1.7559,0.9143

@@ -1,0 +1,541 @@
+{
+  "host": {
+    "platform": "Windows-11-10.0.26200-SP0",
+    "processor": "Intel64 Family 6 Model 189 Stepping 1, GenuineIntel",
+    "python": "3.14.3"
+  },
+  "devices": {
+    "w0-gpu": {
+      "device": "GPU",
+      "engine": "openvino:GPU",
+      "prefill_ms_per_token": 0.509,
+      "decode_ms_per_step": 386.4
+    },
+    "w1-npu": {
+      "device": "NPU",
+      "engine": "openvino:NPU",
+      "prefill_ms_per_token": 0.58,
+      "decode_ms_per_step": 346.96
+    },
+    "w2-cpu": {
+      "device": "CPU",
+      "engine": "openvino:CPU",
+      "prefill_ms_per_token": 1.485,
+      "decode_ms_per_step": 278.74
+    }
+  },
+  "workload": {
+    "n_requests": 48,
+    "n_prefixes": 6,
+    "prefix_tokens": 256,
+    "prompt_tokens_total": 13440,
+    "prefix_hit_ceiling": 10752,
+    "popularity": [
+      22,
+      5,
+      7,
+      9,
+      4,
+      1
+    ],
+    "span_s": 9.79
+  },
+  "spec": {
+    "n_requests": 48,
+    "n_prefixes": 6,
+    "prefix_tokens": 256,
+    "suffix_tokens": 24,
+    "max_new_tokens": 16,
+    "arrival_rate": 6.0,
+    "zipf_s": 1.1,
+    "seed": 0
+  },
+  "cluster": {
+    "block_size": 16,
+    "num_blocks": 384,
+    "kv_bytes_per_token": 36864,
+    "block_bytes": 589824,
+    "max_batch": 8
+  },
+  "results": [
+    {
+      "label": "round_robin@50",
+      "policy": "round_robin",
+      "bandwidth_mbps": 50.0,
+      "latency_ms": 2.0,
+      "n_requests": 144,
+      "wall_s": 40.4206,
+      "throughput_tok_s": 57.0,
+      "request_throughput": 3.563,
+      "ttft_p50": 0.1329,
+      "ttft_p95": 0.3876,
+      "ttft_p99": 0.4784,
+      "tpot_p50": 0.1766,
+      "e2e_p50": 2.8673,
+      "e2e_p95": 5.9103,
+      "e2e_p99": 6.1182,
+      "cache_hit_rate": 0.6286,
+      "prefill_tokens_saved": 25344,
+      "migrations": 0,
+      "migration_bytes": 0,
+      "migration_s": 0.0,
+      "preemptions": 0,
+      "repeats": 3,
+      "throughput_std": 0.87,
+      "per_worker": {
+        "w0-gpu": {
+          "requests": 48,
+          "generated": 768,
+          "prompt": 13440,
+          "cached": 8448
+        },
+        "w1-npu": {
+          "requests": 48,
+          "generated": 768,
+          "prompt": 13440,
+          "cached": 8448
+        },
+        "w2-cpu": {
+          "requests": 48,
+          "generated": 768,
+          "prompt": 13440,
+          "cached": 8448
+        }
+      }
+    },
+    {
+      "label": "least_loaded@50",
+      "policy": "least_loaded",
+      "bandwidth_mbps": 50.0,
+      "latency_ms": 2.0,
+      "n_requests": 144,
+      "wall_s": 38.0705,
+      "throughput_tok_s": 60.52,
+      "request_throughput": 3.782,
+      "ttft_p50": 0.114,
+      "ttft_p95": 0.3685,
+      "ttft_p99": 0.4769,
+      "tpot_p50": 0.13746,
+      "e2e_p50": 2.1998,
+      "e2e_p95": 4.5621,
+      "e2e_p99": 4.69,
+      "cache_hit_rate": 0.6286,
+      "prefill_tokens_saved": 25344,
+      "migrations": 0,
+      "migration_bytes": 0,
+      "migration_s": 0.0,
+      "preemptions": 0,
+      "repeats": 3,
+      "throughput_std": 0.75,
+      "per_worker": {
+        "w0-gpu": {
+          "requests": 62,
+          "generated": 992,
+          "prompt": 17360,
+          "cached": 11776
+        },
+        "w1-npu": {
+          "requests": 34,
+          "generated": 544,
+          "prompt": 9520,
+          "cached": 5376
+        },
+        "w2-cpu": {
+          "requests": 48,
+          "generated": 768,
+          "prompt": 13440,
+          "cached": 8192
+        }
+      }
+    },
+    {
+      "label": "prefix_affinity@50",
+      "policy": "prefix_affinity",
+      "bandwidth_mbps": 50.0,
+      "latency_ms": 2.0,
+      "n_requests": 144,
+      "wall_s": 40.8519,
+      "throughput_tok_s": 56.4,
+      "request_throughput": 3.525,
+      "ttft_p50": 0.136,
+      "ttft_p95": 0.4349,
+      "ttft_p99": 0.5311,
+      "tpot_p50": 0.23069,
+      "e2e_p50": 3.6032,
+      "e2e_p95": 5.74,
+      "e2e_p99": 7.9037,
+      "cache_hit_rate": 0.7873,
+      "prefill_tokens_saved": 31744,
+      "migrations": 0,
+      "migration_bytes": 0,
+      "migration_s": 0.0,
+      "preemptions": 0,
+      "repeats": 3,
+      "throughput_std": 2.25,
+      "per_worker": {
+        "w0-gpu": {
+          "requests": 70,
+          "generated": 1120,
+          "prompt": 19600,
+          "cached": 15872
+        },
+        "w1-npu": {
+          "requests": 27,
+          "generated": 432,
+          "prompt": 7560,
+          "cached": 6144
+        },
+        "w2-cpu": {
+          "requests": 47,
+          "generated": 752,
+          "prompt": 13160,
+          "cached": 9728
+        }
+      }
+    },
+    {
+      "label": "cache_aware@50",
+      "policy": "cache_aware",
+      "bandwidth_mbps": 50.0,
+      "latency_ms": 2.0,
+      "n_requests": 144,
+      "wall_s": 40.5589,
+      "throughput_tok_s": 56.81,
+      "request_throughput": 3.55,
+      "ttft_p50": 0.1378,
+      "ttft_p95": 0.3735,
+      "ttft_p99": 0.5085,
+      "tpot_p50": 0.17154,
+      "e2e_p50": 2.7122,
+      "e2e_p95": 5.1179,
+      "e2e_p99": 5.2783,
+      "cache_hit_rate": 0.6476,
+      "prefill_tokens_saved": 26112,
+      "migrations": 0,
+      "migration_bytes": 0,
+      "migration_s": 0.0,
+      "preemptions": 0,
+      "repeats": 3,
+      "throughput_std": 0.84,
+      "per_worker": {
+        "w0-gpu": {
+          "requests": 60,
+          "generated": 960,
+          "prompt": 16800,
+          "cached": 11520
+        },
+        "w1-npu": {
+          "requests": 38,
+          "generated": 608,
+          "prompt": 10640,
+          "cached": 6400
+        },
+        "w2-cpu": {
+          "requests": 46,
+          "generated": 736,
+          "prompt": 12880,
+          "cached": 8192
+        }
+      }
+    },
+    {
+      "label": "cache_aware@200",
+      "policy": "cache_aware",
+      "bandwidth_mbps": 200.0,
+      "latency_ms": 2.0,
+      "n_requests": 144,
+      "wall_s": 37.2746,
+      "throughput_tok_s": 61.81,
+      "request_throughput": 3.863,
+      "ttft_p50": 0.1042,
+      "ttft_p95": 0.3225,
+      "ttft_p99": 1.4501,
+      "tpot_p50": 0.12139,
+      "e2e_p50": 1.9577,
+      "e2e_p95": 4.5565,
+      "e2e_p99": 5.0254,
+      "cache_hit_rate": 0.7048,
+      "prefill_tokens_saved": 28416,
+      "migrations": 5,
+      "migration_bytes": 47185920,
+      "migration_s": 6.1275,
+      "preemptions": 0,
+      "repeats": 3,
+      "throughput_std": 1.52,
+      "per_worker": {
+        "w0-gpu": {
+          "requests": 58,
+          "generated": 928,
+          "prompt": 16240,
+          "cached": 11264
+        },
+        "w1-npu": {
+          "requests": 32,
+          "generated": 512,
+          "prompt": 8960,
+          "cached": 5120
+        },
+        "w2-cpu": {
+          "requests": 54,
+          "generated": 864,
+          "prompt": 15120,
+          "cached": 12032
+        }
+      }
+    },
+    {
+      "label": "cache_aware@1000",
+      "policy": "cache_aware",
+      "bandwidth_mbps": 1000.0,
+      "latency_ms": 2.0,
+      "n_requests": 144,
+      "wall_s": 38.3103,
+      "throughput_tok_s": 60.14,
+      "request_throughput": 3.759,
+      "ttft_p50": 0.1056,
+      "ttft_p95": 0.683,
+      "ttft_p99": 0.7854,
+      "tpot_p50": 0.11962,
+      "e2e_p50": 1.9495,
+      "e2e_p95": 4.4505,
+      "e2e_p99": 4.5536,
+      "cache_hit_rate": 0.7683,
+      "prefill_tokens_saved": 30976,
+      "migrations": 22,
+      "migration_bytes": 207618048,
+      "migration_s": 10.1589,
+      "preemptions": 0,
+      "repeats": 3,
+      "throughput_std": 0.61,
+      "per_worker": {
+        "w0-gpu": {
+          "requests": 57,
+          "generated": 912,
+          "prompt": 15960,
+          "cached": 11776
+        },
+        "w1-npu": {
+          "requests": 30,
+          "generated": 480,
+          "prompt": 8400,
+          "cached": 5376
+        },
+        "w2-cpu": {
+          "requests": 57,
+          "generated": 912,
+          "prompt": 15960,
+          "cached": 13824
+        }
+      }
+    },
+    {
+      "label": "cache_aware@10000",
+      "policy": "cache_aware",
+      "bandwidth_mbps": 10000.0,
+      "latency_ms": 2.0,
+      "n_requests": 144,
+      "wall_s": 38.501,
+      "throughput_tok_s": 59.84,
+      "request_throughput": 3.74,
+      "ttft_p50": 0.1125,
+      "ttft_p95": 0.6256,
+      "ttft_p99": 0.6741,
+      "tpot_p50": 0.12163,
+      "e2e_p50": 1.9407,
+      "e2e_p95": 4.7682,
+      "e2e_p99": 5.1894,
+      "cache_hit_rate": 0.7937,
+      "prefill_tokens_saved": 32000,
+      "migrations": 27,
+      "migration_bytes": 254803968,
+      "migration_s": 7.8283,
+      "preemptions": 0,
+      "repeats": 3,
+      "throughput_std": 1.5,
+      "per_worker": {
+        "w0-gpu": {
+          "requests": 55,
+          "generated": 880,
+          "prompt": 15400,
+          "cached": 10496
+        },
+        "w1-npu": {
+          "requests": 32,
+          "generated": 512,
+          "prompt": 8960,
+          "cached": 7168
+        },
+        "w2-cpu": {
+          "requests": 57,
+          "generated": 912,
+          "prompt": 15960,
+          "cached": 14336
+        }
+      }
+    }
+  ],
+  "final_snapshot": {
+    "policy": "cache_aware",
+    "link": {
+      "bandwidth_mbps": 10000.0,
+      "latency_ms": 2.0
+    },
+    "migrations": 9,
+    "migration_bytes": 84934656,
+    "workers": [
+      {
+        "worker_id": "w0-gpu",
+        "device": "GPU",
+        "engine": "openvino:GPU",
+        "queued": 0,
+        "running": 0,
+        "kv_util": 0.0,
+        "cached_blocks": 115,
+        "t_prefill_per_token_ms": 0.75,
+        "t_decode_step_ms": 73.98,
+        "state": {
+          "kind": "state",
+          "worker_id": "w0-gpu",
+          "device": "GPU",
+          "engine": "openvino:GPU",
+          "kv": {
+            "num_blocks": 384,
+            "used": 0,
+            "free": 384,
+            "utilisation": 0.0,
+            "cached_blocks": 134,
+            "evictable": 134,
+            "hits": 3840,
+            "misses": 1480,
+            "evictions": 0,
+            "block_bytes": 589824
+          },
+          "queued": 0,
+          "running": 0,
+          "steps": 147,
+          "prefill_steps": 23,
+          "decode_steps": 124,
+          "device_busy_s": 10.284,
+          "prefill_busy_s": 1.1104,
+          "decode_busy_s": 9.1733,
+          "tokens_generated": 304,
+          "tokens_prefilled": 1480,
+          "tokens_saved_by_cache": 3840,
+          "migrations_in": 2,
+          "migrations_out": 5,
+          "bytes_migrated_in": 18874368,
+          "bytes_migrated_out": 47185920,
+          "link": {
+            "bytes_sent": 349224290,
+            "messages": 37,
+            "shaping_delay_s": 5.9342,
+            "propagation_delay_s": 0.074
+          },
+          "t": 1787162533.5079536
+        }
+      },
+      {
+        "worker_id": "w1-npu",
+        "device": "NPU",
+        "engine": "openvino:NPU",
+        "queued": 0,
+        "running": 0,
+        "kv_util": 0.0,
+        "cached_blocks": 76,
+        "t_prefill_per_token_ms": 0.868,
+        "t_decode_step_ms": 250.69,
+        "state": {
+          "kind": "state",
+          "worker_id": "w1-npu",
+          "device": "NPU",
+          "engine": "openvino:NPU",
+          "kv": {
+            "num_blocks": 384,
+            "used": 0,
+            "free": 384,
+            "utilisation": 0.0,
+            "cached_blocks": 88,
+            "evictable": 88,
+            "hits": 2560,
+            "misses": 800,
+            "evictions": 0,
+            "block_bytes": 589824
+          },
+          "queued": 0,
+          "running": 0,
+          "steps": 63,
+          "prefill_steps": 14,
+          "decode_steps": 49,
+          "device_busy_s": 12.9783,
+          "prefill_busy_s": 0.6944,
+          "decode_busy_s": 12.2838,
+          "tokens_generated": 192,
+          "tokens_prefilled": 800,
+          "tokens_saved_by_cache": 2560,
+          "migrations_in": 3,
+          "migrations_out": 4,
+          "bytes_migrated_in": 28311552,
+          "bytes_migrated_out": 37748736,
+          "link": {
+            "bytes_sent": 198208385,
+            "messages": 21,
+            "shaping_delay_s": 2.2241,
+            "propagation_delay_s": 0.042
+          },
+          "t": 1787162533.5328028
+        }
+      },
+      {
+        "worker_id": "w2-cpu",
+        "device": "CPU",
+        "engine": "openvino:CPU",
+        "queued": 0,
+        "running": 0,
+        "kv_util": 0.0,
+        "cached_blocks": 97,
+        "t_prefill_per_token_ms": 2.053,
+        "t_decode_step_ms": 141.29,
+        "state": {
+          "kind": "state",
+          "worker_id": "w2-cpu",
+          "device": "CPU",
+          "engine": "openvino:CPU",
+          "kv": {
+            "num_blocks": 384,
+            "used": 0,
+            "free": 384,
+            "utilisation": 0.0,
+            "cached_blocks": 114,
+            "evictable": 114,
+            "hits": 4096,
+            "misses": 664,
+            "evictions": 0,
+            "block_bytes": 589824
+          },
+          "queued": 0,
+          "running": 0,
+          "steps": 80,
+          "prefill_steps": 18,
+          "decode_steps": 62,
+          "device_busy_s": 10.1231,
+          "prefill_busy_s": 1.3633,
+          "decode_busy_s": 8.7597,
+          "tokens_generated": 272,
+          "tokens_prefilled": 664,
+          "tokens_saved_by_cache": 4096,
+          "migrations_in": 4,
+          "migrations_out": 0,
+          "bytes_migrated_in": 37748736,
+          "bytes_migrated_out": 0,
+          "link": {
+            "bytes_sent": 0,
+            "messages": 0,
+            "shaping_delay_s": 0.0,
+            "propagation_delay_s": 0.0
+          },
+          "t": 1787162533.5333865
+        }
+      }
+    ]
+  }
+}

@@ -211,6 +211,13 @@ Poisson arrivals at 6/s, 16 generated tokens each. Every configuration runs 3 ti
 and the records are pooled — 144 requests per row. `±` is the standard deviation of
 throughput across the three repeats.
 
+Raw data for every number below is committed: **[`results/sweep-headline.json`](results/sweep-headline.json)**
+(per-configuration summaries, device speeds, host details) and
+[`results/requests-headline.csv`](results/requests-headline.csv) (all 1,008 individual
+requests, so you can recompute the percentiles yourself). The pre-fix run is kept as
+[`results/baseline-idle-link-cost-model.json`](results/baseline-idle-link-cost-model.json)
+for the before/after in [what went wrong](#what-went-wrong-the-useful-part).
+
 | policy | link | tok/s | ± | TTFT p50 | TTFT p99 | **E2E p50** | E2E p95 | cache hit | migrations | MB moved |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | round robin | 50 Mbps | 57.0 | 0.9 | 133 ms | 478 ms | 2.87 s | 5.91 s | 62.9% | 0 | 0 |
