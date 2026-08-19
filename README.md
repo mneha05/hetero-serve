@@ -456,7 +456,9 @@ stop happening.
 ## Tests
 
 28 tests, no mocks — the distributed ones spawn real worker processes and talk over
-real sockets. 26 run anywhere; 2 need a CUDA device and skip cleanly without one.
+real sockets. On a bare clone **24 run and pass**; 2 more once GPT-2 weights are
+downloaded, and the final 2 need a CUDA device. Everything that cannot run skips
+cleanly with a reason rather than failing.
 
 The load-bearing ones:
 
