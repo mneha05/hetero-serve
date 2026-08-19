@@ -45,6 +45,8 @@ class TorchEngine:
         self.tdtype = getattr(torch, dtype)
         self.eps = float(self.cfg.layer_norm_eps)
         self.scale = 1.0 / np.sqrt(self.cfg.head_dim)
+        self.kv_heads = self.cfg.kv_heads
+        self.kv_group = self.cfg.kv_group
 
         def T(a):
             return torch.as_tensor(
@@ -76,6 +78,11 @@ class TorchEngine:
         h = self.torch.nn.functional.gelu(x @ lw["fc_w"] + lw["fc_b"], approximate="tanh")
         return h @ lw["fcp_w"] + lw["fcp_b"]
 
+    def _expand_kv(self, x, dim):
+        """Share each KV head across its query group. Reference path only --
+        the fused kernels index the shared head instead of materialising it."""
+        return x if self.kv_group == 1 else x.repeat_interleave(self.kv_group, dim=dim)
+
     def _logits(self, x):
         return (self._ln(x, self.lnf_g, self.lnf_b) @ self.wte.T).float()
 
@@ -98,7 +105,8 @@ class TorchEngine:
         pos = torch.arange(start_pos, start_pos + T, device=self.device)
         x = self._embed(ids, pos)
 
-        k_new = torch.empty((L, H, T, D), dtype=self.tdtype, device=self.device)
+        HKV = self.kv_heads
+        k_new = torch.empty((L, HKV, T, D), dtype=self.tdtype, device=self.device)
         v_new = torch.empty_like(k_new)
 
         q_abs = torch.arange(P, P + T, device=self.device).unsqueeze(1)
@@ -112,14 +120,17 @@ class TorchEngine:
             for li, lw in enumerate(self.layers):
                 h = self._ln(x, lw["ln1_g"], lw["ln1_b"])
                 qkv = h @ lw["attn_w"] + lw["attn_b"]
+                KVD = cfg.kv_dim
                 q = qkv[:, :E].view(T, H, D).permute(1, 0, 2)
-                k = qkv[:, E:2 * E].view(T, H, D).permute(1, 0, 2)
-                v = qkv[:, 2 * E:].view(T, H, D).permute(1, 0, 2)
+                k = qkv[:, E:E + KVD].view(T, HKV, D).permute(1, 0, 2)
+                v = qkv[:, E + KVD:].view(T, HKV, D).permute(1, 0, 2)
 
                 k_new[li], v_new[li] = k, v
 
                 k_full = torch.cat([pk[li], k], dim=1) if P else k
                 v_full = torch.cat([pv[li], v], dim=1) if P else v
+                k_full = self._expand_kv(k_full, 0)
+                v_full = self._expand_kv(v_full, 0)
 
                 scores = (q @ k_full.transpose(1, 2)) * self.scale
                 scores = scores.masked_fill(mask.unsqueeze(0), float("-inf"))
@@ -147,16 +158,18 @@ class TorchEngine:
         pks = [self._to_dev(p) for p in past_ks]
         pvs = [self._to_dev(p) for p in past_vs]
 
-        k_new = torch.empty((B, L, H, 1, D), dtype=self.tdtype, device=self.device)
+        HKV = self.kv_heads
+        k_new = torch.empty((B, L, HKV, 1, D), dtype=self.tdtype, device=self.device)
         v_new = torch.empty_like(k_new)
 
         with torch.inference_mode():
             for li, lw in enumerate(self.layers):
                 h = self._ln(x, lw["ln1_g"], lw["ln1_b"])
                 qkv = h @ lw["attn_w"] + lw["attn_b"]
+                KVD = cfg.kv_dim
                 q = qkv[:, :E].view(B, H, D)
-                k = qkv[:, E:2 * E].view(B, H, D)
-                v = qkv[:, 2 * E:].view(B, H, D)
+                k = qkv[:, E:E + KVD].view(B, HKV, D)
+                v = qkv[:, E + KVD:].view(B, HKV, D)
 
                 k_new[:, li, :, 0, :] = k
                 v_new[:, li, :, 0, :] = v
@@ -165,6 +178,8 @@ class TorchEngine:
                 for b in range(B):
                     kf = torch.cat([pks[b][li], k[b].unsqueeze(1)], dim=1)
                     vf = torch.cat([pvs[b][li], v[b].unsqueeze(1)], dim=1)
+                    kf = self._expand_kv(kf, 0)
+                    vf = self._expand_kv(vf, 0)
                     s = (q[b].unsqueeze(1) @ kf.transpose(1, 2)) * self.scale
                     attn[b] = (torch.softmax(s, dim=-1) @ vf).reshape(E)
 
@@ -215,9 +230,10 @@ class TorchEngine:
             for li, lw in enumerate(self.layers):
                 h = self._ln(x, lw["ln1_g"], lw["ln1_b"])
                 qkv = h @ lw["attn_w"] + lw["attn_b"]
+                KVD = cfg.kv_dim
                 q = qkv[:, :E].view(B, H, D)
-                k = qkv[:, E:2 * E].view(B, H, D)
-                v = qkv[:, 2 * E:].view(B, H, D)
+                k = qkv[:, E:E + KVD].view(B, alloc.model.kv_heads, D)
+                v = qkv[:, E + KVD:].view(B, alloc.model.kv_heads, D)
 
                 fk, fv = alloc.flat_kv(li)
                 fk[slots] = k.to(alloc.torch_dtype)

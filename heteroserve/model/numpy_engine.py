@@ -57,10 +57,21 @@ class NumpyEngine:
 
     # -- helpers ------------------------------------------------------------
 
-    def _split_heads(self, x: np.ndarray) -> np.ndarray:
-        """[T, E] -> [H, T, D]"""
+    def _split_heads(self, x: np.ndarray, heads: int | None = None) -> np.ndarray:
+        """[T, heads*D] -> [heads, T, D]. `heads` differs for K/V under GQA."""
         T = x.shape[0]
-        return x.reshape(T, self.cfg.n_head, self.cfg.head_dim).transpose(1, 0, 2)
+        h = heads or self.cfg.n_head
+        return x.reshape(T, h, self.cfg.head_dim).transpose(1, 0, 2)
+
+    def _expand_kv(self, x: np.ndarray) -> np.ndarray:
+        """[kv_heads, T, D] -> [n_head, T, D] by sharing each KV head.
+
+        Materialising the expansion keeps the reference implementation obvious.
+        The CUDA kernels never do this -- they index the shared KV head directly,
+        which is exactly where GQA's bandwidth saving comes from.
+        """
+        g = self.cfg.kv_group
+        return x if g == 1 else np.repeat(x, g, axis=0)
 
     def _mlp(self, x: np.ndarray, l: LayerWeights) -> np.ndarray:
         h = gelu_new(x @ l.fc_w + l.fc_b)
@@ -98,8 +109,9 @@ class NumpyEngine:
         x = self._embed(token_ids, positions)
 
         L, H, D = self.cfg.n_layer, self.cfg.n_head, self.cfg.head_dim
-        k_new = np.empty((L, H, T, D), dtype=self.dtype)
-        v_new = np.empty((L, H, T, D), dtype=self.dtype)
+        HKV = self.cfg.kv_heads
+        k_new = np.empty((L, HKV, T, D), dtype=self.dtype)
+        v_new = np.empty((L, HKV, T, D), dtype=self.dtype)
 
         # causal mask: query i (absolute position P+i) may see key j iff j <= P+i
         q_abs = np.arange(P, P + T)[:, None]
@@ -109,10 +121,11 @@ class NumpyEngine:
         for li, l in enumerate(self.w.layers):
             h = layer_norm(x, l.ln1_g, l.ln1_b, self.eps)
             qkv = h @ l.attn_w + l.attn_b
-            E = self.cfg.n_embd
+            E, KVD = self.cfg.n_embd, self.cfg.kv_dim
+            HKV = self.cfg.kv_heads
             q = self._split_heads(qkv[:, :E])
-            k = self._split_heads(qkv[:, E : 2 * E])
-            v = self._split_heads(qkv[:, 2 * E :])
+            k = self._split_heads(qkv[:, E : E + KVD], HKV)
+            v = self._split_heads(qkv[:, E + KVD :], HKV)
 
             k_new[li] = k
             v_new[li] = v
@@ -122,6 +135,8 @@ class NumpyEngine:
                 v_full = np.concatenate([past_v[li].astype(self.dtype, copy=False), v], axis=1)
             else:
                 k_full, v_full = k, v
+            k_full = self._expand_kv(k_full)
+            v_full = self._expand_kv(v_full)
 
             scores = (q @ k_full.transpose(0, 2, 1)) * self.scale   # [H, T, P+T]
             scores = np.where(mask[None, :, :], np.float32(-1e30), scores)
@@ -153,17 +168,19 @@ class NumpyEngine:
         B = int(token_ids.shape[0])
         L, H, D, E = self.cfg.n_layer, self.cfg.n_head, self.cfg.head_dim, self.cfg.n_embd
 
+        HKV = self.cfg.kv_heads
         x = self._embed(token_ids, positions)          # [B, E]
-        k_new = np.empty((B, L, H, 1, D), dtype=self.dtype)
-        v_new = np.empty((B, L, H, 1, D), dtype=self.dtype)
+        k_new = np.empty((B, L, HKV, 1, D), dtype=self.dtype)
+        v_new = np.empty((B, L, HKV, 1, D), dtype=self.dtype)
 
         for li, l in enumerate(self.w.layers):
             h = layer_norm(x, l.ln1_g, l.ln1_b, self.eps)
-            qkv = h @ l.attn_w + l.attn_b               # [B, 3E]  <- batched GEMM
+            qkv = h @ l.attn_w + l.attn_b               # [B, E+2*kv_dim] <- batched GEMM
 
+            KVD = self.cfg.kv_dim
             q = qkv[:, :E].reshape(B, H, D)
-            k = qkv[:, E : 2 * E].reshape(B, H, D)
-            v = qkv[:, 2 * E :].reshape(B, H, D)
+            k = qkv[:, E : E + KVD].reshape(B, HKV, D)
+            v = qkv[:, E + KVD :].reshape(B, HKV, D)
 
             k_new[:, li, :, 0, :] = k
             v_new[:, li, :, 0, :] = v
@@ -183,6 +200,8 @@ class NumpyEngine:
                     k_full = k[b][:, None, :]
                     v_full = v[b][:, None, :]
 
+                k_full = self._expand_kv(k_full)
+                v_full = self._expand_kv(v_full)
                 # [H,1,D] x [H,D,P+1] -> [H,1,P+1]; no mask needed, all past is visible
                 scores = (q[b][:, None, :] @ k_full.transpose(0, 2, 1)) * self.scale
                 ctx = softmax(scores, axis=-1) @ v_full   # [H, 1, D]

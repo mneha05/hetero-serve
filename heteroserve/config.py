@@ -23,6 +23,12 @@ class ModelConfig:
     name: str = "gpt2"
     n_layer: int = 12
     n_head: int = 12
+    # Grouped-query attention: fewer KV heads than query heads. None means MHA
+    # (one KV head per query head), which is what GPT-2 does. Every current
+    # model -- Llama 3, Mistral, Qwen -- uses GQA, and it shrinks the KV cache
+    # by exactly n_head / n_kv_head, which moves the migrate-vs-recompute
+    # crossover just as much as a faster link would.
+    n_kv_head: int | None = None
     n_embd: int = 768
     vocab_size: int = 50257
     n_ctx: int = 1024
@@ -32,9 +38,23 @@ class ModelConfig:
     def head_dim(self) -> int:
         return self.n_embd // self.n_head
 
+    @property
+    def kv_heads(self) -> int:
+        """KV heads actually stored. Equals n_head under MHA."""
+        return self.n_kv_head or self.n_head
+
+    @property
+    def kv_group(self) -> int:
+        """Query heads sharing each KV head."""
+        return self.n_head // self.kv_heads
+
+    @property
+    def kv_dim(self) -> int:
+        return self.kv_heads * self.head_dim
+
     def kv_bytes_per_token(self, dtype: np.dtype) -> int:
         """Bytes of KV cache one token occupies across every layer."""
-        return int(2 * self.n_layer * self.n_embd * np.dtype(dtype).itemsize)
+        return int(2 * self.n_layer * self.kv_dim * np.dtype(dtype).itemsize)
 
     @classmethod
     def from_hf_config(cls, path: Path) -> "ModelConfig":
@@ -50,16 +70,27 @@ class ModelConfig:
         )
 
     @classmethod
-    def tiny(cls) -> "ModelConfig":
+    def tiny(cls, n_kv_head: int | None = None) -> "ModelConfig":
         """Small synthetic config for fast sweeps and unit tests."""
         return cls(
-            name="tiny",
+            name="tiny" if n_kv_head is None else f"tiny-gqa{n_kv_head}",
             n_layer=4,
             n_head=4,
+            n_kv_head=n_kv_head,
             n_embd=256,
             vocab_size=50257,
             n_ctx=1024,
         )
+
+    @classmethod
+    def llama3_8b_shape(cls) -> "ModelConfig":
+        """Llama-3-8B's attention geometry: 32 query heads, 8 KV heads.
+
+        Not the weights -- the *shape*, so the KV-cache economics are the real
+        ones. GQA cuts KV per token 4x here, which is the whole point.
+        """
+        return cls(name="llama3-8b-shape", n_layer=32, n_head=32,
+                   n_kv_head=8, n_embd=4096, vocab_size=128256, n_ctx=8192)
 
 
 # ---------------------------------------------------------------------------

@@ -52,6 +52,7 @@ __global__ void paged_attention_kernel(
     const int* __restrict__ block_tables,     // [B, MB]
     const int* __restrict__ context_lens,     // [B]
     const int num_heads,
+    const int num_kv_heads,
     const int head_dim,
     const int block_size,
     const int max_blocks,
@@ -62,6 +63,9 @@ __global__ void paged_attention_kernel(
   const int h = blockIdx.y;
   const int tid = threadIdx.x;
   const int nthreads = blockDim.x;
+
+  // GQA: query head h reads the KV head it shares with its group.
+  const int kv_h = h / (num_heads / num_kv_heads);
 
   const int ctx_len = context_lens[b];
   if (ctx_len <= 0) return;
@@ -79,7 +83,7 @@ __global__ void paged_attention_kernel(
     const int blk = btab[j / block_size];
     const int off = j % block_size;
     const scalar_t* k_ptr =
-        k_cache + (((size_t)blk * block_size + off) * num_heads + h) * head_dim;
+        k_cache + (((size_t)blk * block_size + off) * num_kv_heads + kv_h) * head_dim;
     float acc = 0.f;
     for (int d = 0; d < head_dim; ++d) {
       acc += q_ptr[d] * static_cast<float>(k_ptr[d]);
@@ -122,7 +126,7 @@ __global__ void paged_attention_kernel(
       const int blk = btab[j / block_size];
       const int off = j % block_size;
       const scalar_t* v_ptr =
-          v_cache + (((size_t)blk * block_size + off) * num_heads + h) * head_dim;
+          v_cache + (((size_t)blk * block_size + off) * num_kv_heads + kv_h) * head_dim;
       acc += scores[j] * static_cast<float>(v_ptr[d]);
     }
     out[(size_t)(b * num_heads + h) * head_dim + d] = acc / denom;
@@ -152,6 +156,7 @@ torch::Tensor paged_attention(
   const int H = q.size(1);
   const int D = q.size(2);
   const int BS = k_cache.size(1);
+  const int HKV = k_cache.size(2);
   const int MB = block_tables.size(1);
 
   const int max_context = MB * BS;
@@ -170,7 +175,7 @@ torch::Tensor paged_attention(
             q.data_ptr<float>(),
             block_tables.data_ptr<int>(),
             context_lens.data_ptr<int>(),
-            H, D, BS, MB, max_context, (float)scale);
+            H, HKV, D, BS, MB, max_context, (float)scale);
       }));
 
   C10_CUDA_CHECK(cudaGetLastError());
@@ -257,8 +262,8 @@ def paged_attention_torch(q, k_cache, v_cache, block_tables, context_lens, scale
     """
     import torch
 
-    B, H, D = q.shape
-    NB, BS, _, _ = k_cache.shape
+    B, _, D = q.shape
+    NB, BS, H, _ = k_cache.shape          # H here is the *KV* head count
     MB = block_tables.shape[1]
 
     # [B, MB, BS] -> flat positions into a [NB*BS, H, D] view of the pool
@@ -271,10 +276,19 @@ def paged_attention_torch(q, k_cache, v_cache, block_tables, context_lens, scale
     )                                                                   # [B, MB, BS]
     slots = slots.reshape(B, MB * BS)
 
-    k = flat_k[slots]                       # [B, MB*BS, H, D]
+    k = flat_k[slots]                       # [B, MB*BS, Hkv, D]
     v = flat_v[slots]
 
-    scores = torch.einsum("bhd,bkhd->bhk", q, k.float()) * scale        # [B, H, K]
+    # GQA: several query heads share one KV head. The reference materialises the
+    # expansion for clarity; the CUDA kernels index the shared head instead,
+    # which is where the bandwidth saving actually comes from.
+    Hq = q.shape[1]
+    if Hq != H:
+        g = Hq // H
+        k = k.repeat_interleave(g, dim=2)
+        v = v.repeat_interleave(g, dim=2)
+
+    scores = torch.einsum("bhd,bkhd->bhk", q, k.float()) * scale        # [B, Hq, K]
 
     positions = torch.arange(MB * BS, device=q.device).unsqueeze(0)     # [1, K]
     valid = positions < context_lens.unsqueeze(1).to(positions.dtype)   # [B, K]

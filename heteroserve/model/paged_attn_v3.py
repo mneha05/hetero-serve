@@ -84,6 +84,7 @@ __global__ void paged_attention_split_kernel(
     const int* __restrict__ context_lens,     // [B]
     const int num_seqs,
     const int num_heads,
+    const int num_kv_heads,
     const int block_size,
     const int max_blocks,
     const int num_splits,
@@ -99,6 +100,9 @@ __global__ void paged_attention_split_kernel(
   const int hb = flat / num_splits;
   const int h = hb % num_heads;
   const int b = hb / num_heads;
+
+  // GQA: query head h reads the KV head it shares with its group.
+  const int kv_h = h / (num_heads / num_kv_heads);
 
   const int ctx_len = context_lens[b];
   const int chunk = (ctx_len + num_splits - 1) / num_splits;
@@ -124,7 +128,7 @@ __global__ void paged_attention_split_kernel(
     for (int j = start; j < end; ++j) {
       const int blk = btab[j / block_size];
       const int off = j % block_size;
-      const size_t base = (((size_t)blk * block_size + off) * num_heads + h) * HEAD_DIM;
+      const size_t base = (((size_t)blk * block_size + off) * num_kv_heads + kv_h) * HEAD_DIM;
 
       const scalar_t* k_ptr = k_cache + base + lane * VPT;
       float partial = 0.0f;
@@ -247,8 +251,10 @@ torch::Tensor paged_attention_v3(
   const int H = q.size(1);
   const int D = q.size(2);
   const int BS = k_cache.size(1);
+  const int HKV = k_cache.size(2);
   const int MB = block_tables.size(1);
 
+  TORCH_CHECK(H % HKV == 0, "n_head must be divisible by n_kv_head");
   TORCH_CHECK(D % 32 == 0, "head_dim must be a multiple of the warp size");
 
   if (num_splits <= 0) num_splits = choose_num_splits(B, H, (int64_t)MB * BS);
@@ -276,7 +282,7 @@ torch::Tensor paged_attention_v3(
                   partial_l.data_ptr<float>(), k_cache.data_ptr<scalar_t>(),    \
                   v_cache.data_ptr<scalar_t>(), q.data_ptr<float>(),            \
                   block_tables.data_ptr<int>(), context_lens.data_ptr<int>(),   \
-                  B, H, BS, MB, (int)num_splits, (float)scale);                 \
+                  B, H, HKV, BS, MB, (int)num_splits, (float)scale);                 \
         }));                                                                    \
     merge_splits_kernel<DIM><<<merge_grid, threads>>>(                          \
         out.data_ptr<float>(), partial_out.data_ptr<float>(),                   \

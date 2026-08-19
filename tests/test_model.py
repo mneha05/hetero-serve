@@ -250,3 +250,94 @@ def test_real_gpt2_decode_loop_matches_full_prefill():
     ref, _, _ = eng.prefill(np.array(ids + generated[:-1]), 0)
     assert int(np.argmax(ref)) == generated[-1]
     assert len(tok.decode(generated)) > 0
+
+
+# ---------------------------------------------------------------------------
+# grouped-query attention
+# ---------------------------------------------------------------------------
+
+
+def _gqa_to_mha_weights(gqa_cfg, gqa_w):
+    """Build MHA weights that must compute exactly what the GQA ones do.
+
+    Duplicating each shared KV head across its query group turns a GQA model
+    into an algebraically identical MHA model. If the two disagree, the GQA
+    plumbing is wrong somewhere.
+    """
+    import copy
+
+    from heteroserve.config import ModelConfig
+
+    H, HKV, D, E = gqa_cfg.n_head, gqa_cfg.kv_heads, gqa_cfg.head_dim, gqa_cfg.n_embd
+    g = H // HKV
+    mha_cfg = ModelConfig(name="mha", n_layer=gqa_cfg.n_layer, n_head=H,
+                          n_kv_head=None, n_embd=E, vocab_size=gqa_cfg.vocab_size,
+                          n_ctx=gqa_cfg.n_ctx)
+    w = copy.deepcopy(gqa_w)
+    w.cfg = mha_cfg
+    for l in w.layers:
+        q = l.attn_w[:, :E]
+        k = l.attn_w[:, E:E + HKV * D].reshape(E, HKV, D)
+        v = l.attn_w[:, E + HKV * D:].reshape(E, HKV, D)
+        l.attn_w = np.concatenate([
+            q,
+            np.repeat(k, g, axis=1).reshape(E, H * D),
+            np.repeat(v, g, axis=1).reshape(E, H * D),
+        ], axis=1)
+        qb = l.attn_b[:E]
+        kb = l.attn_b[E:E + HKV * D].reshape(HKV, D)
+        vb = l.attn_b[E + HKV * D:].reshape(HKV, D)
+        l.attn_b = np.concatenate([
+            qb,
+            np.repeat(kb, g, axis=0).reshape(H * D),
+            np.repeat(vb, g, axis=0).reshape(H * D),
+        ])
+    return mha_cfg, w
+
+
+@pytest.mark.parametrize("n_kv_head", [1, 2])
+def test_gqa_equals_mha_with_duplicated_kv_heads(n_kv_head):
+    from heteroserve.config import ModelConfig
+    from heteroserve.model.weights import synthetic_gpt2
+
+    gqa_cfg = ModelConfig.tiny(n_kv_head=n_kv_head)
+    gqa_w = synthetic_gpt2(gqa_cfg, seed=21)
+    mha_cfg, mha_w = _gqa_to_mha_weights(gqa_cfg, gqa_w)
+
+    gqa, mha = NumpyEngine(gqa_w, gqa_cfg), NumpyEngine(mha_w, mha_cfg)
+    toks = np.array([4, 19, 200, 7, 88, 3, 41, 900, 12, 6])
+
+    lg_g, k_g, v_g = gqa.prefill(toks, 0)
+    lg_m, k_m, v_m = mha.prefill(toks, 0)
+    np.testing.assert_allclose(lg_g, lg_m, rtol=1e-4, atol=1e-4)
+
+    # the cache itself is g times smaller -- that is the entire point
+    assert k_g.shape[1] == n_kv_head
+    assert k_m.shape[1] == gqa_cfg.n_head
+
+    d_g, _, _ = gqa.decode_batch(np.array([13]), np.array([10]), [k_g], [v_g])
+    d_m, _, _ = mha.decode_batch(np.array([13]), np.array([10]), [k_m], [v_m])
+    np.testing.assert_allclose(d_g, d_m, rtol=1e-4, atol=1e-4)
+
+
+def test_gqa_shrinks_the_kv_cache_proportionally():
+    """KV bytes scale exactly with the KV-head count, which is what moves the
+    migrate-vs-recompute crossover."""
+    from heteroserve.config import KVConfig, ModelConfig
+
+    full = ModelConfig.tiny()
+    half = ModelConfig.tiny(n_kv_head=2)
+    quarter = ModelConfig.tiny(n_kv_head=1)
+    fp16 = np.dtype("float16")
+
+    assert full.kv_bytes_per_token(fp16) == 2 * half.kv_bytes_per_token(fp16)
+    assert full.kv_bytes_per_token(fp16) == 4 * quarter.kv_bytes_per_token(fp16)
+
+    kv = KVConfig(block_size=16, num_blocks=64)
+    assert kv.pool_bytes(half) * 2 == kv.pool_bytes(full)
+
+    # Llama-3-8B geometry: 32 query heads, 8 KV heads -> 4x less cache to move
+    llama = ModelConfig.llama3_8b_shape()
+    assert llama.kv_group == 4
+    mha_equiv = ModelConfig(name="x", n_layer=32, n_head=32, n_embd=4096)
+    assert mha_equiv.kv_bytes_per_token(fp16) == 4 * llama.kv_bytes_per_token(fp16)

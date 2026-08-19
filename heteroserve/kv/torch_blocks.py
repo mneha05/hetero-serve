@@ -55,7 +55,7 @@ class TorchBlockAllocator(BlockAllocator):
 
     def flat_kv(self, layer: int):
         """[num_blocks*block_size, H, D] views of one layer's K and V."""
-        H, D = self.model.n_head, self.model.head_dim
+        H, D = self.model.kv_heads, self.model.head_dim
         n = self.num_blocks * self.block_size
         return (
             self.pool[layer, 0].reshape(n, H, D),
@@ -105,7 +105,7 @@ class TorchBlockAllocator(BlockAllocator):
     def gather_kv(self, block_ids, length):
         """Contiguous [n_layer, H, length, D] view — the cost the kernel avoids."""
         torch = self.torch
-        L, H, D = self.model.n_layer, self.model.n_head, self.model.head_dim
+        L, H, D = self.model.n_layer, self.model.kv_heads, self.model.head_dim
         if length == 0:
             z = torch.zeros((L, H, 0, D), dtype=self.torch_dtype, device=self.device)
             return z, z.clone()

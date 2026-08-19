@@ -82,6 +82,7 @@ __global__ void paged_attention_v2_kernel(
     const int* __restrict__ context_lens,     // [B]
     const int num_seqs,
     const int num_heads,
+    const int num_kv_heads,
     const int block_size,
     const int max_blocks,
     const float scale) {
@@ -98,6 +99,9 @@ __global__ void paged_attention_v2_kernel(
   if (flat >= num_seqs * num_heads) return;
   const int b = flat / num_heads;
   const int h = flat % num_heads;
+
+  // GQA: query head h reads the KV head it shares with its group.
+  const int kv_h = h / (num_heads / num_kv_heads);
 
   const int ctx_len = context_lens[b];
   if (ctx_len <= 0) return;
@@ -120,7 +124,7 @@ __global__ void paged_attention_v2_kernel(
   for (int j = 0; j < ctx_len; ++j) {
     const int blk = btab[j / block_size];
     const int off = j % block_size;
-    const size_t base = (((size_t)blk * block_size + off) * num_heads + h) * HEAD_DIM;
+    const size_t base = (((size_t)blk * block_size + off) * num_kv_heads + kv_h) * HEAD_DIM;
 
     // ---- score: warp-cooperative dot product, one shuffle reduction ----
     const scalar_t* k_ptr = k_cache + base + lane * VPT;
@@ -171,8 +175,10 @@ torch::Tensor paged_attention_v2(
   const int H = q.size(1);
   const int D = q.size(2);
   const int BS = k_cache.size(1);
+  const int HKV = k_cache.size(2);
   const int MB = block_tables.size(1);
 
+  TORCH_CHECK(H % HKV == 0, "n_head must be divisible by n_kv_head");
   TORCH_CHECK(D % 32 == 0, "head_dim must be a multiple of the warp size");
 
   auto out = torch::empty({B, H, D}, q.options().dtype(torch::kFloat32));
@@ -189,7 +195,7 @@ torch::Tensor paged_attention_v2(
               out.data_ptr<float>(), k_cache.data_ptr<scalar_t>(),             \
               v_cache.data_ptr<scalar_t>(), q.data_ptr<float>(),               \
               block_tables.data_ptr<int>(), context_lens.data_ptr<int>(),      \
-              B, H, BS, MB, (float)scale);                                        \
+              B, H, HKV, BS, MB, (float)scale);                                        \
         }));
 
   switch (D) {

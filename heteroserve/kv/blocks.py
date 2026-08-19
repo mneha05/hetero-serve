@@ -74,7 +74,7 @@ class BlockAllocator:
             2,
             kv.num_blocks,
             kv.block_size,
-            model.n_head,
+            model.kv_heads,        # GQA: fewer stored KV heads than query heads
             model.head_dim,
         )
         # The real memory. ~576 KiB per block for GPT-2 @ fp16 / block_size 16.
@@ -263,7 +263,7 @@ class BlockAllocator:
         assert self.pool is not None
         if length == 0:
             z = np.zeros(
-                (self.model.n_layer, self.model.n_head, 0, self.model.head_dim),
+                (self.model.n_layer, self.model.kv_heads, 0, self.model.head_dim),
                 dtype=self.dtype,
             )
             return z, z.copy()

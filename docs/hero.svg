@@ -1,0 +1,328 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 260" width="860" height="260"
+     role="img" aria-label="Two accelerators sharing a KV cache prefix: blocks fill on the first
+     worker, a second request reuses them, then the cached prefix migrates across the interconnect
+     to the second worker.">
+<style>
+  :root { color-scheme: light dark; }
+  .bg     { fill:#F4F5F8; }
+  .panel  { fill:#FFFFFF; stroke:#DADEE6; }
+  .b      { fill:#E2E6ED; }
+  .ink    { fill:#11131A; }
+  .ink2   { fill:#474D5B; }
+  .ink3   { fill:#79808F; }
+  .wire   { stroke:#C2C8D4; }
+  @media (prefers-color-scheme: dark) {
+    .bg    { fill:#131519; }
+    .panel { fill:#1A1D23; stroke:#2A2F38; }
+    .b     { fill:#0E1014; }
+    .ink   { fill:#F1F3F7; }
+    .ink2  { fill:#B2B8C5; }
+    .ink3  { fill:#7C8393; }
+    .wire  { stroke:#39404C; }
+  }
+  text { font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace; }
+  .h  { font-size:13px; font-weight:600; }
+  .s  { font-size:10px; letter-spacing:.09em; }
+  .k  { font-size:11px; }
+
+  .b { animation-duration:9.0s; animation-iteration-count:infinite;
+        animation-timing-function:linear; animation-fill-mode:both; }
+  /* cold prefill -> published to the prefix cache (green) */
+  .fill-shared { animation-name:shared; }
+  @keyframes shared {
+    0%,2%    { fill:#E2E6ED; }
+    4%,13%   { fill:#2A6FD6; }
+    16%,96%  { fill:#0C7A4A; }
+    100%     { fill:#E2E6ED; }
+  }
+  .fill-own  { animation-name:own; }
+  .fill-own2 { animation-name:own; }
+  .fill-own3 { animation-name:own; }
+  @keyframes own {
+    0%,2%   { fill:#E2E6ED; }
+    5%,26%  { fill:#2A6FD6; }
+    30%,96% { fill:#E2E6ED; }
+    100%    { fill:#E2E6ED; }
+  }
+  /* blocks that arrived over the interconnect */
+  .fill-recv { animation-name:recv; }
+  @keyframes recv {
+    0%,70%   { fill:#E2E6ED; }
+    73%,78%  { fill:#D9541F; }
+    82%,96%  { fill:#0C7A4A; }
+    100%     { fill:#E2E6ED; }
+  }
+  @media (prefers-color-scheme: dark) {
+    @keyframes shared {
+      0%,2%{fill:#0E1014} 4%,13%{fill:#4E93E8} 16%,96%{fill:#3FAE7A} 100%{fill:#0E1014} }
+    @keyframes own {
+      0%,2%{fill:#0E1014} 5%,26%{fill:#4E93E8} 30%,96%{fill:#0E1014} 100%{fill:#0E1014} }
+    @keyframes recv {
+      0%,70%{fill:#0E1014} 73%,78%{fill:#E8703C} 82%,96%{fill:#3FAE7A} 100%{fill:#0E1014} }
+  }
+
+  .pkt { fill:#D9541F; animation:pkt 9.0s linear infinite; opacity:0; }
+  @keyframes pkt {
+    0%,68%   { opacity:0; transform:translateX(0); }
+    70%      { opacity:1; transform:translateX(0); }
+    79%      { opacity:1; transform:translateX(170px); }
+    81%,100% { opacity:0; transform:translateX(170px); }
+  }
+  .cap { animation:cap 9.0s linear infinite; }
+  @keyframes cap {
+    0%,14%   { opacity:1 }  18%,33% { opacity:0 }
+    100%     { opacity:0 }
+  }
+  .cap2 { animation:cap2 9.0s linear infinite; opacity:0 }
+  @keyframes cap2 {
+    0%,36%   { opacity:0 }  40%,62% { opacity:1 }  66%,100% { opacity:0 }
+  }
+  .cap3 { animation:cap3 9.0s linear infinite; opacity:0 }
+  @keyframes cap3 {
+    0%,68%   { opacity:0 }  72%,92% { opacity:1 }  96%,100% { opacity:0 }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .b,.pkt,.cap,.cap2,.cap3 { animation:none; }
+    .fill-shared,.fill-recv { fill:#0C7A4A; }
+    .fill-own,.fill-own2,.fill-own3 { fill:#2A6FD6; }
+    .cap2,.cap3,.pkt { opacity:0 }
+  }
+</style>
+
+<rect class="bg" width="860" height="260"/>
+
+<text class="ink h" x="20" y="26">hetero-serve</text>
+<text class="ink3 s" x="20" y="42">PAGED KV CACHE · PREFIX SHARING · MIGRATION UNDER A LINK BUDGET</text>
+
+<!-- captions, one per beat -->
+<text class="ink2 k cap"  x="430" y="42" text-anchor="middle">cold request — prefill fills 24 blocks</text>
+<text class="ink2 k cap2" x="430" y="42" text-anchor="middle">same prefix — cache hit, prefill skipped</text>
+<text class="ink2 k cap3" x="430" y="42" text-anchor="middle">9.4 MB of KV crosses the interconnect</text>
+
+<!-- worker A -->
+<rect class="panel" x="20" y="58" width="329" height="134" rx="3" stroke-width="1"/>
+<text class="ink k" x="36" y="80">cuda:0</text>
+<text class="ink3 s" x="36" y="95">TESLA T4 · 100 BLOCKS</text>
+<rect class="b fill-shared" x="36" y="106" width="12" height="12" rx="1.5" style="animation-delay:0.25s"/>
+<rect class="b fill-shared" x="51" y="106" width="12" height="12" rx="1.5" style="animation-delay:0.28s"/>
+<rect class="b fill-shared" x="66" y="106" width="12" height="12" rx="1.5" style="animation-delay:0.31s"/>
+<rect class="b fill-shared" x="81" y="106" width="12" height="12" rx="1.5" style="animation-delay:0.34s"/>
+<rect class="b fill-shared" x="96" y="106" width="12" height="12" rx="1.5" style="animation-delay:0.37s"/>
+<rect class="b fill-shared" x="111" y="106" width="12" height="12" rx="1.5" style="animation-delay:0.40s"/>
+<rect class="b fill-shared" x="126" y="106" width="12" height="12" rx="1.5" style="animation-delay:0.43s"/>
+<rect class="b fill-shared" x="141" y="106" width="12" height="12" rx="1.5" style="animation-delay:0.46s"/>
+<rect class="b fill-shared" x="156" y="106" width="12" height="12" rx="1.5" style="animation-delay:0.49s"/>
+<rect class="b fill-shared" x="171" y="106" width="12" height="12" rx="1.5" style="animation-delay:0.52s"/>
+<rect class="b fill-shared" x="186" y="106" width="12" height="12" rx="1.5" style="animation-delay:0.55s"/>
+<rect class="b fill-shared" x="201" y="106" width="12" height="12" rx="1.5" style="animation-delay:0.58s"/>
+<rect class="b fill-shared" x="216" y="106" width="12" height="12" rx="1.5" style="animation-delay:0.61s"/>
+<rect class="b fill-shared" x="231" y="106" width="12" height="12" rx="1.5" style="animation-delay:0.64s"/>
+<rect class="b fill-shared" x="246" y="106" width="12" height="12" rx="1.5" style="animation-delay:0.67s"/>
+<rect class="b fill-shared" x="261" y="106" width="12" height="12" rx="1.5" style="animation-delay:0.70s"/>
+<rect class="b fill-shared" x="276" y="106" width="12" height="12" rx="1.5" style="animation-delay:0.73s"/>
+<rect class="b fill-shared" x="291" y="106" width="12" height="12" rx="1.5" style="animation-delay:0.76s"/>
+<rect class="b fill-shared" x="306" y="106" width="12" height="12" rx="1.5" style="animation-delay:0.79s"/>
+<rect class="b fill-shared" x="321" y="106" width="12" height="12" rx="1.5" style="animation-delay:0.82s"/>
+<rect class="b fill-shared" x="36" y="121" width="12" height="12" rx="1.5" style="animation-delay:0.85s"/>
+<rect class="b fill-shared" x="51" y="121" width="12" height="12" rx="1.5" style="animation-delay:0.88s"/>
+<rect class="b fill-shared" x="66" y="121" width="12" height="12" rx="1.5" style="animation-delay:0.91s"/>
+<rect class="b fill-shared" x="81" y="121" width="12" height="12" rx="1.5" style="animation-delay:0.94s"/>
+<rect class="b fill-own" x="96" y="121" width="12" height="12" rx="1.5" style="animation-delay:1.30s"/>
+<rect class="b fill-own" x="111" y="121" width="12" height="12" rx="1.5" style="animation-delay:1.34s"/>
+<rect class="b fill-own" x="126" y="121" width="12" height="12" rx="1.5" style="animation-delay:1.39s"/>
+<rect class="b fill-own" x="141" y="121" width="12" height="12" rx="1.5" style="animation-delay:1.44s"/>
+<rect class="b fill-own" x="156" y="121" width="12" height="12" rx="1.5" style="animation-delay:1.48s"/>
+<rect class="b fill-own" x="171" y="121" width="12" height="12" rx="1.5" style="animation-delay:1.52s"/>
+<rect class="b fill-own" x="186" y="121" width="12" height="12" rx="1.5" style="animation-delay:1.57s"/>
+<rect class="b fill-own" x="201" y="121" width="12" height="12" rx="1.5" style="animation-delay:1.61s"/>
+<rect class="b fill-own" x="216" y="121" width="12" height="12" rx="1.5" style="animation-delay:1.66s"/>
+<rect class="b fill-own" x="231" y="121" width="12" height="12" rx="1.5" style="animation-delay:1.71s"/>
+<rect class="b fill-own2" x="246" y="121" width="12" height="12" rx="1.5" style="animation-delay:3.60s"/>
+<rect class="b fill-own2" x="261" y="121" width="12" height="12" rx="1.5" style="animation-delay:3.65s"/>
+<rect class="b fill-own2" x="276" y="121" width="12" height="12" rx="1.5" style="animation-delay:3.69s"/>
+<rect class="b fill-own2" x="291" y="121" width="12" height="12" rx="1.5" style="animation-delay:3.74s"/>
+<rect class="b fill-own2" x="306" y="121" width="12" height="12" rx="1.5" style="animation-delay:3.78s"/>
+<rect class="b fill-own2" x="321" y="121" width="12" height="12" rx="1.5" style="animation-delay:3.83s"/>
+<rect class="b fill-own2" x="36" y="136" width="12" height="12" rx="1.5" style="animation-delay:3.87s"/>
+<rect class="b fill-own2" x="51" y="136" width="12" height="12" rx="1.5" style="animation-delay:3.92s"/>
+<rect class="b fill-own2" x="66" y="136" width="12" height="12" rx="1.5" style="animation-delay:3.96s"/>
+<rect class="b fill-own2" x="81" y="136" width="12" height="12" rx="1.5" style="animation-delay:4.00s"/>
+<rect class="b " x="96" y="136" width="12" height="12" rx="1.5"/>
+<rect class="b " x="111" y="136" width="12" height="12" rx="1.5"/>
+<rect class="b " x="126" y="136" width="12" height="12" rx="1.5"/>
+<rect class="b " x="141" y="136" width="12" height="12" rx="1.5"/>
+<rect class="b " x="156" y="136" width="12" height="12" rx="1.5"/>
+<rect class="b " x="171" y="136" width="12" height="12" rx="1.5"/>
+<rect class="b " x="186" y="136" width="12" height="12" rx="1.5"/>
+<rect class="b " x="201" y="136" width="12" height="12" rx="1.5"/>
+<rect class="b " x="216" y="136" width="12" height="12" rx="1.5"/>
+<rect class="b " x="231" y="136" width="12" height="12" rx="1.5"/>
+<rect class="b " x="246" y="136" width="12" height="12" rx="1.5"/>
+<rect class="b " x="261" y="136" width="12" height="12" rx="1.5"/>
+<rect class="b " x="276" y="136" width="12" height="12" rx="1.5"/>
+<rect class="b " x="291" y="136" width="12" height="12" rx="1.5"/>
+<rect class="b " x="306" y="136" width="12" height="12" rx="1.5"/>
+<rect class="b " x="321" y="136" width="12" height="12" rx="1.5"/>
+<rect class="b " x="36" y="151" width="12" height="12" rx="1.5"/>
+<rect class="b " x="51" y="151" width="12" height="12" rx="1.5"/>
+<rect class="b " x="66" y="151" width="12" height="12" rx="1.5"/>
+<rect class="b " x="81" y="151" width="12" height="12" rx="1.5"/>
+<rect class="b " x="96" y="151" width="12" height="12" rx="1.5"/>
+<rect class="b " x="111" y="151" width="12" height="12" rx="1.5"/>
+<rect class="b " x="126" y="151" width="12" height="12" rx="1.5"/>
+<rect class="b " x="141" y="151" width="12" height="12" rx="1.5"/>
+<rect class="b " x="156" y="151" width="12" height="12" rx="1.5"/>
+<rect class="b " x="171" y="151" width="12" height="12" rx="1.5"/>
+<rect class="b " x="186" y="151" width="12" height="12" rx="1.5"/>
+<rect class="b " x="201" y="151" width="12" height="12" rx="1.5"/>
+<rect class="b " x="216" y="151" width="12" height="12" rx="1.5"/>
+<rect class="b " x="231" y="151" width="12" height="12" rx="1.5"/>
+<rect class="b " x="246" y="151" width="12" height="12" rx="1.5"/>
+<rect class="b " x="261" y="151" width="12" height="12" rx="1.5"/>
+<rect class="b " x="276" y="151" width="12" height="12" rx="1.5"/>
+<rect class="b " x="291" y="151" width="12" height="12" rx="1.5"/>
+<rect class="b " x="306" y="151" width="12" height="12" rx="1.5"/>
+<rect class="b " x="321" y="151" width="12" height="12" rx="1.5"/>
+<rect class="b " x="36" y="166" width="12" height="12" rx="1.5"/>
+<rect class="b " x="51" y="166" width="12" height="12" rx="1.5"/>
+<rect class="b " x="66" y="166" width="12" height="12" rx="1.5"/>
+<rect class="b " x="81" y="166" width="12" height="12" rx="1.5"/>
+<rect class="b " x="96" y="166" width="12" height="12" rx="1.5"/>
+<rect class="b " x="111" y="166" width="12" height="12" rx="1.5"/>
+<rect class="b " x="126" y="166" width="12" height="12" rx="1.5"/>
+<rect class="b " x="141" y="166" width="12" height="12" rx="1.5"/>
+<rect class="b " x="156" y="166" width="12" height="12" rx="1.5"/>
+<rect class="b " x="171" y="166" width="12" height="12" rx="1.5"/>
+<rect class="b " x="186" y="166" width="12" height="12" rx="1.5"/>
+<rect class="b " x="201" y="166" width="12" height="12" rx="1.5"/>
+<rect class="b " x="216" y="166" width="12" height="12" rx="1.5"/>
+<rect class="b " x="231" y="166" width="12" height="12" rx="1.5"/>
+<rect class="b " x="246" y="166" width="12" height="12" rx="1.5"/>
+<rect class="b " x="261" y="166" width="12" height="12" rx="1.5"/>
+<rect class="b " x="276" y="166" width="12" height="12" rx="1.5"/>
+<rect class="b " x="291" y="166" width="12" height="12" rx="1.5"/>
+<rect class="b " x="306" y="166" width="12" height="12" rx="1.5"/>
+<rect class="b " x="321" y="166" width="12" height="12" rx="1.5"/>
+
+<!-- worker B -->
+<rect class="panel" x="511" y="58" width="329" height="134" rx="3" stroke-width="1"/>
+<text class="ink k" x="527" y="80">cuda:1</text>
+<text class="ink3 s" x="527" y="95">TESLA T4 · 100 BLOCKS</text>
+<rect class="b fill-recv" x="527" y="106" width="12" height="12" rx="1.5" style="animation-delay:6.35s"/>
+<rect class="b fill-recv" x="542" y="106" width="12" height="12" rx="1.5" style="animation-delay:6.37s"/>
+<rect class="b fill-recv" x="557" y="106" width="12" height="12" rx="1.5" style="animation-delay:6.39s"/>
+<rect class="b fill-recv" x="572" y="106" width="12" height="12" rx="1.5" style="animation-delay:6.42s"/>
+<rect class="b fill-recv" x="587" y="106" width="12" height="12" rx="1.5" style="animation-delay:6.44s"/>
+<rect class="b fill-recv" x="602" y="106" width="12" height="12" rx="1.5" style="animation-delay:6.46s"/>
+<rect class="b fill-recv" x="617" y="106" width="12" height="12" rx="1.5" style="animation-delay:6.48s"/>
+<rect class="b fill-recv" x="632" y="106" width="12" height="12" rx="1.5" style="animation-delay:6.50s"/>
+<rect class="b fill-recv" x="647" y="106" width="12" height="12" rx="1.5" style="animation-delay:6.53s"/>
+<rect class="b fill-recv" x="662" y="106" width="12" height="12" rx="1.5" style="animation-delay:6.55s"/>
+<rect class="b fill-recv" x="677" y="106" width="12" height="12" rx="1.5" style="animation-delay:6.57s"/>
+<rect class="b fill-recv" x="692" y="106" width="12" height="12" rx="1.5" style="animation-delay:6.59s"/>
+<rect class="b fill-recv" x="707" y="106" width="12" height="12" rx="1.5" style="animation-delay:6.61s"/>
+<rect class="b fill-recv" x="722" y="106" width="12" height="12" rx="1.5" style="animation-delay:6.64s"/>
+<rect class="b fill-recv" x="737" y="106" width="12" height="12" rx="1.5" style="animation-delay:6.66s"/>
+<rect class="b fill-recv" x="752" y="106" width="12" height="12" rx="1.5" style="animation-delay:6.68s"/>
+<rect class="b fill-recv" x="767" y="106" width="12" height="12" rx="1.5" style="animation-delay:6.70s"/>
+<rect class="b fill-recv" x="782" y="106" width="12" height="12" rx="1.5" style="animation-delay:6.72s"/>
+<rect class="b fill-recv" x="797" y="106" width="12" height="12" rx="1.5" style="animation-delay:6.75s"/>
+<rect class="b fill-recv" x="812" y="106" width="12" height="12" rx="1.5" style="animation-delay:6.77s"/>
+<rect class="b fill-recv" x="527" y="121" width="12" height="12" rx="1.5" style="animation-delay:6.79s"/>
+<rect class="b fill-recv" x="542" y="121" width="12" height="12" rx="1.5" style="animation-delay:6.81s"/>
+<rect class="b fill-recv" x="557" y="121" width="12" height="12" rx="1.5" style="animation-delay:6.83s"/>
+<rect class="b fill-recv" x="572" y="121" width="12" height="12" rx="1.5" style="animation-delay:6.86s"/>
+<rect class="b fill-own3" x="587" y="121" width="12" height="12" rx="1.5" style="animation-delay:7.30s"/>
+<rect class="b fill-own3" x="602" y="121" width="12" height="12" rx="1.5" style="animation-delay:7.35s"/>
+<rect class="b fill-own3" x="617" y="121" width="12" height="12" rx="1.5" style="animation-delay:7.40s"/>
+<rect class="b fill-own3" x="632" y="121" width="12" height="12" rx="1.5" style="animation-delay:7.45s"/>
+<rect class="b fill-own3" x="647" y="121" width="12" height="12" rx="1.5" style="animation-delay:7.50s"/>
+<rect class="b fill-own3" x="662" y="121" width="12" height="12" rx="1.5" style="animation-delay:7.55s"/>
+<rect class="b " x="677" y="121" width="12" height="12" rx="1.5"/>
+<rect class="b " x="692" y="121" width="12" height="12" rx="1.5"/>
+<rect class="b " x="707" y="121" width="12" height="12" rx="1.5"/>
+<rect class="b " x="722" y="121" width="12" height="12" rx="1.5"/>
+<rect class="b " x="737" y="121" width="12" height="12" rx="1.5"/>
+<rect class="b " x="752" y="121" width="12" height="12" rx="1.5"/>
+<rect class="b " x="767" y="121" width="12" height="12" rx="1.5"/>
+<rect class="b " x="782" y="121" width="12" height="12" rx="1.5"/>
+<rect class="b " x="797" y="121" width="12" height="12" rx="1.5"/>
+<rect class="b " x="812" y="121" width="12" height="12" rx="1.5"/>
+<rect class="b " x="527" y="136" width="12" height="12" rx="1.5"/>
+<rect class="b " x="542" y="136" width="12" height="12" rx="1.5"/>
+<rect class="b " x="557" y="136" width="12" height="12" rx="1.5"/>
+<rect class="b " x="572" y="136" width="12" height="12" rx="1.5"/>
+<rect class="b " x="587" y="136" width="12" height="12" rx="1.5"/>
+<rect class="b " x="602" y="136" width="12" height="12" rx="1.5"/>
+<rect class="b " x="617" y="136" width="12" height="12" rx="1.5"/>
+<rect class="b " x="632" y="136" width="12" height="12" rx="1.5"/>
+<rect class="b " x="647" y="136" width="12" height="12" rx="1.5"/>
+<rect class="b " x="662" y="136" width="12" height="12" rx="1.5"/>
+<rect class="b " x="677" y="136" width="12" height="12" rx="1.5"/>
+<rect class="b " x="692" y="136" width="12" height="12" rx="1.5"/>
+<rect class="b " x="707" y="136" width="12" height="12" rx="1.5"/>
+<rect class="b " x="722" y="136" width="12" height="12" rx="1.5"/>
+<rect class="b " x="737" y="136" width="12" height="12" rx="1.5"/>
+<rect class="b " x="752" y="136" width="12" height="12" rx="1.5"/>
+<rect class="b " x="767" y="136" width="12" height="12" rx="1.5"/>
+<rect class="b " x="782" y="136" width="12" height="12" rx="1.5"/>
+<rect class="b " x="797" y="136" width="12" height="12" rx="1.5"/>
+<rect class="b " x="812" y="136" width="12" height="12" rx="1.5"/>
+<rect class="b " x="527" y="151" width="12" height="12" rx="1.5"/>
+<rect class="b " x="542" y="151" width="12" height="12" rx="1.5"/>
+<rect class="b " x="557" y="151" width="12" height="12" rx="1.5"/>
+<rect class="b " x="572" y="151" width="12" height="12" rx="1.5"/>
+<rect class="b " x="587" y="151" width="12" height="12" rx="1.5"/>
+<rect class="b " x="602" y="151" width="12" height="12" rx="1.5"/>
+<rect class="b " x="617" y="151" width="12" height="12" rx="1.5"/>
+<rect class="b " x="632" y="151" width="12" height="12" rx="1.5"/>
+<rect class="b " x="647" y="151" width="12" height="12" rx="1.5"/>
+<rect class="b " x="662" y="151" width="12" height="12" rx="1.5"/>
+<rect class="b " x="677" y="151" width="12" height="12" rx="1.5"/>
+<rect class="b " x="692" y="151" width="12" height="12" rx="1.5"/>
+<rect class="b " x="707" y="151" width="12" height="12" rx="1.5"/>
+<rect class="b " x="722" y="151" width="12" height="12" rx="1.5"/>
+<rect class="b " x="737" y="151" width="12" height="12" rx="1.5"/>
+<rect class="b " x="752" y="151" width="12" height="12" rx="1.5"/>
+<rect class="b " x="767" y="151" width="12" height="12" rx="1.5"/>
+<rect class="b " x="782" y="151" width="12" height="12" rx="1.5"/>
+<rect class="b " x="797" y="151" width="12" height="12" rx="1.5"/>
+<rect class="b " x="812" y="151" width="12" height="12" rx="1.5"/>
+<rect class="b " x="527" y="166" width="12" height="12" rx="1.5"/>
+<rect class="b " x="542" y="166" width="12" height="12" rx="1.5"/>
+<rect class="b " x="557" y="166" width="12" height="12" rx="1.5"/>
+<rect class="b " x="572" y="166" width="12" height="12" rx="1.5"/>
+<rect class="b " x="587" y="166" width="12" height="12" rx="1.5"/>
+<rect class="b " x="602" y="166" width="12" height="12" rx="1.5"/>
+<rect class="b " x="617" y="166" width="12" height="12" rx="1.5"/>
+<rect class="b " x="632" y="166" width="12" height="12" rx="1.5"/>
+<rect class="b " x="647" y="166" width="12" height="12" rx="1.5"/>
+<rect class="b " x="662" y="166" width="12" height="12" rx="1.5"/>
+<rect class="b " x="677" y="166" width="12" height="12" rx="1.5"/>
+<rect class="b " x="692" y="166" width="12" height="12" rx="1.5"/>
+<rect class="b " x="707" y="166" width="12" height="12" rx="1.5"/>
+<rect class="b " x="722" y="166" width="12" height="12" rx="1.5"/>
+<rect class="b " x="737" y="166" width="12" height="12" rx="1.5"/>
+<rect class="b " x="752" y="166" width="12" height="12" rx="1.5"/>
+<rect class="b " x="767" y="166" width="12" height="12" rx="1.5"/>
+<rect class="b " x="782" y="166" width="12" height="12" rx="1.5"/>
+<rect class="b " x="797" y="166" width="12" height="12" rx="1.5"/>
+<rect class="b " x="812" y="166" width="12" height="12" rx="1.5"/>
+
+<!-- interconnect -->
+<line class="wire" x1="349" y1="125"
+      x2="511" y2="125" stroke-width="1" stroke-dasharray="3 3"/>
+<rect class="pkt" x="351" y="121"
+      width="14" height="8" rx="1"/>
+
+<!-- legend -->
+<g transform="translate(20,244)">
+  <rect x="0" y="-9" width="9" height="9" rx="1" fill="#2A6FD6"/>
+  <text class="ink3 s" x="14" y="-1">IN USE</text>
+  <rect x="76" y="-9" width="9" height="9" rx="1" fill="#0C7A4A"/>
+  <text class="ink3 s" x="90" y="-1">CACHED — SHAREABLE</text>
+  <rect x="238" y="-9" width="9" height="9" rx="1" fill="#D9541F"/>
+  <text class="ink3 s" x="252" y="-1">ARRIVED OVER THE WIRE</text>
+</g>
+<text class="ink3 s" x="840" y="244" text-anchor="end">55.4% OF T4 PEAK BANDWIDTH · 44 TESTS</text>
+</svg>

@@ -15,8 +15,8 @@ from .fetch import load_safetensors
 class LayerWeights:
     ln1_g: np.ndarray
     ln1_b: np.ndarray
-    attn_w: np.ndarray      # [E, 3E]
-    attn_b: np.ndarray      # [3E]
+    attn_w: np.ndarray      # [E, E + 2*kv_dim]  (== [E, 3E] under MHA)
+    attn_b: np.ndarray      # [E + 2*kv_dim]
     proj_w: np.ndarray      # [E, E]
     proj_b: np.ndarray
     ln2_g: np.ndarray
@@ -108,6 +108,10 @@ def synthetic_gpt2(cfg: ModelConfig, seed: int = 0, dtype=np.float32) -> GPT2Wei
     """
     rng = np.random.default_rng(seed)
     E, L = cfg.n_embd, cfg.n_layer
+    # Under GQA the K and V projections are narrower than Q: n_kv_head * head_dim
+    # rather than n_embd. That asymmetry is the whole saving.
+    KVD = cfg.kv_dim
+    QKV = E + 2 * KVD
     s = 0.02
 
     def n(*shape):
@@ -119,7 +123,7 @@ def synthetic_gpt2(cfg: ModelConfig, seed: int = 0, dtype=np.float32) -> GPT2Wei
     layers = [
         LayerWeights(
             ln1_g=np.ones(E, dtype=dtype), ln1_b=z(E),
-            attn_w=n(E, 3 * E), attn_b=z(3 * E),
+            attn_w=n(E, QKV), attn_b=z(QKV),
             proj_w=n(E, E), proj_b=z(E),
             ln2_g=np.ones(E, dtype=dtype), ln2_b=z(E),
             fc_w=n(E, 4 * E), fc_b=z(4 * E),

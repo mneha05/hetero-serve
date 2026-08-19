@@ -4,6 +4,10 @@ A KV-cache-aware LLM serving scheduler that decides, per request, whether it is 
 to **ship a KV cache across the network** or to **recompute it from scratch** — with a
 paged KV cache, continuous batching, and a **fused CUDA paged-attention kernel**.
 
+<p align="center">
+  <img src="docs/hero.svg" alt="Two accelerators sharing a KV cache prefix: blocks fill on the first worker, a second request reuses them, then the cached prefix migrates across the interconnect." width="100%">
+</p>
+
 [![tests](https://github.com/mneha05/hetero-serve/actions/workflows/ci.yml/badge.svg)](https://github.com/mneha05/hetero-serve/actions/workflows/ci.yml)
 [![Verify the CUDA kernels in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/mneha05/hetero-serve/blob/main/notebooks/verify_cuda_kernel.ipynb)
 
@@ -34,6 +38,7 @@ reproduce all of it on a free GPU.
 | [`model/paged_attn_v3.py`](heteroserve/model/paged_attn_v3.py) | the **fastest kernel** — context-split, written because the profiler said so |
 | [`model/paged_attn_v2.py`](heteroserve/model/paged_attn_v2.py) | the online-softmax kernel it builds on |
 | [`model/paged_attn.py`](heteroserve/model/paged_attn.py) | the naive v1 kernel it is measured against, plus the torch reference |
+| [`config.py`](heteroserve/config.py) | model geometry incl. GQA — `n_kv_head` is what moves the crossover |
 | [`kv/blocks.py`](heteroserve/kv/blocks.py) | paged KV cache: chain hashing, refcounts, eviction, migration |
 | [`sched/router.py`](heteroserve/sched/router.py) | the migrate-vs-recompute cost model |
 | [`worker/worker.py`](heteroserve/worker/worker.py) | one device, one KV pool, continuous batching |
@@ -383,6 +388,58 @@ device-fill argument when the context is too short for that.
 That is the second time on this project that the number I would have guessed and the
 number the hardware reported disagreed, and both times the measurement was the
 interesting one.
+
+### Grouped-query attention, and what it does to the crossover
+
+GPT-2 is MHA — every query head carries its own KV head. **Nothing current does that.**
+Llama-3-8B has 32 query heads and 8 KV heads; Mistral and Qwen are the same shape. All
+three kernels support GQA: a query head reads the KV head it shares with its group,
+
+```cuda
+const int kv_h = h / (num_heads / num_kv_heads);
+```
+
+so the shared head is *indexed*, never materialised. The KV pool is sized by
+`n_kv_head`, which is where the saving actually lives.
+
+The interesting part is not the kernel change, it is what GQA does to the scheduler.
+Cutting KV by the group factor cuts the bytes a migration must move by the same factor,
+so the bandwidth at which moving beats recomputing drops in lockstep — 512-token prefix,
+T4 prefill at 0.59 ms/token:
+
+| attention | KV heads | KV/token | 512-token prefix | crossover |
+|---|---:|---:|---:|---:|
+| MHA (GPT-2 as-is) | 12 | 36 KiB | 18.9 MB | 503 Mbps |
+| GQA 2:1 | 6 | 18 KiB | 9.4 MB | 252 Mbps |
+| **GQA 4:1** (Llama-3's ratio) | 3 | 9 KiB | 4.7 MB | **126 Mbps** |
+| MQA (1 KV head) | 1 | 3 KiB | 1.6 MB | 42 Mbps |
+
+At Llama-3's 4:1 ratio, migration stops needing a datacenter fabric and starts working
+on **commodity networking**. The architectural choice everyone made for memory reasons
+turns out to change the distributed-serving calculus too, and this project can measure
+that because both halves — kernel and scheduler — are real.
+
+Correctness is pinned by construction: duplicating each shared KV head across its query
+group turns a GQA model into an algebraically identical MHA one, and
+`test_gqa_equals_mha_with_duplicated_kv_heads` asserts the two produce the same logits.
+If the GQA plumbing were wrong anywhere, that test fails.
+
+### Why there are no tensor cores in here
+
+Reasonable question, and the answer is that they would not help. **Decode attention is a
+GEMV, not a GEMM** — one query token against N cached keys. It moves 201 MB and does
+almost no arithmetic per byte, so it is bound by memory, and tensor cores accelerate
+math. My own profile says so directly:
+
+```
+Memory Throughput        13.67 %
+Compute (SM) Throughput  11.34 %
+```
+
+Compute was never the constraint. Tensor cores belong in **prefill**, which is a genuine
+GEMM over many query tokens at once — that is a real extension, and it is not what any
+of these three kernels do. Reaching for WMMA in a memory-bound decode kernel would be
+motion without movement.
 
 ### What is verified, and what is not
 
@@ -742,7 +799,7 @@ stop happening.
 
 ## Tests
 
-44 tests, no mocks — the distributed ones spawn real worker processes and talk over
+47 tests, no mocks — the distributed ones spawn real worker processes and talk over
 real sockets. [CI](.github/workflows/ci.yml) runs the whole suite on Python 3.11 and
 3.12, plus the two-worker smoke test, plus a Docker build that runs the suite again
 inside the container — so "it works on my machine" is not load-bearing anywhere. On a bare clone **38 run and pass**; 2 more once GPT-2 weights are
@@ -772,6 +829,8 @@ The load-bearing ones:
   block sizes, and shuffled non-contiguous block tables.
 - **`test_all_three_kernels_agree_under_fuzz`** *(GPU)* — 15 random trials asserting v1,
   v2 and v3 all match the reference and each other.
+- **`test_gqa_equals_mha_with_duplicated_kv_heads`** — a GQA model and the MHA model built
+  by duplicating its shared KV heads must produce identical logits.
 
 ---
 
