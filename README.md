@@ -4,6 +4,7 @@ A KV-cache-aware LLM serving scheduler that decides, per request, whether it is 
 to **ship a KV cache across the network** or to **recompute it from scratch** — with a
 paged KV cache, continuous batching, and a **fused CUDA paged-attention kernel**.
 
+[![tests](https://github.com/mneha05/hetero-serve/actions/workflows/ci.yml/badge.svg)](https://github.com/mneha05/hetero-serve/actions/workflows/ci.yml)
 [![Verify the CUDA kernels in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/mneha05/hetero-serve/blob/main/notebooks/verify_cuda_kernel.ipynb)
 
 **The headline, measured on a Tesla T4:** profiling my own decode step showed a third
@@ -24,6 +25,7 @@ reproduce all of it on a free GPU.
 | 🚀 **See it work in 60 seconds** | [`run_demo.py`](run_demo.py) |
 | 📊 **The measurements** | [T4 kernel results](#measured-on-a-tesla-t4) · [Nsight profile](#what-nsight-says-to-do-next) · [policy sweep](#results) · [raw data](results/) |
 | 🐛 **What I got wrong** | [four bugs, found by measuring](#what-went-wrong-the-useful-part) |
+| 🐳 **Reproduce it anywhere** | [`Dockerfile`](Dockerfile) (CPU) · [`Dockerfile.cuda`](Dockerfile.cuda) (kernels) · [CI](.github/workflows/ci.yml) |
 
 **The code, in the order it is worth reading:**
 
@@ -683,6 +685,19 @@ measures the fully-padded batch, making it look ~4× slower than it is under loa
 compiles both kernels, runs the tests, prints the bandwidth roofline, and boots the
 serving system. Nothing to install.
 
+**No setup at all?** Docker:
+
+```bash
+docker build -t hetero-serve .
+docker run --rm hetero-serve                       # the test suite
+docker run --rm hetero-serve python run_demo.py --model tiny
+
+# with a GPU, so the CUDA kernels actually compile and run
+docker build -f Dockerfile.cuda -t hetero-serve:cuda .
+docker run --rm --gpus all hetero-serve:cuda
+docker run --rm --gpus all hetero-serve:cuda     python scripts/bench_kernel.py --batch 16 --context 512 --dtype float16
+```
+
 Locally:
 
 ```bash
@@ -728,7 +743,9 @@ stop happening.
 ## Tests
 
 44 tests, no mocks — the distributed ones spawn real worker processes and talk over
-real sockets. On a bare clone **38 run and pass**; 2 more once GPT-2 weights are
+real sockets. [CI](.github/workflows/ci.yml) runs the whole suite on Python 3.11 and
+3.12, plus the two-worker smoke test, plus a Docker build that runs the suite again
+inside the container — so "it works on my machine" is not load-bearing anywhere. On a bare clone **38 run and pass**; 2 more once GPT-2 weights are
 downloaded, and the final 6 need a CUDA device. Everything that cannot run skips
 cleanly with a reason rather than failing.
 

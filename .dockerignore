@@ -1,0 +1,12 @@
+.git
+.github
+weights/
+results/
+.ov_cache/
+.pytest_cache/
+__pycache__/
+**/__pycache__/
+*.pyc
+notebooks/
+.venv/
+venv/

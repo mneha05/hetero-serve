@@ -1,0 +1,42 @@
+# CUDA image: everything above, plus the three hand-written paged-attention
+# kernels actually compiled and run.
+#
+#   docker build -f Dockerfile.cuda -t hetero-serve:cuda .
+#   docker run --rm --gpus all hetero-serve:cuda                 # full suite, nothing skipped
+#   docker run --rm --gpus all hetero-serve:cuda \
+#       python scripts/bench_kernel.py --batch 16 --context 512 --dtype float16
+#   docker run --rm --gpus all hetero-serve:cuda \
+#       python -m heteroserve.bench.sweep --devices cuda:0,cuda:0 --repeats 3
+#
+# Needs the NVIDIA Container Toolkit on the host for `--gpus all`.
+# `devel` rather than `runtime` because torch.utils.cpp_extension shells out to
+# nvcc at import time to build the kernels.
+
+FROM nvidia/cuda:12.4.1-devel-ubuntu22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        python3 python3-pip python3-dev \
+        git \
+        ninja-build \
+    && rm -rf /var/lib/apt/lists/* \
+    && ln -sf /usr/bin/python3 /usr/local/bin/python
+
+# ninja above is load-bearing: without it torch cannot build the CUDA
+# extensions and every kernel silently falls back to the torch path.
+RUN pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cu124 \
+        "torch>=2.4"
+RUN pip install --no-cache-dir \
+        "numpy>=2.0" "regex>=2024.0" "pytest>=8.0" \
+        "matplotlib>=3.8" "fastapi>=0.110" "uvicorn>=0.27"
+
+WORKDIR /app
+COPY . /app
+
+VOLUME ["/app/weights"]
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONIOENCODING=utf-8 \
+    TORCH_CUDA_ARCH_LIST="7.0;7.5;8.0;8.6;8.9;9.0"
+
+CMD ["python", "-m", "pytest", "-q"]

@@ -1,0 +1,59 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  tests:
+    name: pytest (py${{ matrix.python }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          # CPU torch: the CUDA wheel is ~2.5 GB and there is no GPU on a runner.
+          pip install --index-url https://download.pytorch.org/whl/cpu "torch>=2.4"
+          pip install "numpy>=2.0" "regex>=2024.0" "pytest>=8.0" \
+                      "matplotlib>=3.8" "fastapi>=0.110" "uvicorn>=0.27"
+
+      - name: Byte-compile everything
+        run: python -m compileall -q heteroserve scripts run_demo.py
+
+      - name: Run the suite
+        # The distributed tests spawn real worker processes and talk over real
+        # TCP sockets, so this exercises the scheduler end to end -- not mocks.
+        # Tests needing GPT-2 weights (~550 MB) or a CUDA device skip with a
+        # reason rather than failing.
+        run: python -m pytest -v
+
+      - name: Smoke-test a 2-worker cluster
+        run: python scripts/smoke.py
+
+  docker:
+    name: docker build + test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build the CPU image
+        run: docker build -t hetero-serve:ci .
+
+      - name: Run the suite inside the container
+        run: docker run --rm hetero-serve:ci
+
+      - name: Run the demo inside the container
+        run: docker run --rm hetero-serve:ci python run_demo.py --model tiny --devices CPU,CPU
