@@ -1,0 +1,20 @@
+# Core — the scheduler, KV cache and reference engine need only numpy.
+numpy>=2.0
+
+# Accelerator backends (Intel Arc GPU / NPU / optimised CPU).
+# Optional: without it everything still runs on the numpy reference engine.
+openvino>=2025.0
+
+# Exact GPT-2 pre-tokenisation (\p{L} classes). Optional; there is a stdlib
+# fallback that matches on ASCII.
+regex>=2024.0
+
+# Live dashboard only.
+fastapi>=0.110
+uvicorn>=0.27
+
+# Charts only.
+matplotlib>=3.8
+
+# Tests only.
+pytest>=8.0

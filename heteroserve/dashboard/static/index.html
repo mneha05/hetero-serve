@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>hetero-serve</title>
+<style>
+:root{
+  color-scheme: light;
+  --surface:#fcfcfb; --plane:#f9f9f7; --card:#ffffff;
+  --ink:#0b0b0b; --ink2:#52514e; --muted:#898781;
+  --grid:#e1e0d9; --axis:#c3c2b7; --border:rgba(11,11,11,.10);
+  --gpu:#2a78d6; --npu:#eb6834; --cpu:#1baf7a; --accent:#2a78d6;
+  --good:#0ca30c; --warn:#fab219; --crit:#d03b3b;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --surface:#1a1a19; --plane:#0d0d0d; --card:#212120;
+    --ink:#ffffff; --ink2:#c3c2b7; --muted:#898781;
+    --grid:#2c2c2a; --axis:#383835; --border:rgba(255,255,255,.10);
+    --gpu:#3987e5; --npu:#d95926; --cpu:#199e70; --accent:#3987e5;
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--plane); color:var(--ink);
+  font:14px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+header{
+  padding:20px 24px 16px; border-bottom:1px solid var(--border);
+  background:var(--surface); position:sticky; top:0; z-index:5;
+}
+h1{margin:0 0 2px; font-size:19px; font-weight:650; letter-spacing:-.01em}
+.sub{color:var(--muted); font-size:12.5px}
+.controls{display:flex; flex-wrap:wrap; gap:14px; align-items:flex-end; margin-top:14px}
+.ctl{display:flex; flex-direction:column; gap:5px}
+.ctl label{font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.06em}
+select,input[type=text],button{
+  font:inherit; padding:7px 10px; border-radius:7px;
+  border:1px solid var(--border); background:var(--card); color:var(--ink);
+}
+input[type=text]{min-width:340px}
+button{cursor:pointer; font-weight:550}
+button.primary{background:var(--accent); color:#fff; border-color:transparent}
+button:disabled{opacity:.5; cursor:default}
+input[type=range]{width:190px; accent-color:var(--accent)}
+main{padding:20px 24px 40px; display:grid; gap:18px}
+.cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(255px,1fr)); gap:14px}
+.card{
+  background:var(--card); border:1px solid var(--border); border-radius:12px;
+  padding:14px 16px;
+}
+.card h3{margin:0; font-size:14.5px; display:flex; align-items:center; gap:8px}
+.dot{width:9px; height:9px; border-radius:50%; flex:none}
+.engine{color:var(--muted); font-size:11.5px; margin:3px 0 11px; font-family:ui-monospace,monospace}
+.bar{height:7px; border-radius:4px; background:var(--grid); overflow:hidden; margin:3px 0 9px}
+.bar>i{display:block; height:100%; border-radius:4px; transition:width .35s}
+.kvs{display:grid; grid-template-columns:1fr 1fr; gap:4px 12px; font-size:12.5px}
+.kvs b{font-weight:600; font-variant-numeric:tabular-nums}
+.kvs span{color:var(--muted)}
+.panels{display:grid; grid-template-columns:1.25fr 1fr; gap:18px}
+@media (max-width:940px){.panels{grid-template-columns:1fr}}
+.panel{background:var(--card); border:1px solid var(--border); border-radius:12px; overflow:hidden}
+.panel>h2{
+  margin:0; padding:12px 16px; font-size:13px; font-weight:600;
+  border-bottom:1px solid var(--border); display:flex; justify-content:space-between;
+}
+.panel>h2 em{font-style:normal; color:var(--muted); font-weight:400; font-size:12px}
+.scroll{max-height:390px; overflow:auto}
+.row{padding:10px 16px; border-bottom:1px solid var(--border); font-size:12.5px}
+.row:last-child{border-bottom:none}
+.row .top{display:flex; gap:8px; align-items:center; margin-bottom:3px; flex-wrap:wrap}
+.tag{
+  font-size:10.5px; padding:2px 7px; border-radius:20px; font-weight:600;
+  border:1px solid var(--border); font-family:ui-monospace,monospace;
+}
+.tag.hit{color:var(--good); border-color:color-mix(in srgb,var(--good) 40%,transparent)}
+.tag.mig{color:var(--npu); border-color:color-mix(in srgb,var(--npu) 45%,transparent)}
+.tag.cold{color:var(--muted)}
+.gen{color:var(--ink2); font-family:ui-monospace,monospace; font-size:12px;
+     white-space:pre-wrap; word-break:break-word; margin-top:3px}
+.gen .p{color:var(--muted)}
+.reason{color:var(--muted); font-size:11.5px; font-family:ui-monospace,monospace}
+.metrics{display:flex; gap:14px; color:var(--muted); font-size:11.5px;
+         font-variant-numeric:tabular-nums; margin-top:3px}
+.evt{padding:6px 16px; border-bottom:1px solid var(--border);
+     font-family:ui-monospace,monospace; font-size:11.5px; color:var(--ink2)}
+.evt b{color:var(--ink)}
+.empty{padding:28px 16px; text-align:center; color:var(--muted); font-size:12.5px}
+svg text{font:10px system-ui,sans-serif; fill:var(--muted)}
+.legend{display:flex; gap:14px; padding:8px 16px 0; font-size:11.5px; color:var(--ink2)}
+.legend i{display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:5px}
+</style>
+</head>
+<body>
+<header>
+  <h1>hetero-serve</h1>
+  <div class="sub">KV-cache-aware LLM scheduling across <b id="devlist">…</b> · GPT-2 124M · every number measured live</div>
+  <div class="controls">
+    <div class="ctl">
+      <label for="prompt">Prompt</label>
+      <input type="text" id="prompt" value="You are a careful assistant. Answer using only the provided context. The Eiffel Tower is located in the city of">
+    </div>
+    <div class="ctl"><label>&nbsp;</label><button class="primary" id="send">Send</button></div>
+    <div class="ctl"><label>&nbsp;</label><button id="burst">Burst ×8</button></div>
+    <div class="ctl">
+      <label for="policy">Routing policy</label>
+      <select id="policy">
+        <option value="cache_aware" selected>cache aware</option>
+        <option value="prefix_affinity">prefix affinity</option>
+        <option value="least_loaded">least loaded</option>
+        <option value="round_robin">round robin</option>
+      </select>
+    </div>
+    <div class="ctl">
+      <label for="bw">Interconnect <b id="bwv">1000</b> Mbps</label>
+      <input type="range" id="bw" min="0" max="4" step="1" value="3">
+    </div>
+    <div class="ctl"><label>&nbsp;</label><button id="reset">Clear caches</button></div>
+  </div>
+</header>
+
+<main>
+  <div class="cards" id="cards"></div>
+
+  <div class="panels">
+    <section class="panel">
+      <h2>Requests <em id="reqcount">0 served</em></h2>
+      <div class="scroll" id="reqs"><div class="empty">Send a prompt. Send it twice — the second one hits the prefix cache.</div></div>
+    </section>
+
+    <section class="panel">
+      <h2>Time to first token <em>most recent 40</em></h2>
+      <div class="legend">
+        <span><i style="background:var(--gpu)"></i>cache hit</span>
+        <span><i style="background:var(--npu)"></i>migrated KV</span>
+        <span><i style="background:var(--muted)"></i>cold prefill</span>
+      </div>
+      <svg id="chart" viewBox="0 0 520 190" width="100%" height="190" preserveAspectRatio="none"></svg>
+      <h2 style="border-top:1px solid var(--border)">Scheduler events</h2>
+      <div class="scroll" style="max-height:190px" id="events"></div>
+    </section>
+  </div>
+</main>
+
+<script>
+const BW = [50, 200, 1000, 5000, 10000];
+const $ = s => document.querySelector(s);
+const reqs = [];
+
+function devColor(d){
+  d = (d||'').toUpperCase();
+  return d.includes('GPU') ? 'var(--gpu)' : d.includes('NPU') ? 'var(--npu)' : 'var(--cpu)';
+}
+const esc = s => String(s ?? '').replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+
+function renderCards(state){
+  $('#devlist').textContent = state.workers.map(w => w.device).join(' + ');
+  $('#cards').innerHTML = state.workers.map(w => {
+    const st = w.state || {}, kv = st.kv || {};
+    const util = Math.round((w.kv_util || 0) * 100);
+    return `<div class="card">
+      <h3><span class="dot" style="background:${devColor(w.device)}"></span>${esc(w.device)}
+        <span style="color:var(--muted);font-weight:400;font-size:12px">${esc(w.worker_id)}</span></h3>
+      <div class="engine">${esc(w.engine)}</div>
+      <div class="bar"><i style="width:${util}%;background:${devColor(w.device)}"></i></div>
+      <div class="kvs">
+        <span>KV used</span><b>${util}%</b>
+        <span>queued / running</span><b>${w.queued} / ${w.running}</b>
+        <span>prefill</span><b>${w.t_prefill_per_token_ms} ms/tok</b>
+        <span>decode</span><b>${w.t_decode_step_ms} ms/step</b>
+        <span>tokens out</span><b>${st.tokens_generated ?? 0}</b>
+        <span>prefill saved</span><b>${st.tokens_saved_by_cache ?? 0}</b>
+        <span>cached blocks</span><b>${w.cached_blocks}</b>
+        <span>KV in / out</span><b>${st.migrations_in ?? 0} / ${st.migrations_out ?? 0}</b>
+      </div></div>`;
+  }).join('');
+}
+
+function renderReqs(){
+  const el = $('#reqs');
+  $('#reqcount').textContent = `${reqs.length} served`;
+  if(!reqs.length){ el.innerHTML = '<div class="empty">No requests yet.</div>'; return; }
+  el.innerHTML = reqs.slice().reverse().slice(0, 40).map(r => {
+    const pct = r.prompt_tokens ? Math.round(100 * r.cached / r.prompt_tokens) : 0;
+    const tag = r.migrated ? `<span class="tag mig">migrated ${r.migration_mb} MB</span>`
+              : pct > 0    ? `<span class="tag hit">${pct}% cache hit</span>`
+                           : `<span class="tag cold">cold</span>`;
+    return `<div class="row">
+      <div class="top">
+        <span class="tag" style="color:${devColor(r.worker)}">${esc(r.worker)}</span>${tag}
+      </div>
+      <div class="gen"><span class="p">${esc(r.prompt)}</span>${esc(r.text)}</div>
+      <div class="metrics">
+        <span>TTFT <b>${r.ttft_ms} ms</b></span>
+        <span>E2E <b>${r.e2e_ms} ms</b></span>
+        <span>prefill computed <b>${r.computed}</b>/${r.prompt_tokens}</span>
+      </div>
+      <div class="reason">${esc(r.reason)}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderChart(){
+  const W = 520, H = 190, pad = {l: 42, r: 10, t: 12, b: 22};
+  const data = reqs.slice(-40);
+  const svg = $('#chart');
+  if(!data.length){ svg.innerHTML = '<text x="50%" y="50%" text-anchor="middle">no data yet</text>'; return; }
+  const max = Math.max(...data.map(d => d.ttft_ms), 10) * 1.15;
+  const iw = W - pad.l - pad.r, ih = H - pad.t - pad.b;
+  const bw = Math.max(2, iw / data.length - 3);
+  let out = '';
+  for(let i = 0; i <= 3; i++){
+    const y = pad.t + ih * i / 3, v = max * (1 - i / 3);
+    out += `<line x1="${pad.l}" y1="${y}" x2="${W - pad.r}" y2="${y}" stroke="var(--grid)" stroke-width="1"/>`;
+    out += `<text x="${pad.l - 6}" y="${y + 3}" text-anchor="end">${Math.round(v)}</text>`;
+  }
+  data.forEach((d, i) => {
+    const h = Math.max(1, ih * d.ttft_ms / max);
+    const x = pad.l + iw * i / data.length;
+    const c = d.migrated ? 'var(--npu)' : (d.cached > 0 ? 'var(--gpu)' : 'var(--muted)');
+    out += `<rect x="${x}" y="${pad.t + ih - h}" width="${bw}" height="${h}" rx="2" fill="${c}"><title>${d.ttft_ms} ms — ${esc(d.reason)}</title></rect>`;
+  });
+  out += `<text x="${pad.l}" y="${H - 6}">oldest</text><text x="${W - pad.r}" y="${H - 6}" text-anchor="end">newest</text>`;
+  out += `<text x="${pad.l - 34}" y="${pad.t - 2}">ms</text>`;
+  svg.innerHTML = out;
+}
+
+const evEl = $('#events');
+function pushEvent(e){
+  const kind = e.kind;
+  let line = null;
+  if(kind === 'push_done')  line = e.ok ? `<b>KV migrated</b> ${e.from} → ${e.target} · ${(e.bytes/1e6).toFixed(1)} MB in ${(e.elapsed*1000).toFixed(0)} ms`
+                                        : `<b>migration failed</b> (${esc(e.reason||'')})`;
+  if(kind === 'preempted')  line = `<b>preempted</b> ${e.seq_id?.slice(0,6)} on ${e.worker_id} (×${e.count})`;
+  if(kind === 'rejected')   line = `<b>rejected</b> by ${e.worker_id}: ${esc(e.reason)}`;
+  if(kind === 'error')      line = `<b>error</b> ${esc(e.error)}`;
+  if(!line) return;
+  const div = document.createElement('div');
+  div.className = 'evt';
+  div.innerHTML = `<span style="color:var(--muted)">${new Date().toLocaleTimeString()}</span> ${line}`;
+  evEl.prepend(div);
+  while(evEl.children.length > 60) evEl.lastChild.remove();
+}
+
+const es = new EventSource('/api/events');
+es.onmessage = ev => {
+  const m = JSON.parse(ev.data);
+  if(m.type === 'state')   renderCards(m.state);
+  if(m.type === 'event')   pushEvent(m.event);
+  if(m.type === 'request'){ reqs.push(m.request); renderReqs(); renderChart(); }
+};
+
+const post = (url, body) => fetch(url, {
+  method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body || {})
+}).then(r => r.json());
+
+$('#send').onclick = async () => {
+  const b = $('#send'); b.disabled = true; b.textContent = 'Running…';
+  try { await post('/api/generate', {prompt: $('#prompt').value, max_new_tokens: 16}); }
+  finally { b.disabled = false; b.textContent = 'Send'; }
+};
+$('#burst').onclick = async () => {
+  const b = $('#burst'); b.disabled = true; b.textContent = 'Running…';
+  try { await post('/api/burst', {n: 8, max_new_tokens: 12}); }
+  finally { b.disabled = false; b.textContent = 'Burst ×8'; }
+};
+$('#policy').onchange = e => post('/api/policy', {policy: e.target.value});
+$('#bw').oninput = e => {
+  const v = BW[+e.target.value];
+  $('#bwv').textContent = v;
+  post('/api/link', {bandwidth_mbps: v, latency_ms: 2.0});
+};
+$('#reset').onclick = async () => {
+  await post('/api/reset'); reqs.length = 0; renderReqs(); renderChart(); evEl.innerHTML = '';
+};
+renderChart();
+</script>
+</body>
+</html>

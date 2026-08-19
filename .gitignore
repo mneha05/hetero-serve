@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ov_cache/
+weights/
+results/*.csv
+results/*.json
+!results/baseline-*.json
+.venv/
+venv/
