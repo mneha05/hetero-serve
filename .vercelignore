@@ -1,0 +1,15 @@
+# Vercel only needs web/. Without this it finds requirements.txt, decides the
+# repo is a Python serverless app, and fails looking for a FastAPI endpoint.
+heteroserve/
+scripts/
+tests/
+notebooks/
+weights/
+results/
+docs/
+.github/
+requirements.txt
+pytest.ini
+Dockerfile
+Dockerfile.cuda
+.dockerignore
