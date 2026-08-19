@@ -1,309 +1,352 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Paged Attention Bench — hetero-serve</title>
-  <meta name="description" content="A KV-cache-aware LLM serving scheduler with hand-written CUDA paged-attention kernels reaching 55% of a Tesla T4's peak memory bandwidth. Send a prompt and watch prefixes get shared and KV caches migrate under a bandwidth budget.">
-  <meta name="color-scheme" content="light dark">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Paged Attention Bench — hetero-serve</title>
+<meta name="description" content="A KV-cache-aware LLM serving scheduler with hand-written CUDA paged-attention kernels reaching 55% of a Tesla T4's peak memory bandwidth. Send a prompt and watch prefixes get shared and KV caches migrate under a bandwidth budget.">
+<meta name="color-scheme" content="light dark">
+<meta property="og:type" content="website">
+<meta property="og:title" content="hetero-serve — paged attention, live">
+<meta property="og:description" content="Send a prompt and watch a paged KV cache fill, prefixes get shared, and caches migrate between accelerators under a bandwidth budget. Backed by CUDA kernels at 55% of a T4's peak bandwidth.">
+<meta property="og:image" content="https://raw.githubusercontent.com/mneha05/hetero-serve/main/results/figures/ttft-by-policy-light.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22><text y=%2213%22 font-size=%2213%22>⚡</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
 
-  <!-- link previews -->
-  <meta property="og:type" content="website">
-  <meta property="og:title" content="hetero-serve — paged attention, live">
-  <meta property="og:description" content="A KV-cache-aware LLM serving scheduler with hand-written CUDA paged-attention kernels reaching 55% of a Tesla T4's peak memory bandwidth. Send a prompt and watch prefixes get shared and KV caches migrate under a bandwidth budget.">
-  <meta property="og:image" content="https://raw.githubusercontent.com/mneha05/hetero-serve/main/results/figures/ttft-by-policy-light.png">
-  <meta name="twitter:card" content="summary_large_image">
-
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22><text y=%2213%22 font-size=%2213%22>⚡</text></svg>">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
-</head>
-<body>
 <style>
+/* ── tokens ─────────────────────────────────────────────────────────────── */
 :root{
   color-scheme: light;
-  --ground:#F4F5F8; --panel:#FFFFFF; --panel-2:#EBEEF3; --sunk:#E2E6ED;
-  --ink:#11131A; --ink-2:#474D5B; --ink-3:#79808F;
-  --rule:#DADEE6; --rule-2:#C2C8D4;
-  --accent:#D9541F; --accent-2:#F7E5DA;
-  --signal:#2A6FD6; --signal-2:#DDE9FA;
-  --hit:#0C7A4A; --hit-2:#D8EEE3;
-  --warn:#B3402F;
-  --shadow:0 1px 2px rgba(17,19,26,.05), 0 10px 28px -14px rgba(17,19,26,.22);
+  --bg:#FAFBFC;        --surface:#FFFFFF;   --raised:#F2F4F7;  --sunk:#E9ECF1;
+  --ink:#0A0D13;       --ink-2:#454E5E;     --ink-3:#78828F;
+  --line:#E3E7ED;      --line-2:#CFD5DE;
+  --accent:#E24A18;    --accent-w:#FBE9E2;
+  --data:#2563D9;      --data-w:#E3ECFC;
+  --hit:#0E8A5F;       --hit-w:#DDF1E8;
+  --ring:0 0 0 3px rgba(226,74,24,.22);
+  --lift:0 1px 1px rgba(10,13,19,.04), 0 8px 24px -16px rgba(10,13,19,.30);
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
     color-scheme: dark;
-    --ground:#131519; --panel:#1A1D23; --panel-2:#21252C; --sunk:#0E1014;
-    --ink:#F1F3F7; --ink-2:#B2B8C5; --ink-3:#7C8393;
-    --rule:#2A2F38; --rule-2:#39404C;
-    --accent:#E8703C; --accent-2:#33211A;
-    --signal:#4E93E8; --signal-2:#16253A;
-    --hit:#3FAE7A; --hit-2:#12291F;
-    --warn:#D9614C;
-    --shadow:0 1px 2px rgba(0,0,0,.45), 0 12px 32px -16px rgba(0,0,0,.8);
+    --bg:#0A0C10;      --surface:#111419;   --raised:#171B22;  --sunk:#07090C;
+    --ink:#EDF0F5;     --ink-2:#A7B0BF;     --ink-3:#6E7887;
+    --line:#1E232C;    --line-2:#2C333F;
+    --accent:#FF6A38;  --accent-w:#2A1710;
+    --data:#5A92FF;    --data-w:#10203C;
+    --hit:#2BC088;     --hit-w:#0A2419;
+    --ring:0 0 0 3px rgba(255,106,56,.28);
+    --lift:0 1px 1px rgba(0,0,0,.5), 0 10px 30px -18px rgba(0,0,0,.9);
   }
 }
 :root[data-theme="dark"]{
   color-scheme: dark;
-  --ground:#131519; --panel:#1A1D23; --panel-2:#21252C; --sunk:#0E1014;
-  --ink:#F1F3F7; --ink-2:#B2B8C5; --ink-3:#7C8393;
-  --rule:#2A2F38; --rule-2:#39404C;
-  --accent:#E8703C; --accent-2:#33211A;
-  --signal:#4E93E8; --signal-2:#16253A;
-  --hit:#3FAE7A; --hit-2:#12291F;
-  --warn:#D9614C;
-  --shadow:0 1px 2px rgba(0,0,0,.45), 0 12px 32px -16px rgba(0,0,0,.8);
+  --bg:#0A0C10;        --surface:#111419;   --raised:#171B22;  --sunk:#07090C;
+  --ink:#EDF0F5;       --ink-2:#A7B0BF;     --ink-3:#6E7887;
+  --line:#1E232C;      --line-2:#2C333F;
+  --accent:#FF6A38;    --accent-w:#2A1710;
+  --data:#5A92FF;      --data-w:#10203C;
+  --hit:#2BC088;       --hit-w:#0A2419;
+  --ring:0 0 0 3px rgba(255,106,56,.28);
+  --lift:0 1px 1px rgba(0,0,0,.5), 0 10px 30px -18px rgba(0,0,0,.9);
 }
-*{box-sizing:border-box}
-body{margin:0;background:var(--ground);color:var(--ink);
-  font-family:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;font-size:15px;line-height:1.55;
-  -webkit-font-smoothing:antialiased}
-.wrap{max-width:1240px;margin:0 auto;padding:0 22px}
-h1,h2,h3{font-family:"IBM Plex Sans Condensed","IBM Plex Sans",sans-serif;margin:0;text-wrap:balance;letter-spacing:-.01em}
-.mono{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;font-variant-numeric:tabular-nums}
-.eyebrow{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.13em;
-  text-transform:uppercase;color:var(--ink-3)}
 
-/* masthead */
-header{border-bottom:1px solid var(--rule);background:var(--panel)}
-.mast{padding:24px 0 20px;display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap}
-.mast h1{font-size:clamp(24px,3.4vw,34px);font-weight:700;line-height:1.05}
-.mast h1 em{font-style:normal;color:var(--accent)}
-.mast p{margin:6px 0 0;color:var(--ink-2);font-size:14px;max-width:62ch}
-.links{display:flex;gap:8px;flex-wrap:wrap}
-.links a{font-family:"IBM Plex Mono",monospace;font-size:12px;padding:8px 12px;text-decoration:none;
-  border:1px solid var(--rule-2);color:var(--ink);background:var(--panel-2);border-radius:2px}
-.links a.primary{background:var(--accent);border-color:var(--accent);color:#fff}
-.links a:hover{border-color:var(--accent)}
-.links a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:Archivo,system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:15px; line-height:1.55; -webkit-font-smoothing:antialiased;
+  font-feature-settings:"cv05","ss01";
+}
+.mono,code{font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-variant-numeric:tabular-nums}
+h1,h2,h3{margin:0; font-weight:700; letter-spacing:-.028em; text-wrap:balance; line-height:1.1}
+a{color:inherit}
+.lab{font-family:"JetBrains Mono",monospace; font-size:10.5px; letter-spacing:.12em;
+  text-transform:uppercase; color:var(--ink-3)}
+.wrap{max-width:1320px; margin:0 auto; padding:0 24px}
+@media(max-width:640px){.wrap{padding:0 16px}}
 
-/* console shell */
-main{padding:20px 0 0}
-.rig{display:grid;grid-template-columns:300px minmax(0,1fr);gap:16px;align-items:start}
-@media(max-width:980px){.rig{grid-template-columns:1fr}}
-.card{background:var(--panel);border:1px solid var(--rule);border-radius:3px;box-shadow:var(--shadow)}
-.card > h2{font-size:13px;font-weight:600;padding:11px 14px;border-bottom:1px solid var(--rule);
-  background:var(--panel-2);display:flex;justify-content:space-between;align-items:center;gap:10px}
-.card > h2 .eyebrow{font-size:10.5px}
+/* ── header ─────────────────────────────────────────────────────────────── */
+.top{position:sticky; top:0; z-index:40; background:color-mix(in srgb,var(--surface) 88%,transparent);
+  backdrop-filter:saturate(180%) blur(14px); border-bottom:1px solid var(--line)}
+.top .wrap{display:flex; align-items:center; gap:22px; height:58px}
+.brand{display:flex; align-items:baseline; gap:9px; font-weight:700; letter-spacing:-.03em;
+  font-size:16px; white-space:nowrap}
+.brand i{width:7px; height:7px; border-radius:50%; background:var(--accent); display:block;
+  align-self:center; box-shadow:0 0 0 3px var(--accent-w)}
+.brand span{color:var(--ink-3); font-weight:500; font-size:12px; letter-spacing:0}
+.hud{display:flex; gap:1px; margin-left:auto; background:var(--line); border:1px solid var(--line);
+  border-radius:7px; overflow:hidden}
+.hud div{background:var(--surface); padding:5px 13px; min-width:78px}
+.hud .k{font-family:"JetBrains Mono",monospace; font-size:9px; letter-spacing:.11em;
+  text-transform:uppercase; color:var(--ink-3); line-height:1.4}
+.hud .v{font-family:"JetBrains Mono",monospace; font-size:14px; font-weight:600;
+  font-variant-numeric:tabular-nums; line-height:1.25}
+.hud .v.a{color:var(--accent)} .hud .v.h{color:var(--hit)}
+@media(max-width:1080px){.hud div:nth-child(n+4){display:none}}
+@media(max-width:720px){.hud{display:none}}
+.gh{display:inline-flex; align-items:center; gap:7px; text-decoration:none; font-size:13px;
+  font-weight:500; padding:7px 13px; border:1px solid var(--line-2); border-radius:7px;
+  white-space:nowrap; transition:border-color .15s, background .15s}
+.gh:hover{border-color:var(--accent); background:var(--raised)}
+.gh:focus-visible{outline:none; box-shadow:var(--ring)}
+@media(max-width:880px){.gh.sec{display:none}}
+
+/* ── hero ───────────────────────────────────────────────────────────────── */
+.hero{padding:52px 0 30px; border-bottom:1px solid var(--line)}
+.hero h1{font-size:clamp(30px,4.6vw,52px); max-width:17ch}
+.hero h1 em{font-style:normal; color:var(--accent)}
+.hero .sub{margin:16px 0 0; color:var(--ink-2); font-size:16.5px; max-width:60ch}
+.hero .row{display:flex; gap:26px; align-items:flex-end; justify-content:space-between;
+  flex-wrap:wrap; margin-top:26px}
+.stats{display:flex; gap:30px; flex-wrap:wrap}
+.stat .n{font-family:"JetBrains Mono",monospace; font-size:26px; font-weight:600;
+  letter-spacing:-.02em; font-variant-numeric:tabular-nums}
+.stat .n.a{color:var(--accent)}
+
+/* ── rig ────────────────────────────────────────────────────────────────── */
+main{padding:26px 0 0}
+.rig{display:grid; grid-template-columns:322px minmax(0,1fr); gap:20px; align-items:start}
+@media(max-width:1020px){.rig{grid-template-columns:1fr}}
+.card{background:var(--surface); border:1px solid var(--line); border-radius:11px;
+  box-shadow:var(--lift); overflow:hidden}
+.card > header{padding:13px 17px; border-bottom:1px solid var(--line); display:flex;
+  align-items:center; justify-content:space-between; gap:12px; background:var(--raised)}
+.card > header h2{font-size:13.5px; letter-spacing:-.01em}
+.pad{padding:17px}
 
 /* controls */
-.pad{padding:14px}
-.field{margin-bottom:15px}
-.field:last-child{margin-bottom:0}
-.field > label{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:6px}
-.field .name{font-size:12px;color:var(--ink-2)}
-.field .num{font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--ink);font-variant-numeric:tabular-nums}
-textarea,select{width:100%;font:inherit;font-size:13px;padding:9px 10px;background:var(--sunk);
-  color:var(--ink);border:1px solid var(--rule-2);border-radius:2px;resize:vertical}
-textarea{font-family:"IBM Plex Mono",monospace;font-size:12.5px;line-height:1.5;min-height:78px}
-select{font-family:"IBM Plex Mono",monospace;font-size:12.5px}
-textarea:focus,select:focus{outline:2px solid var(--accent);outline-offset:-1px;border-color:var(--accent)}
-input[type=range]{width:100%;accent-color:var(--accent);height:20px}
-input[type=range]:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
-.btns{display:flex;gap:7px;flex-wrap:wrap}
-button{font:inherit;font-size:12.5px;font-family:"IBM Plex Mono",monospace;padding:9px 13px;cursor:pointer;
-  border:1px solid var(--rule-2);background:var(--panel-2);color:var(--ink);border-radius:2px}
-button:hover{border-color:var(--accent)}
-button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-button.go{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:500}
-button.go:hover{filter:brightness(1.08)}
-button:disabled{opacity:.45;cursor:default}
-.presets{display:flex;flex-direction:column;gap:5px;margin-top:8px}
-.presets button{text-align:left;font-size:11.5px;padding:7px 10px;line-height:1.35;white-space:normal}
+.f{margin-bottom:17px}
+.f:last-child{margin-bottom:0}
+.f > label{display:flex; justify-content:space-between; align-items:baseline; gap:8px;
+  margin-bottom:7px}
+.f .nm{font-size:12.5px; font-weight:500; color:var(--ink-2)}
+.f .vv{font-family:"JetBrains Mono",monospace; font-size:12.5px; color:var(--ink);
+  font-variant-numeric:tabular-nums}
+textarea,select{width:100%; font:inherit; font-size:13.5px; padding:10px 12px; color:var(--ink);
+  background:var(--sunk); border:1px solid var(--line-2); border-radius:8px;
+  transition:border-color .15s, box-shadow .15s}
+textarea{font-family:"JetBrains Mono",monospace; font-size:12.5px; line-height:1.55;
+  min-height:86px; resize:vertical}
+select{cursor:pointer; appearance:none;
+  background-image:linear-gradient(45deg,transparent 50%,currentColor 50%),linear-gradient(135deg,currentColor 50%,transparent 50%);
+  background-position:calc(100% - 17px) 50%,calc(100% - 12px) 50%;
+  background-size:5px 5px,5px 5px; background-repeat:no-repeat; padding-right:34px}
+textarea:focus,select:focus{outline:none; border-color:var(--accent); box-shadow:var(--ring)}
+input[type=range]{width:100%; accent-color:var(--accent); height:22px; cursor:pointer}
+input[type=range]:focus-visible{outline:none; box-shadow:var(--ring); border-radius:4px}
+.btns{display:grid; grid-template-columns:1fr auto auto; gap:8px}
+button{font:inherit; font-size:13px; font-weight:500; padding:10px 14px; cursor:pointer;
+  color:var(--ink); background:var(--surface); border:1px solid var(--line-2); border-radius:8px;
+  transition:border-color .15s, background .15s, transform .06s}
+button:hover{border-color:var(--accent); background:var(--raised)}
+button:active{transform:translateY(1px)}
+button:focus-visible{outline:none; box-shadow:var(--ring)}
+button.go{background:var(--accent); border-color:var(--accent); color:#fff; font-weight:600}
+button.go:hover{filter:brightness(1.07); background:var(--accent)}
+button:disabled{opacity:.5; cursor:default; transform:none}
+.steps{display:flex; flex-direction:column; gap:6px; margin-top:9px}
+.steps button{display:flex; gap:10px; align-items:flex-start; text-align:left; font-size:12px;
+  padding:9px 11px; line-height:1.4; color:var(--ink-2)}
+.steps button b{font-family:"JetBrains Mono",monospace; color:var(--accent); font-size:11px;
+  flex:none; padding-top:1px}
 
 /* workers */
-.workers{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;padding:14px}
-.worker{border:1px solid var(--rule);border-radius:2px;background:var(--panel-2);padding:12px;min-width:0}
-.worker.busy{border-color:var(--accent)}
-.wtop{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:3px}
-.wtop b{font-family:"IBM Plex Sans Condensed",sans-serif;font-size:15px;font-weight:700}
-.wtop .st{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;
-  padding:2px 6px;border-radius:2px;background:var(--sunk);color:var(--ink-3)}
-.worker.busy .st{background:var(--accent);color:#fff}
-.wsub{font-family:"IBM Plex Mono",monospace;font-size:10.5px;color:var(--ink-3);margin-bottom:9px}
-.blocks{display:grid;grid-template-columns:repeat(24,1fr);gap:1.5px;margin-bottom:9px}
-.blocks i{aspect-ratio:1;background:var(--sunk);border-radius:.5px;transition:background .25s}
-.blocks i.used{background:var(--signal)}
+.grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(252px,1fr)); gap:14px; padding:17px}
+.w{border:1px solid var(--line); border-radius:9px; background:var(--raised); padding:14px;
+  min-width:0; transition:border-color .2s, box-shadow .2s}
+.w.on{border-color:var(--accent); box-shadow:0 0 0 1px var(--accent-w)}
+.w .h{display:flex; justify-content:space-between; align-items:center; gap:8px}
+.w .h b{font-size:14.5px; letter-spacing:-.02em}
+.pill{font-family:"JetBrains Mono",monospace; font-size:9.5px; letter-spacing:.09em;
+  text-transform:uppercase; padding:3px 7px; border-radius:5px; background:var(--sunk);
+  color:var(--ink-3); transition:background .2s,color .2s}
+.w.on .pill{background:var(--accent); color:#fff}
+.w .id{font-family:"JetBrains Mono",monospace; font-size:10.5px; color:var(--ink-3); margin-top:2px}
+.blocks{display:grid; grid-template-columns:repeat(24,1fr); gap:2px; margin:12px 0 11px}
+.blocks i{aspect-ratio:1; background:var(--sunk); border-radius:1.5px;
+  transition:background .3s ease}
+.blocks i.used{background:var(--data)}
 .blocks i.cached{background:var(--hit)}
-.blocks i.fresh{background:var(--accent)}
-.wstats{display:grid;grid-template-columns:1fr 1fr;gap:2px 10px;font-size:11.5px}
-.wstats span{color:var(--ink-3)}
-.wstats b{font-family:"IBM Plex Mono",monospace;font-weight:500;color:var(--ink);font-variant-numeric:tabular-nums}
+.kv{display:grid; grid-template-columns:auto 1fr; gap:3px 12px; font-size:11.5px; align-items:baseline}
+.kv span{color:var(--ink-3); white-space:nowrap}
+.kv b{font-family:"JetBrains Mono",monospace; font-weight:500; text-align:right;
+  font-variant-numeric:tabular-nums}
 
 /* wire */
-.wire{padding:0 14px 14px}
-.wirebar{height:22px;background:var(--sunk);border:1px solid var(--rule);position:relative;overflow:hidden;
-  border-radius:2px}
-.wirebar i{position:absolute;top:0;bottom:0;left:0;width:0;background:var(--signal);opacity:.85;
-  transition:width .12s linear}
-.wirebar span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
-  font-family:"IBM Plex Mono",monospace;font-size:10.5px;color:var(--ink-2)}
-
-/* metrics */
-.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:1px;background:var(--rule);
-  border-top:1px solid var(--rule)}
-.metric{background:var(--panel);padding:11px 13px}
-.metric .k{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.09em;text-transform:uppercase;
-  color:var(--ink-3)}
-.metric .v{font-family:"IBM Plex Mono",monospace;font-size:19px;font-weight:600;margin-top:2px;
-  font-variant-numeric:tabular-nums}
-.metric .v.hit{color:var(--hit)} .metric .v.acc{color:var(--accent)}
+.wire{padding:0 17px 17px}
+.track{height:26px; background:var(--sunk); border:1px solid var(--line); border-radius:7px;
+  position:relative; overflow:hidden}
+.track i{position:absolute; inset:0 auto 0 0; width:0; background:var(--data); opacity:.9;
+  transition:width .1s linear}
+.track span{position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  font-family:"JetBrains Mono",monospace; font-size:10.5px; color:var(--ink-2)}
 
 /* stream */
-.stream{max-height:300px;overflow-y:auto}
-.row{padding:9px 14px;border-bottom:1px solid var(--rule);font-size:12.5px}
-.row:last-child{border-bottom:none}
-.rtop{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-bottom:3px}
-.chip{font-family:"IBM Plex Mono",monospace;font-size:10.5px;padding:2px 7px;border-radius:2px;
-  border:1px solid var(--rule-2);color:var(--ink-2)}
-.chip.w{border-color:var(--signal);color:var(--signal)}
-.chip.hit{background:var(--hit-2);border-color:var(--hit);color:var(--hit)}
-.chip.mig{background:var(--signal-2);border-color:var(--signal);color:var(--signal)}
-.chip.cold{color:var(--ink-3)}
-.rtxt{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--ink-2);
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.rwhy{font-family:"IBM Plex Mono",monospace;font-size:10.5px;color:var(--ink-3);margin-top:2px}
-.empty{padding:30px 16px;text-align:center;color:var(--ink-3);font-size:12.5px}
+.stream{max-height:330px; overflow-y:auto; scrollbar-width:thin}
+.r{padding:12px 17px; border-bottom:1px solid var(--line)}
+.r:last-child{border-bottom:none}
+.r .t{display:flex; gap:7px; align-items:center; flex-wrap:wrap; margin-bottom:5px}
+.tag{font-family:"JetBrains Mono",monospace; font-size:10px; letter-spacing:.03em; padding:3px 7px;
+  border-radius:5px; border:1px solid var(--line-2); color:var(--ink-2); white-space:nowrap}
+.tag.w{border-color:var(--data); color:var(--data); background:var(--data-w)}
+.tag.hit{border-color:var(--hit); color:var(--hit); background:var(--hit-w)}
+.tag.mig{border-color:var(--accent); color:var(--accent); background:var(--accent-w)}
+.tag.cold{color:var(--ink-3)}
+.r .p{font-family:"JetBrains Mono",monospace; font-size:11.5px; color:var(--ink-3);
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.r .p b{color:var(--ink); font-weight:500}
+.r .y{font-family:"JetBrains Mono",monospace; font-size:10.5px; color:var(--ink-3); margin-top:4px}
+.blank{padding:40px 20px; text-align:center; color:var(--ink-3); font-size:13px}
 
 /* note */
-.note{margin:18px 0 0;padding:13px 15px;border:1px solid var(--rule);border-left:2px solid var(--accent);
-  background:var(--panel);font-size:12.5px;color:var(--ink-2);border-radius:2px}
-.note b{color:var(--ink)}
+.note{margin-top:20px; padding:16px 18px; background:var(--surface); border:1px solid var(--line);
+  border-left:2px solid var(--accent); border-radius:0 9px 9px 0; font-size:13px; color:var(--ink-2)}
+.note b{color:var(--ink); font-weight:600}
 
 /* results */
-section{padding:40px 0;border-top:1px solid var(--rule);margin-top:26px}
-section h2{font-size:clamp(20px,2.6vw,26px);font-weight:700;margin-bottom:8px}
-.prose{max-width:66ch;color:var(--ink-2);font-size:14px}
-.prose strong{color:var(--ink);font-weight:600}
-.tbl{overflow-x:auto;margin-top:16px;border:1px solid var(--rule);border-radius:3px}
-table{border-collapse:collapse;width:100%;font-size:13px;background:var(--panel)}
-th,td{padding:9px 13px;text-align:right;border-bottom:1px solid var(--rule);white-space:nowrap}
+section.res{margin-top:44px; padding:40px 0 0; border-top:1px solid var(--line)}
+section.res h2{font-size:clamp(21px,2.6vw,28px); margin:9px 0 10px}
+.prose{max-width:66ch; color:var(--ink-2); font-size:14.5px}
+.prose strong{color:var(--ink); font-weight:600}
+.tbl{overflow-x:auto; margin-top:18px; border:1px solid var(--line); border-radius:9px;
+  background:var(--surface)}
+table{border-collapse:collapse; width:100%; font-size:13px}
+th,td{padding:11px 15px; text-align:right; border-bottom:1px solid var(--line); white-space:nowrap}
 th:first-child,td:first-child{text-align:left}
-thead th{background:var(--panel-2);font-family:"IBM Plex Mono",monospace;font-size:10.5px;
-  letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3);font-weight:500}
-tbody td{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;color:var(--ink-2)}
-tbody td:first-child{font-family:"IBM Plex Sans",sans-serif;color:var(--ink)}
-tr.hi td{background:var(--accent-2);color:var(--ink);font-weight:600}
+thead th{background:var(--raised); font-family:"JetBrains Mono",monospace; font-size:10px;
+  letter-spacing:.09em; text-transform:uppercase; color:var(--ink-3); font-weight:500}
+tbody td{font-family:"JetBrains Mono",monospace; color:var(--ink-2); font-variant-numeric:tabular-nums}
+tbody td:first-child{font-family:Archivo,sans-serif; color:var(--ink)}
+tr.hi td{background:var(--accent-w); color:var(--ink); font-weight:600}
 tr:last-child td{border-bottom:none}
-.fine{margin-top:14px;font-size:12.5px;color:var(--ink-3);max-width:72ch}
-footer{padding:30px 0 50px;color:var(--ink-3);font-size:12.5px}
-@media (prefers-reduced-motion:reduce){*{transition:none!important}}
-</style>
+.fine{margin-top:15px; font-size:12.5px; color:var(--ink-3); max-width:74ch}
+footer{padding:34px 0 56px; margin-top:38px; border-top:1px solid var(--line);
+  color:var(--ink-3); font-size:12.5px}
+footer a{color:var(--ink-2)}
 
-<header>
-  <div class="wrap mast">
-    <div>
-      <div class="eyebrow">hetero-serve</div>
-      <h1>Type a prompt twice.<br>Watch the second one <em>skip the work</em>.</h1>
-      <p>A KV-cache-aware LLM serving scheduler — paged cache, prefix sharing, continuous batching, and a
-        cost model that decides whether to move a cache across the network or recompute it. Running here, live.</p>
+@media (prefers-reduced-motion:reduce){*{transition:none!important; animation:none!important}}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div class="wrap">
+    <div class="brand"><i></i>hetero-serve<span>paged attention</span></div>
+    <div class="hud">
+      <div><div class="k">served</div><div class="v" id="hServed">0</div></div>
+      <div><div class="k">ttft p50</div><div class="v" id="hTtft">—</div></div>
+      <div><div class="k">cache hit</div><div class="v h" id="hHit">0%</div></div>
+      <div><div class="k">migrations</div><div class="v a" id="hMig">0</div></div>
+      <div><div class="k">kv moved</div><div class="v a" id="hBytes">0 MB</div></div>
     </div>
-    <div class="links">
-      <a class="primary" href="https://colab.research.google.com/github/mneha05/hetero-serve/blob/main/notebooks/verify_cuda_kernel.ipynb">▶ Run the CUDA kernels</a>
-      <a href="https://github.com/mneha05/hetero-serve">GitHub</a>
+    <a class="gh sec" href="https://colab.research.google.com/github/mneha05/hetero-serve/blob/main/notebooks/verify_cuda_kernel.ipynb">Run the kernels</a>
+    <a class="gh" href="https://github.com/mneha05/hetero-serve">GitHub</a>
+  </div>
+</div>
+
+<div class="hero">
+  <div class="wrap">
+    <h1>Send a prompt twice.<br>Watch the second one <em>skip the work</em>.</h1>
+    <p class="sub">A KV-cache-aware LLM serving scheduler — paged cache, prefix sharing,
+      continuous batching, and a cost model that decides whether to move a cache across the
+      network or recompute it. Running here, in your browser.</p>
+    <div class="row">
+      <div class="stats">
+        <div class="stat"><div class="lab">peak bandwidth used</div><div class="n a">55.4%</div></div>
+        <div class="stat"><div class="lab">vs PyTorch SDPA</div><div class="n">10–22×</div></div>
+        <div class="stat"><div class="lab">CUDA kernels</div><div class="n">3</div></div>
+        <div class="stat"><div class="lab">tests</div><div class="n">47 + 22</div></div>
+      </div>
     </div>
   </div>
-</header>
+</div>
 
 <main class="wrap">
   <div class="rig">
 
-    <!-- ---------- controls ---------- -->
     <div class="card">
-      <h2>Send a request <span class="eyebrow" id="clock">t 0.00s</span></h2>
+      <header><h2>Send a request</h2><span class="lab mono" id="clock">t 0.00s</span></header>
       <div class="pad">
-        <div class="field">
-          <label for="prompt"><span class="name">Prompt</span><span class="num" id="tokCount">0 tok</span></label>
+        <div class="f">
+          <label for="prompt"><span class="nm">Prompt</span><span class="vv" id="tokN">0 tok</span></label>
           <textarea id="prompt" spellcheck="false">You are a careful assistant. Answer using only the provided context. What is the capital of France?</textarea>
         </div>
         <div class="btns">
           <button class="go" id="send">Send</button>
           <button id="burst">Burst ×8</button>
-          <button id="reset">Clear caches</button>
+          <button id="reset" title="Clear every worker's KV cache">Clear</button>
         </div>
 
-        <div class="presets">
-          <div class="eyebrow" style="margin:14px 0 2px">Try these in order</div>
-          <button data-p="You are a careful assistant. Answer using only the provided context. What is the capital of France?">1 · cold — nothing cached</button>
-          <button data-p="You are a careful assistant. Answer using only the provided context. What is the largest planet?">2 · same system prompt → cache hit</button>
-          <button data-p="You are a careful assistant. Answer using only the provided context. Summarise the retransmission policy.">3 · again → hit, and it may migrate</button>
-          <button data-p="Translate the following passage into plain English for a general audience without losing precision.">4 · new prefix → cold again</button>
-        </div>
+        <div class="lab" style="margin:20px 0 0">Try in order</div>
+        <div class="steps" id="steps"></div>
 
-        <div class="field" style="margin-top:16px">
-          <label for="policy"><span class="name">Routing policy</span></label>
+        <div class="f" style="margin-top:20px">
+          <label for="policy"><span class="nm">Routing policy</span></label>
           <select id="policy">
-            <option value="cache_aware" selected>cache aware — full cost model</option>
-            <option value="prefix_affinity">prefix affinity — always follow the cache</option>
+            <option value="cache_aware">cache aware — full cost model</option>
+            <option value="prefix_affinity">prefix affinity — follow the cache</option>
             <option value="least_loaded">least loaded — queue depth only</option>
             <option value="round_robin">round robin — cache blind</option>
           </select>
         </div>
-        <div class="field">
-          <label for="bw"><span class="name">Interconnect</span><span class="num" id="bwVal">1.0 Gbps</span></label>
+        <div class="f">
+          <label for="bw"><span class="nm">Interconnect</span><span class="vv" id="bwV">1.0 Gbps</span></label>
           <input type="range" id="bw" min="0" max="100" step="1" value="60">
         </div>
-        <div class="field">
-          <label for="cluster"><span class="name">Cluster</span></label>
+        <div class="f">
+          <label for="cluster"><span class="nm">Cluster</span></label>
           <select id="cluster">
-            <option value="t4" selected>2 × Tesla T4 — CUDA, v3 kernel</option>
+            <option value="t4">2 × Tesla T4 — CUDA, v3 kernel</option>
             <option value="intel">Arc GPU + NPU + CPU — heterogeneous</option>
           </select>
         </div>
-        <div class="field">
-          <label for="speed"><span class="name">Sim speed</span><span class="num" id="speedVal">2×</span></label>
+        <div class="f">
+          <label for="speed"><span class="nm">Sim speed</span><span class="vv" id="spV">4×</span></label>
           <input type="range" id="speed" min="1" max="20" step="1" value="4">
         </div>
       </div>
     </div>
 
-    <!-- ---------- the cluster ---------- -->
     <div>
       <div class="card">
-        <h2>Cluster <span class="eyebrow" id="clusterNote"></span></h2>
-        <div class="workers" id="workers"></div>
+        <header><h2>Cluster</h2><span class="lab" id="cNote"></span></header>
+        <div class="grid" id="workers"></div>
         <div class="wire">
-          <div class="eyebrow" style="margin-bottom:5px">Interconnect · KV migrations</div>
-          <div class="wirebar"><i id="wireFill"></i><span id="wireTxt">idle</span></div>
-        </div>
-        <div class="metrics">
-          <div class="metric"><div class="k">served</div><div class="v" id="mServed">0</div></div>
-          <div class="metric"><div class="k">TTFT p50</div><div class="v" id="mTtft">—</div></div>
-          <div class="metric"><div class="k">E2E p50</div><div class="v" id="mE2e">—</div></div>
-          <div class="metric"><div class="k">cache hit</div><div class="v hit" id="mHit">0%</div></div>
-          <div class="metric"><div class="k">prefill saved</div><div class="v hit" id="mSaved">0</div></div>
-          <div class="metric"><div class="k">migrations</div><div class="v acc" id="mMig">0</div></div>
-          <div class="metric"><div class="k">KV moved</div><div class="v acc" id="mBytes">0 MB</div></div>
+          <div class="lab" style="margin-bottom:6px">Interconnect · KV migrations</div>
+          <div class="track"><i id="wireF"></i><span id="wireT">idle</span></div>
         </div>
       </div>
 
-      <div class="card" style="margin-top:16px">
-        <h2>Requests <span class="eyebrow" id="streamNote">newest first</span></h2>
-        <div class="stream" id="stream"><div class="empty">Nothing yet — send a prompt, then send another that starts the same way.</div></div>
+      <div class="card" style="margin-top:20px">
+        <header><h2>Requests</h2><span class="lab">newest first</span></header>
+        <div class="stream" id="stream"><div class="blank">Send a prompt — then send another that starts the same way.</div></div>
       </div>
 
       <p class="note">
-        <b>What is actually running:</b> the real scheduling logic — 16-token paged blocks, chain-hashed
-        prefix matching, refcounts and LRU eviction, continuous batching, and the migrate-vs-recompute
-        cost model priced against a token-bucket link. Device timings are the ones
-        <b>measured on real hardware</b> (T4 prefill 0.59 ms/token, decode 52 ms/step). What is <em>not</em>
-        here is GPT-2 itself — generated text is a stand-in, because a 124M-parameter model will not run
-        in a browser tab. The Python system this mirrors runs the real model on real CUDA;
-        the Colab link above compiles the kernels and runs it.
+        <b>What is actually running:</b> the real scheduling logic — 16-token paged blocks,
+        chain-hashed prefix matching, refcounts and LRU eviction, continuous batching, and the
+        migrate-vs-recompute cost model priced against a token-bucket link. Step costs are
+        timings <b>measured on real hardware</b> (T4 prefill 0.59 ms/token, decode 52 ms/step).
+        What is <em>not</em> here is GPT-2 — a 124M-parameter model will not run in a browser tab,
+        so generated text is a stand-in. The Python system this mirrors runs the real model on
+        real CUDA; the kernels link above compiles and benchmarks it on a free GPU.
       </p>
     </div>
   </div>
 
-  <!-- ---------- measured results ---------- -->
-  <section>
-    <div class="eyebrow">measured · tesla t4 · 320 gb/s peak</div>
+  <section class="res">
+    <div class="lab">measured · tesla t4 · 320 gb/s peak</div>
     <h2>The kernels underneath</h2>
     <div class="prose">
-      <p>Profiling the decode step showed a third of it was the host gathering KV blocks into contiguous
-      tensors — overhead invented by paging the cache. Three kernel generations later, each one written
-      in response to a measurement rather than a hunch:</p>
+      <p>Profiling the decode step showed a third of it was the host gathering KV blocks into
+      contiguous tensors — overhead invented by paging the cache. Three kernel generations
+      later, each written in response to a measurement rather than a hunch:</p>
     </div>
     <div class="tbl">
       <table>
@@ -313,472 +356,186 @@ footer{padding:30px 0 50px;color:var(--ink-3);font-size:12.5px}
     </div>
     <p class="fine">
       batch 32 · context 2048 · 201 MB of KV per call. PyTorch's SDPA — cuDNN and FlashAttention
-      underneath — barely beats a naive einsum, because both still pay the gather. That is the argument
-      for a paged kernel in one line: a fast dense kernel does not help once the cache is paged, because
-      it cannot read a block table. Nsight then showed v2 was <em>occupancy</em>-starved rather than
-      bandwidth-starved (0.1 waves across 40 SMs), which is what produced v3's context split.
+      underneath — barely beats a naive einsum, because both still pay the gather. That is the
+      case for a paged kernel in one line: a fast dense kernel does not help once the cache is
+      paged, because it cannot read a block table. Nsight then showed v2 was <em>occupancy</em>-starved
+      rather than bandwidth-starved — 0.1 waves across 40 SMs — which is what produced v3's
+      context split.
     </p>
   </section>
 
   <footer>
-    Measured on a shared, thermally throttled Colab T4 — the same shape swung one kernel 44% between
-    sessions. Ordering is stable and the v3 gap far exceeds the noise, but treat any single figure as
-    ±30%. Everything is reproducible from the repo; nothing is projected.
+    Measured on a shared, thermally throttled Colab T4 — the same shape swung one kernel 44%
+    between sessions. Ordering is stable and the v3 gap far exceeds the noise, but treat any
+    single figure as ±30%. Everything is reproducible from
+    <a href="https://github.com/mneha05/hetero-serve">the repo</a>; nothing is projected.
   </footer>
 </main>
 
-<script>
-"use strict";
-/* =======================================================================
-   A faithful port of the scheduler. Same block size, same chain hashing,
-   same refcount + LRU eviction, same four policies, same cost model.
-   Only the model itself is stubbed -- timings come from measurement.
-   ===================================================================== */
+<script type="module">
+import { CLUSTERS, Sim, tokenize } from "./sim.mjs";
 
-const BLOCK = 16;                 // tokens per block, as in the Python
-const KV_PER_TOK = 36864;         // GPT-2 124M, fp16, all layers
-const LAT_S = 0.002;              // 2 ms one-way
-const GEN_TOKENS = 14;            // tokens generated per request
-const NBLOCKS = 96;               // blocks per worker in this demo
+const $ = (id) => document.getElementById(id);
+const NB = 96;
+const PRESETS = [
+  ["1", "cold — nothing cached", "You are a careful assistant. Answer using only the provided context. What is the capital of France?"],
+  ["2", "same system prompt → cache hit", "You are a careful assistant. Answer using only the provided context. What is the largest planet?"],
+  ["3", "again → hit, and it may migrate", "You are a careful assistant. Answer using only the provided context. Summarise the retransmission policy."],
+  ["4", "new prefix → cold again", "Translate the following passage into plain English for a general audience."],
+];
+const KERNELS = [
+  ["gather + dense attention", "18207 µs", "1.0×", "11.1", "3.5%"],
+  ["gather + PyTorch SDPA", "12115 µs", "1.5×", "16.6", "5.2%"],
+  ["v1 kernel (naive fused)", "3030 µs", "6.0×", "66.4", "20.8%"],
+  ["v2 kernel (online softmax)", "2028 µs", "9.0×", "99.3", "31.0%"],
+  ["v3 kernel (64-way split)", "1136 µs", "16.0×", "177.3", "55.4%", true],
+];
 
-const CLUSTERS = {
-  t4: [
-    {id:"cuda:0", name:"Tesla T4", sub:"CUDA · v3 kernel", pre:0.59, dec:52},
-    {id:"cuda:1", name:"Tesla T4", sub:"CUDA · v3 kernel", pre:0.59, dec:52},
-  ],
-  intel: [
-    {id:"GPU", name:"Arc 140V", sub:"OpenVINO iGPU",  pre:0.38, dec:134},
-    {id:"NPU", name:"AI Boost", sub:"static shapes",   pre:0.62, dec:240},
-    {id:"CPU", name:"Ultra 7",  sub:"OpenVINO CPU",    pre:1.38, dec:172},
-  ],
-};
+const sim = new Sim({ cluster: "t4", policy: "cache_aware", blocksPerWorker: NB });
 
-const $ = (s) => document.getElementById(s);
-const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
+const posToMbps = (p) => Math.pow(10, 1 + (p / 100) * 4);
+const fmtBw = (m) => m >= 1000 ? (m / 1000).toFixed(m >= 10000 ? 0 : 1) + " Gbps"
+                               : m.toFixed(0) + " Mbps";
+const fmtT = (s) => s == null ? "—" : s >= 1 ? s.toFixed(2) + "s" : Math.round(s * 1000) + "ms";
+const esc = (s) => String(s).replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
 
-/* ---------- tokenizer stand-in: deterministic, prefix-preserving ---------- */
-function tokenize(text){
-  const words = text.trim().toLowerCase().match(/[a-z0-9']+|[^\sa-z0-9]/g) || [];
-  const ids = [];
-  for (const w of words){
-    let h = 2166136261;
-    for (let i = 0; i < w.length; i++){ h ^= w.charCodeAt(i); h = Math.imul(h, 16777619); }
-    ids.push((h >>> 0) % 50000);
-    if (w.length > 6) ids.push(((h >>> 7) ^ 0x9e37) % 50000);   // long words -> 2 tokens
-  }
-  return ids;
-}
-function chainHashes(ids){
-  const out = [];
-  let prev = 0x811c9dc5;
-  for (let b = 0; b + BLOCK <= ids.length; b += BLOCK){
-    let h = prev;
-    for (let i = b; i < b + BLOCK; i++){ h ^= ids[i]; h = Math.imul(h, 16777619); }
-    prev = h >>> 0;
-    out.push(prev);
-  }
-  return out;
-}
+/* ---- static content ---- */
+$("steps").innerHTML = PRESETS.map(([n, label], i) =>
+  `<button type="button" data-i="${i}"><b>${n}</b><span>${label}</span></button>`).join("");
+$("kRows").innerHTML = KERNELS.map(([p, t, x, g, pk, hi]) =>
+  `<tr class="${hi ? "hi" : ""}"><td>${p}</td><td>${t}</td><td>${x}</td><td>${g}</td><td>${pk}</td></tr>`
+).join("");
 
-/* ---------- paged block allocator ---------- */
-class Allocator{
-  constructor(n){
-    this.n = n;
-    this.free = [...Array(n).keys()].reverse();
-    this.ref = new Int32Array(n);
-    this.byHash = new Map();          // hash -> block
-    this.hashOf = new Map();          // block -> hash
-    this.evictable = new Map();       // hash -> true, insertion-ordered = LRU
-    this.fresh = new Set();
-  }
-  get used(){ return this.n - this.free.length - this.evictable.size; }
-  take(){
-    if (this.free.length) return this.free.pop();
-    if (this.evictable.size){
-      const h = this.evictable.keys().next().value;   // oldest
-      this.evictable.delete(h);
-      const b = this.byHash.get(h);
-      this.byHash.delete(h); this.hashOf.delete(b);
-      return b;
-    }
-    return -1;                                        // pool exhausted
-  }
-  incref(b){
-    if (this.ref[b] === 0){
-      const h = this.hashOf.get(b);
-      if (h !== undefined) this.evictable.delete(h);
-    }
-    this.ref[b]++;
-  }
-  decref(b){
-    if (--this.ref[b] > 0) return;
-    this.ref[b] = 0;
-    const h = this.hashOf.get(b);
-    if (h !== undefined && this.byHash.get(h) === b) this.evictable.set(h, true);
-    else this.free.push(b);
-  }
-  matchPrefix(hashes){
-    let n = 0;
-    for (const h of hashes){ if (!this.byHash.has(h)) break; n++; }
-    return n;                                          // blocks matched
-  }
-  allocate(ids, hashes){
-    const need = Math.ceil(ids.length / BLOCK);
-    const hit = Math.min(this.matchPrefix(hashes), need);
-    const blocks = [];
-    for (let i = 0; i < hit; i++){ const b = this.byHash.get(hashes[i]); this.incref(b); blocks.push(b); }
-    while (blocks.length < need){
-      const b = this.take();
-      if (b < 0){ blocks.forEach(x => this.decref(x)); return null; }
-      this.ref[b] = 1; blocks.push(b); this.fresh.add(b);
-    }
-    return {blocks, cachedTokens: hit * BLOCK};
-  }
-  publish(hashes, blocks){
-    for (let i = 0; i < hashes.length && i < blocks.length; i++){
-      if (this.byHash.has(hashes[i])) continue;
-      this.byHash.set(hashes[i], blocks[i]);
-      this.hashOf.set(blocks[i], hashes[i]);
-    }
-  }
-  release(blocks){ blocks.forEach(b => this.decref(b)); }
-  adopt(hashes, upto){        // migrated blocks arrive already populated
-    for (let i = 0; i < upto; i++){
-      if (this.byHash.has(hashes[i])) continue;
-      const b = this.take(); if (b < 0) return;
-      this.byHash.set(hashes[i], b); this.hashOf.set(b, hashes[i]);
-      this.evictable.set(hashes[i], true);             // cached, unowned
-      this.fresh.add(b);
-    }
-  }
-}
-
-/* ---------- worker ---------- */
-class Worker{
-  constructor(spec){
-    Object.assign(this, spec);
-    this.alloc = new Allocator(NBLOCKS);
-    this.queue = []; this.running = [];
-    this.busyUntil = 0; this.phase = "idle";
-    this.pendingPrefill = 0; this.generated = 0; this.saved = 0; this.migIn = 0;
-  }
-  get load(){ return this.pendingPrefill * this.pre / 1000 + this.running.length * this.dec / 1000; }
-}
-
-/* ---------- the simulator ---------- */
-const sim = {
-  t: 0, workers: [], rr: 0, seq: 0,
-  wire: {busyUntil: 0, bytes: 0, count: 0, activeUntil: 0, activeFrom: 0},
-  done: [], log: [],
-};
-
-function buildCluster(key){
-  sim.workers = CLUSTERS[key].map(s => new Worker(s));
-  sim.rr = 0;
-  $("clusterNote").textContent = CLUSTERS[key].length + " workers · " +
-    NBLOCKS + " blocks each · " + (NBLOCKS * BLOCK) + " tokens";
-  renderWorkers(true);
-}
-
-function bwMbps(){ return Math.pow(10, 1 + (+$("bw").value / 100) * 4); }
-function fmtBw(m){ return m >= 1000 ? (m/1000).toFixed(m >= 10000 ? 0 : 1) + " Gbps" : m.toFixed(0) + " Mbps"; }
-function transferS(bytes){ return LAT_S + bytes / (bwMbps() * 1e6 / 8); }
-
-/* ---- placement: the cost model, ported ---- */
-function place(ids, hashes){
-  const policy = $("policy").value;
-  const W = sim.workers;
-
-  if (policy === "round_robin"){
-    const w = W[sim.rr++ % W.length];
-    return {w, donor:null, hitTok:0, why:"round robin"};
-  }
-  const hits = W.map(w => w.alloc.matchPrefix(hashes));
-
-  if (policy === "least_loaded"){
-    let best = 0;
-    W.forEach((w,i) => { if (w.load < W[best].load) best = i; });
-    return {w:W[best], donor:null, hitTok:hits[best]*BLOCK, why:"least loaded"};
-  }
-  if (policy === "prefix_affinity"){
-    let best = 0;
-    W.forEach((w,i) => { if (hits[i] > hits[best] || (hits[i] === hits[best] && w.load < W[best].load)) best = i; });
-    return {w:W[best], donor:null, hitTok:hits[best]*BLOCK,
-            why:`affinity · ${hits[best]} blk cached`};
-  }
-
-  // cache_aware: price staying vs migrating, in seconds
-  let best = null;
-  W.forEach((w, i) => {
-    const localTok = hits[i] * BLOCK;
-    const stay = w.load + Math.max(0, ids.length - localTok) * w.pre / 1000;
-    let cand = {w, donor:null, hitTok:localTok, cost:stay,
-                why:`local hit ${localTok} tok`};
-
-    let dIdx = -1;
-    W.forEach((_, j) => { if (j !== i && (dIdx < 0 || hits[j] > hits[dIdx])) dIdx = j; });
-    if (dIdx >= 0 && hits[dIdx] > hits[i]){
-      const deltaBlocks = hits[dIdx] - hits[i];
-      const bytes = deltaBlocks * BLOCK * KV_PER_TOK;
-      // queue behind whatever is already on the wire -- the contention fix
-      const inflight = Math.max(0, sim.wire.busyUntil - sim.t);
-      const mig = transferS(bytes) + inflight;
-      const donorTok = hits[dIdx] * BLOCK;
-      const alt = w.load + mig + Math.max(0, ids.length - donorTok) * w.pre / 1000;
-      if (alt < cand.cost){
-        cand = {w, donor:W[dIdx], hitTok:donorTok, cost:alt, bytes,
-                why:`migrate ${deltaBlocks} blk (${(bytes/1e6).toFixed(1)} MB, ~${Math.round(mig*1000)} ms)`};
-      }
-    }
-    if (!best || cand.cost < best.cost) best = cand;
-  });
-  return best;
-}
-
-/* ---- submit ---- */
-function submit(text){
-  const ids = tokenize(text);
-  if (!ids.length) return;
-  const hashes = chainHashes(ids);
-  const p = place(ids, hashes);
-
-  const req = {
-    id: ++sim.seq, text, ids, hashes, w: p.w, why: p.why,
-    tSubmit: sim.t, migrated: false, bytes: 0,
-    cached: 0, computed: 0, nKv: 0, out: 0, tFirst: 0, state: "waiting",
-  };
-
-  const start = () => {
-    const a = req.w.alloc.allocate(ids, hashes);
-    if (!a){ req.state = "rejected"; pushLog(req); return; }
-    req.blocks = a.blocks;
-    req.cached = Math.min(a.cachedTokens, ids.length - 1);
-    req.nKv = req.cached;
-    req.w.pendingPrefill += ids.length - req.cached;
-    req.w.saved += req.cached;
-    req.w.queue.push(req);
-  };
-
-  if (p.donor && p.bytes){
-    // pay the wire first: the migration sits on the request's critical path
-    const startAt = Math.max(sim.t, sim.wire.busyUntil);
-    const dur = transferS(p.bytes);
-    sim.wire.busyUntil = startAt + dur;
-    sim.wire.activeFrom = startAt; sim.wire.activeUntil = startAt + dur;
-    sim.wire.bytes += p.bytes; sim.wire.count++;
-    req.migrated = true; req.bytes = p.bytes;
-    req.state = "moving";
-    req.onWire = sim.wire.busyUntil;
-    req.arriveCb = () => { p.w.alloc.adopt(hashes, Math.ceil(p.hitTok / BLOCK)); p.w.migIn++; start(); };
-    sim.pendingWire = sim.pendingWire || [];
-    sim.pendingWire.push(req);
-  } else {
-    start();
-  }
-  sim.log.unshift(req);
-  if (sim.log.length > 40) sim.log.pop();
-}
-
-/* ---- one simulated step ---- */
-function tick(dt){
-  sim.t += dt;
-
-  // migrations landing
-  if (sim.pendingWire){
-    for (let i = sim.pendingWire.length - 1; i >= 0; i--){
-      const r = sim.pendingWire[i];
-      if (sim.t >= r.onWire){ r.arriveCb(); sim.pendingWire.splice(i, 1); }
-    }
-  }
-
-  for (const w of sim.workers){
-    if (sim.t < w.busyUntil) continue;
-    w.phase = "idle";
-
-    // prefill has priority, chunked
-    const pend = w.queue[0];
-    if (pend){
-      const chunk = Math.min(256, pend.ids.length - pend.nKv);
-      if (chunk > 0){
-        w.busyUntil = sim.t + chunk * w.pre / 1000;
-        w.phase = "prefill";
-        pend.nKv += chunk; pend.computed += chunk;
-        w.pendingPrefill = Math.max(0, w.pendingPrefill - chunk);
-        if (pend.nKv >= pend.ids.length){
-          w.alloc.publish(pend.hashes, pend.blocks);
-          pend.tFirst = w.busyUntil; pend.out = 1; pend.state = "running";
-          w.queue.shift(); w.running.push(pend);
-        }
-        continue;
-      }
-      w.queue.shift();
-    }
-
-    // otherwise decode the whole running set as one batch
-    if (w.running.length){
-      w.busyUntil = sim.t + w.dec / 1000;
-      w.phase = "decode";
-      for (let i = w.running.length - 1; i >= 0; i--){
-        const r = w.running[i];
-        r.out++; w.generated++;
-        if (r.out >= GEN_TOKENS){
-          r.tDone = w.busyUntil; r.state = "done";
-          w.alloc.publish(r.hashes, r.blocks);
-          w.alloc.release(r.blocks);
-          w.running.splice(i, 1);
-          sim.done.push(r);
-        }
-      }
-    }
-  }
-}
-
-/* ---------- rendering ---------- */
-let wEls = [];
-function renderWorkers(rebuild){
+/* ---- worker cards ---- */
+let cards = [];
+function buildWorkers() {
   const host = $("workers");
-  if (rebuild){
-    host.innerHTML = "";
-    wEls = sim.workers.map(w => {
-      const el = document.createElement("div");
-      el.className = "worker";
-      el.innerHTML =
-        `<div class="wtop"><b>${w.name}</b><span class="st">idle</span></div>
-         <div class="wsub">${w.id} · ${w.sub}</div>
-         <div class="blocks">${'<i></i>'.repeat(NBLOCKS)}</div>
-         <div class="wstats">
-           <span>queue / running</span><b class="q">0 / 0</b>
-           <span>KV used</span><b class="kv">0%</b>
-           <span>prefill saved</span><b class="sv">0</b>
-           <span>KV received</span><b class="mi">0</b>
-         </div>`;
-      host.appendChild(el);
-      return el;
-    });
-  }
-  sim.workers.forEach((w, i) => {
-    const el = wEls[i];
-    el.classList.toggle("busy", w.phase !== "idle");
-    el.querySelector(".st").textContent = w.phase;
-    el.querySelector(".q").textContent = `${w.queue.length} / ${w.running.length}`;
-    el.querySelector(".kv").textContent = Math.round(100 * w.alloc.used / NBLOCKS) + "%";
-    el.querySelector(".sv").textContent = w.saved;
-    el.querySelector(".mi").textContent = w.migIn;
-    const cells = el.querySelectorAll(".blocks i");
-    for (let b = 0; b < NBLOCKS; b++){
-      const c = cells[b];
-      const cls = w.alloc.ref[b] > 0 ? (w.alloc.fresh.has(b) ? "fresh" : "used")
-                : w.alloc.hashOf.has(b) ? "cached" : "";
-      if (c.className !== cls) c.className = cls;
-    }
-    w.alloc.fresh.clear();
+  host.innerHTML = "";
+  cards = sim.workers.map(w => {
+    const el = document.createElement("div");
+    el.className = "w";
+    el.innerHTML = `<div class="h"><b>${esc(w.name)}</b><span class="pill">idle</span></div>
+      <div class="id">${esc(w.id)} · ${esc(w.sub)}</div>
+      <div class="blocks">${"<i></i>".repeat(NB)}</div>
+      <div class="kv">
+        <span>queue / running</span><b class="q">0 / 0</b>
+        <span>KV used</span><b class="u">0%</b>
+        <span>prefill saved</span><b class="s">0</b>
+        <span>KV received</span><b class="m">0</b>
+      </div>`;
+    host.appendChild(el);
+    return el;
   });
+  const c = CLUSTERS[sim.clusterKey];
+  $("cNote").textContent = `${c.label} · ${c.note} · ${NB} blocks each`;
 }
 
-function pct(a){ a = a.slice().sort((x,y)=>x-y); return a.length ? a[Math.floor(a.length*0.5)] : null; }
-function ms(v){ return v == null ? "—" : v >= 1 ? v.toFixed(2)+"s" : Math.round(v*1000)+"ms"; }
+/* ---- render ---- */
+function render() {
+  sim.workers.forEach((w, i) => {
+    const el = cards[i];
+    const on = w.phase !== "idle";
+    el.classList.toggle("on", on);
+    el.querySelector(".pill").textContent = w.phase;
+    el.querySelector(".q").textContent = `${w.queue.length} / ${w.running.length}`;
+    el.querySelector(".u").textContent = Math.round(w.alloc.utilisation * 100) + "%";
+    el.querySelector(".s").textContent = w.saved;
+    el.querySelector(".m").textContent = w.migIn;
+    const cells = el.querySelectorAll(".blocks i");
+    for (let b = 0; b < NB; b++) {
+      const s = w.alloc.stateOf(b);
+      const cls = s === "free" ? "" : s;
+      if (cells[b].className !== cls) cells[b].className = cls;
+    }
+  });
 
-function renderMetrics(){
-  const d = sim.done;
-  $("mServed").textContent = d.length;
-  $("mTtft").textContent = ms(pct(d.map(r => r.tFirst - r.tSubmit)));
-  $("mE2e").textContent  = ms(pct(d.map(r => r.tDone - r.tSubmit)));
-  const tot = d.reduce((s,r) => s + r.ids.length, 0);
-  const hit = d.reduce((s,r) => s + r.cached, 0);
-  $("mHit").textContent = tot ? Math.round(100*hit/tot) + "%" : "0%";
-  $("mSaved").textContent = hit;
-  $("mMig").textContent = sim.wire.count;
-  $("mBytes").textContent = (sim.wire.bytes/1e6).toFixed(0) + " MB";
+  const m = sim.metrics();
+  $("hServed").textContent = m.served;
+  $("hTtft").textContent = fmtT(m.ttft);
+  $("hHit").textContent = Math.round(m.hitRate * 100) + "%";
+  $("hMig").textContent = m.migrations;
+  $("hBytes").textContent = (m.bytes / 1e6).toFixed(0) + " MB";
   $("clock").textContent = "t " + sim.t.toFixed(2) + "s";
 
-  const active = sim.t < sim.wire.activeUntil;
-  const span = sim.wire.activeUntil - sim.wire.activeFrom;
-  $("wireFill").style.width = active && span > 0
-    ? clamp(100*(sim.t - sim.wire.activeFrom)/span, 0, 100) + "%" : "0%";
-  $("wireTxt").textContent = active
-    ? "moving KV · " + fmtBw(bwMbps())
-    : (sim.wire.count ? `${sim.wire.count} migrations · ${(sim.wire.bytes/1e6).toFixed(0)} MB · ${fmtBw(bwMbps())}`
-                      : "idle · " + fmtBw(bwMbps()));
-}
+  $("wireF").style.width = m.wireActive ? (m.wireProgress * 100) + "%" : "0%";
+  $("wireT").textContent = m.wireActive
+    ? "moving KV · " + fmtBw(sim.bandwidthMbps)
+    : m.migrations
+      ? `${m.migrations} migrations · ${(m.bytes / 1e6).toFixed(0)} MB · ${fmtBw(sim.bandwidthMbps)}`
+      : "idle · " + fmtBw(sim.bandwidthMbps);
 
-const WORDS = ["Paris",".","The","answer","follows","from","the","context","above","and","is",
-               "consistent","with","the","cited","section","."];
-function renderStream(){
   const host = $("stream");
-  if (!sim.log.length){ return; }
+  if (!sim.log.length) return;
+  const WORDS = ["Paris", ".", "The", "answer", "follows", "from", "the", "context",
+                 "above", "and", "is", "consistent", "with", "the", "cited", "section"];
   host.innerHTML = sim.log.map(r => {
-    const pctHit = r.ids.length ? Math.round(100*r.cached/r.ids.length) : 0;
-    const chip = r.migrated ? `<span class="chip mig">migrated ${(r.bytes/1e6).toFixed(1)} MB</span>`
-              : pctHit > 0  ? `<span class="chip hit">${pctHit}% cache hit</span>`
-                            : `<span class="chip cold">cold</span>`;
-    const state = r.state === "done"
-      ? `<span class="chip">TTFT ${ms(r.tFirst-r.tSubmit)}</span><span class="chip">E2E ${ms(r.tDone-r.tSubmit)}</span>`
-      : `<span class="chip">${r.state}…</span>`;
-    const gen = r.out ? WORDS.slice(0, Math.min(r.out, WORDS.length)).join(" ") : "";
-    return `<div class="row">
-      <div class="rtop"><span class="chip w">${r.w.name}</span>${chip}${state}</div>
-      <div class="rtxt">${r.text.length > 92 ? r.text.slice(0,92)+"…" : r.text}
-        <span style="color:var(--ink)">${gen}</span></div>
-      <div class="rwhy">${r.why} · ${r.ids.length} tok, ${r.computed} computed</div>
+    const pc = r.ids.length ? Math.round(100 * r.cached / r.ids.length) : 0;
+    const tag = r.migrated ? `<span class="tag mig">migrated ${(r.bytes / 1e6).toFixed(1)} MB</span>`
+             : pc > 0 ? `<span class="tag hit">${pc}% cache hit</span>`
+                      : `<span class="tag cold">cold</span>`;
+    const timing = r.state === "done"
+      ? `<span class="tag">TTFT ${fmtT(r.tFirst - r.tSubmit)}</span><span class="tag">E2E ${fmtT(r.tDone - r.tSubmit)}</span>`
+      : `<span class="tag">${r.state}…</span>`;
+    const gen = r.out ? " " + WORDS.slice(0, Math.min(r.out, WORDS.length)).join(" ") : "";
+    return `<div class="r">
+      <div class="t"><span class="tag w">${esc(r.w.name)}</span>${tag}${timing}</div>
+      <div class="p">${esc(r.text.length > 84 ? r.text.slice(0, 84) + "…" : r.text)}<b>${esc(gen)}</b></div>
+      <div class="y">${esc(r.why)} · ${r.ids.length} tok, ${r.computed} computed</div>
     </div>`;
   }).join("");
 }
 
-/* ---------- loop ---------- */
+/* ---- loop ---- */
 let last = performance.now();
-function frame(now){
-  const speed = +$("speed").value;
-  const real = Math.min(0.05, (now - last)/1000);
+function frame(now) {
+  const dt = Math.min(0.05, (now - last) / 1000) * (+$("speed").value);
   last = now;
-  const steps = 4;
-  for (let i = 0; i < steps; i++) tick(real * speed / steps);
-  renderWorkers(false); renderMetrics(); renderStream();
+  for (let i = 0; i < 4; i++) sim.tick(dt / 4);
+  render();
   requestAnimationFrame(frame);
 }
 
-/* ---------- wiring ---------- */
+/* ---- controls ---- */
 $("prompt").addEventListener("input", () => {
-  $("tokCount").textContent = tokenize($("prompt").value).length + " tok";
+  $("tokN").textContent = tokenize($("prompt").value).length + " tok";
 });
-$("send").addEventListener("click", () => submit($("prompt").value));
+$("send").addEventListener("click", () => sim.submit($("prompt").value));
 $("burst").addEventListener("click", () => {
   const base = $("prompt").value;
-  for (let i = 0; i < 8; i++) setTimeout(() => submit(base + " (variant " + i + ")"), i * 55);
+  for (let i = 0; i < 8; i++) setTimeout(() => sim.submit(`${base} (variant ${i})`), i * 60);
 });
 $("reset").addEventListener("click", () => {
-  buildCluster($("cluster").value);
-  sim.t = 0; sim.done = []; sim.log = []; sim.seq = 0; sim.pendingWire = [];
-  sim.wire = {busyUntil:0, bytes:0, count:0, activeUntil:0, activeFrom:0};
-  $("stream").innerHTML = '<div class="empty">Caches cleared. Send a prompt, then send another that starts the same way.</div>';
+  sim.reset();
+  $("stream").innerHTML = '<div class="blank">Caches cleared. Send a prompt, then send another that starts the same way.</div>';
 });
-$("cluster").addEventListener("change", () => $("reset").click());
-$("bw").addEventListener("input", () => { $("bwVal").textContent = fmtBw(bwMbps()); });
-$("speed").addEventListener("input", () => { $("speedVal").textContent = $("speed").value + "×"; });
-document.querySelectorAll(".presets button").forEach(b =>
-  b.addEventListener("click", () => {
-    $("prompt").value = b.dataset.p;
-    $("prompt").dispatchEvent(new Event("input"));
-    submit(b.dataset.p);
-  }));
+$("policy").addEventListener("change", e => sim.setPolicy(e.target.value));
+$("cluster").addEventListener("change", e => {
+  sim.setCluster(e.target.value);
+  buildWorkers();
+  $("stream").innerHTML = '<div class="blank">Cluster switched. Send a prompt to begin.</div>';
+});
+$("bw").addEventListener("input", e => {
+  const v = posToMbps(+e.target.value);
+  sim.setBandwidth(v);
+  $("bwV").textContent = fmtBw(v);
+});
+$("speed").addEventListener("input", e => { $("spV").textContent = e.target.value + "×"; });
+$("steps").addEventListener("click", e => {
+  const b = e.target.closest("button[data-i]");
+  if (!b) return;
+  const text = PRESETS[+b.dataset.i][2];
+  $("prompt").value = text;
+  $("prompt").dispatchEvent(new Event("input"));
+  sim.submit(text);
+});
 
-/* results table */
-const KERNELS = [
-  {p:"gather + dense attention", t:"18207 µs", x:"1.0×",  g:"11.1", pk:"3.5%"},
-  {p:"gather + PyTorch SDPA",    t:"12115 µs", x:"1.5×",  g:"16.6", pk:"5.2%"},
-  {p:"v1 kernel (naive fused)",  t:"3030 µs",  x:"6.0×",  g:"66.4", pk:"20.8%"},
-  {p:"v2 kernel (online softmax)",t:"2028 µs", x:"9.0×",  g:"99.3", pk:"31.0%"},
-  {p:"v3 kernel (64-way split)", t:"1136 µs",  x:"16.0×", g:"177.3",pk:"55.4%", hi:true},
-];
-$("kRows").innerHTML = KERNELS.map(k =>
-  `<tr class="${k.hi?"hi":""}"><td>${k.p}</td><td>${k.t}</td><td>${k.x}</td><td>${k.g}</td><td>${k.pk}</td></tr>`
-).join("");
-
-buildCluster("t4");
-$("bwVal").textContent = fmtBw(bwMbps());
-$("speedVal").textContent = $("speed").value + "×";
+/* ---- boot ---- */
+buildWorkers();
+sim.setBandwidth(posToMbps(+$("bw").value));
+$("bwV").textContent = fmtBw(sim.bandwidthMbps);
 $("prompt").dispatchEvent(new Event("input"));
+render();
 requestAnimationFrame(frame);
 </script>
-
 </body>
 </html>

@@ -12,3 +12,4 @@ results/*.json
 !results/requests-headline.csv
 .venv/
 venv/
+build/

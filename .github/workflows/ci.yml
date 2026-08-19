@@ -43,6 +43,14 @@ jobs:
       - name: Smoke-test a 2-worker cluster
         run: python scripts/smoke.py
 
+      - name: Front-end scheduler tests
+        # Every control on the page maps to one Sim method, so these drive the
+        # buttons without a browser.
+        run: node --test web/sim.test.mjs
+
+      - name: Artifact bundle still builds
+        run: python scripts/build_artifact.py
+
   docker:
     name: docker build + test
     runs-on: ubuntu-latest
