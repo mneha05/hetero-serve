@@ -30,8 +30,10 @@ splits the grid goes from 48 blocks to 384.
 
 Same approach as FlashDecoding, and as vLLM's paged-attention v2 kernel.
 
-`num_splits` is chosen from the device's SM count so small batches split hard and
-large batches barely split at all; pass it explicitly to sweep it.
+`num_splits` targets a *dependent-chain length* (~32 tokens per split), not an
+occupancy number. That distinction was measured, not assumed: an occupancy-based
+heuristic picked 2 splits where 32 was 2.1x faster. Pass `num_splits` explicitly
+to sweep it — `scripts/bench_kernel.py --splits N`.
 """
 
 from __future__ import annotations
@@ -204,15 +206,25 @@ __global__ void merge_splits_kernel(
 // ---------------------------------------------------------------------------
 
 int64_t choose_num_splits(int64_t num_seqs, int64_t num_heads, int64_t max_context) {
-  // Enough warps to give every SM a few, but never so many that a slice gets
-  // too short to amortise the merge.
+  // The first version of this targeted occupancy -- enough warps to give each SM
+  // a few -- and it was wrong. Measured on a T4 at batch 16 / context 512 it
+  // chose 2 splits (23.5% of peak) when 32 gave 48.8%, and at batch 32 /
+  // context 2048 it chose 1, i.e. no split at all.
+  //
+  // Occupancy is not the binding constraint: the online softmax is *sequential*,
+  // so a warp streaming 512 tokens carries a 512-long dependent chain of
+  // exp/rescale. Splitting shortens that chain. So target a chain length
+  // (~32 tokens per split) and only fall back to a device-fill argument when
+  // the context is too short for that to produce enough work.
   const int sms = at::cuda::getCurrentDeviceProperties()->multiProcessorCount;
-  const int64_t want_warps = (int64_t)sms * 8;
   const int64_t have = std::max<int64_t>(num_seqs * num_heads, 1);
-  int64_t splits = (want_warps + have - 1) / have;
-  const int64_t by_ctx = std::max<int64_t>(max_context / 128, 1);
-  splits = std::min(splits, by_ctx);
-  return std::max<int64_t>(1, std::min<int64_t>(splits, 32));
+
+  const int64_t by_chain = std::max<int64_t>(max_context / 32, 1);
+  const int64_t to_fill_device =
+      std::max<int64_t>(((int64_t)sms * 8 + have - 1) / have, 1);
+
+  int64_t splits = std::max(by_chain, to_fill_device);
+  return std::max<int64_t>(1, std::min<int64_t>(splits, 64));
 }
 
 torch::Tensor paged_attention_v3(

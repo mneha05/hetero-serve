@@ -337,8 +337,34 @@ already in v2, and they bought a real 1.35-1.47x. The profiler says none of that
 what is holding it back now. Guessing would have sent me to tune the inner loop; the
 measurement said restructure the grid.
 
-**Run the notebook to get v3's numbers on your own card** — the benchmark sweeps the
-split count, so you can watch occupancy trade off against merge overhead directly.
+### v3, measured
+
+Same T4, batch 16, context 512, sweeping the split count by hand:
+
+| splits | GB/s | % of peak |
+|---:|---:|---:|
+| 1 | 42.9 | 13.4% |
+| 2 | 75.1 | 23.5% |
+| 4 | 132.4 | 41.4% |
+| 8 | 121.9 | 38.1% |
+| 16 | 141.4 | 44.2% |
+| **32** | **156.1** | **48.8%** |
+
+**13.4% → 48.8% of peak**, from splitting alone. Against the strong baseline, v3 is
+**60x PyTorch SDPA** on the same paged data (156.1 vs 2.6 GB/s) — SDPA is a fast kernel,
+but it cannot read a block table, so it pays the gather that v3 deletes.
+
+And the sweep found a bug in my own heuristic. `choose_num_splits` originally targeted
+*occupancy* — enough warps to give each SM a few — and picked **2 splits where 32 was
+2.1x faster**; at batch 32 / context 2048 it picked 1, i.e. no split at all. Occupancy
+was the wrong model. The online softmax is **sequential**, so a warp streaming 512
+tokens carries a 512-long dependent chain of exp-and-rescale; splitting shortens the
+chain. The heuristic now targets ~32 tokens per split, and only falls back to a
+device-fill argument when the context is too short for that.
+
+That is the second time on this project that the number I would have guessed and the
+number the hardware reported disagreed, and both times the measurement was the
+interesting one.
 
 ### What is verified, and what is not
 
