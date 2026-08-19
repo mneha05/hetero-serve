@@ -264,30 +264,46 @@ baseline that counts.
 
 **batch 16, context 512** (25.2 MB of KV per call)
 
-| path | per call | speedup | GB/s | % of peak | max err |
+| path | per call | vs gather | GB/s | % of peak | max err |
 |---|---:|---:|---:|---:|---:|
-| gather + dense attention | 3897 us | 1.00x | 6.5 | 2.0% | — |
-| v1 kernel (naive fused) | 787 us | 4.95x | 32.0 | 10.0% | 8.3e-07 |
-| **v2 kernel (online softmax)** | **580 us** | **6.73x** | **43.4** | **13.6%** | 6.9e-07 |
+| gather + dense attention | 4105 us | 1.0x | 6.1 | 1.9% | — |
+| gather + PyTorch SDPA | 3825 us | 1.1x | 6.6 | 2.1% | 4.2e-07 |
+| v1 kernel (naive fused) | 545 us | 7.5x | 46.2 | 14.4% | 4.8e-07 |
+| v2 kernel (online softmax) | 651 us | 6.3x | 38.7 | 12.1% | 6.6e-07 |
+| **v3 kernel (16-way split)** | **170 us** | **24.2x** | **148.1** | **46.3%** | 2.1e-07 |
 
 **batch 32, context 2048** (201.3 MB of KV per call)
 
-| path | per call | speedup | GB/s | % of peak | max err |
+| path | per call | vs gather | GB/s | % of peak | max err |
 |---|---:|---:|---:|---:|---:|
-| gather + dense attention | 16348 us | 1.00x | 12.3 | 3.8% | — |
-| v1 kernel (naive fused) | 3093 us | 5.29x | 65.1 | 20.3% | 8.0e-07 |
-| **v2 kernel (online softmax)** | **2098 us** | **7.79x** | **96.0** | **30.0%** | 1.2e-06 |
+| gather + dense attention | 18207 us | 1.0x | 11.1 | 3.5% | — |
+| gather + PyTorch SDPA | 12115 us | 1.5x | 16.6 | 5.2% | 7.7e-07 |
+| v1 kernel (naive fused) | 3030 us | 6.0x | 66.4 | 20.8% | 7.5e-07 |
+| v2 kernel (online softmax) | 2028 us | 9.0x | 99.3 | 31.0% | 1.0e-06 |
+| **v3 kernel (64-way split)** | **1136 us** | **16.0x** | **177.3** | **55.4%** | 2.7e-07 |
 
-Three things worth reading off these:
+Both v3 rows used the **auto-selected** split count — no hand-tuning.
 
-- **The gather path is catastrophic** — 2-4% of peak. That is the real cost of
-  paging a KV cache when attention cannot read the block table directly, and it is
-  what the whole kernel exists to remove.
-- **v2's lead over v1 grows with context** (1.35x at 512, 1.47x at 2048), which is
-  precisely what online softmax predicts: v1's shared-memory score vector gets more
-  expensive as the context lengthens, v2's does not exist.
-- **Both are still far from peak.** 30% is not a good number, and the next section
-  says why.
+> **On measurement noise:** these are single runs on a shared, thermally throttled
+> Colab T4. Repeating the same shape swung v1 between 31.6 and 46.2 GB/s (44%) across
+> sessions. The *ordering* is stable and the v3 gap is far larger than the noise, but
+> treat any individual figure as +/- 30% rather than exact. Notebook attached — run it
+> yourself.
+
+Four things worth reading off these:
+
+- **The gather path is catastrophic** — 2-5% of peak, and *PyTorch's own SDPA barely
+  helps* (1.1-1.5x). That is the point: SDPA is an excellent kernel, but it cannot read
+  a block table, so it still pays the gather. Once you have paged your KV cache, a
+  fast dense kernel is not enough.
+- **v2 beats v1 only at long context** (12.1% vs 14.4% at 512; 31.0% vs 20.8% at 2048).
+  The online-softmax win is real but it is a *scaling* win, not a constant one — at
+  short context v1's simpler inner loop is competitive.
+- **v3 is a different regime**: 46-55% of peak, 10-22x PyTorch SDPA on the same paged
+  data. Splitting the context was worth more than every micro-optimisation in v2
+  combined.
+- **45% is still on the table.** A production kernel would go further with async
+  copies and better scheduling; this is where I stopped, not where the ceiling is.
 
 End to end, the kernel moved the serving system too: decode went from **110 ms to
 57 ms per step**, and end-to-end p50 from **0.67 s to 0.22 s**.
