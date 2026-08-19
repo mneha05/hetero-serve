@@ -14,6 +14,52 @@ bandwidth, up from 3.8%.** Nsight then showed the remaining gap is occupancy, no
 bandwidth — [details below](#what-nsight-says-to-do-next). Click the badge to
 reproduce all of it on a free GPU.
 
+---
+
+### Start here
+
+| | |
+|---|---|
+| ▶ **Run the kernels on a free GPU** | [open in Colab](https://colab.research.google.com/github/mneha05/hetero-serve/blob/main/notebooks/verify_cuda_kernel.ipynb) · [notebook source](notebooks/verify_cuda_kernel.ipynb) |
+| 🚀 **See it work in 60 seconds** | [`run_demo.py`](run_demo.py) |
+| 📊 **The measurements** | [T4 kernel results](#measured-on-a-tesla-t4) · [Nsight profile](#what-nsight-says-to-do-next) · [policy sweep](#results) · [raw data](results/) |
+| 🐛 **What I got wrong** | [four bugs, found by measuring](#what-went-wrong-the-useful-part) |
+
+**The code, in the order it is worth reading:**
+
+| file | what it is |
+|---|---|
+| [`model/paged_attn_v2.py`](heteroserve/model/paged_attn_v2.py) | the **fused CUDA kernel** — online softmax, warp-per-head, coalesced loads |
+| [`model/paged_attn.py`](heteroserve/model/paged_attn.py) | the naive v1 kernel it is measured against, plus the torch reference |
+| [`kv/blocks.py`](heteroserve/kv/blocks.py) | paged KV cache: chain hashing, refcounts, eviction, migration |
+| [`sched/router.py`](heteroserve/sched/router.py) | the migrate-vs-recompute cost model |
+| [`worker/worker.py`](heteroserve/worker/worker.py) | one device, one KV pool, continuous batching |
+| [`net/shaper.py`](heteroserve/net/shaper.py) | the token bucket that makes the link budget real |
+
+<details>
+<summary><b>Full contents</b></summary>
+
+- [The question I actually wanted to answer](#the-question-i-actually-wanted-to-answer)
+- [The hardware I had (and didn't have)](#the-hardware-i-had-and-didnt-have)
+- [What it's made of](#what-its-made-of)
+- [Running on NVIDIA, and a fused paged-attention kernel](#running-on-nvidia-and-a-fused-paged-attention-kernel)
+  - [Two kernels, because the first one was naive](#two-kernels-because-the-first-one-was-naive)
+  - [Measured on a Tesla T4](#measured-on-a-tesla-t4)
+  - [What Nsight says to do next](#what-nsight-says-to-do-next)
+  - [What is verified, and what is not](#what-is-verified-and-what-is-not)
+- [Results](#results)
+  - [The same sweep on a T4](#the-same-sweep-on-a-t4)
+  - [Where the migration crossover actually is](#where-the-migration-crossover-actually-is)
+  - [Where a decode step really goes](#where-a-decode-step-really-goes)
+- [What went wrong (the useful part)](#what-went-wrong-the-useful-part)
+- [The NPU tax](#the-npu-tax)
+- [Run it](#run-it)
+- [Tests](#tests)
+- [Honest limitations](#honest-limitations)
+- [Layout](#layout)
+
+</details>
+
 Runs on NVIDIA (CUDA), on Intel Arc GPU / NPU / CPU (OpenVINO), or on nothing but numpy.
 Real GPT-2 weights, real worker processes, real TCP sockets, a real token-bucket
 bandwidth shaper. Every number below was measured, and where something is *not*
@@ -302,8 +348,9 @@ T4** — the numbers above are that run.
 
 **Verify it yourself in about two minutes, free**, on a Colab T4 — no GPU required:
 
-[**`notebooks/verify_cuda_kernel.ipynb`**](notebooks/verify_cuda_kernel.ipynb) →
-open in Colab, set `Runtime → Change runtime type → T4 GPU`, `Run all`. It compiles
+**[▶ Open the notebook in Colab](https://colab.research.google.com/github/mneha05/hetero-serve/blob/main/notebooks/verify_cuda_kernel.ipynb)** — set
+`Runtime → Change runtime type → T4 GPU`, then `Run all`.
+([notebook source](notebooks/verify_cuda_kernel.ipynb)) It compiles
 both kernels, runs the correctness suite, prints the bandwidth roofline, and runs the
 whole serving system on the GPU.
 
@@ -567,6 +614,12 @@ measures the fully-padded batch, making it look ~4× slower than it is under loa
 
 ## Run it
 
+**No GPU? Start here:** [▶ run the whole thing on a free Colab T4](https://colab.research.google.com/github/mneha05/hetero-serve/blob/main/notebooks/verify_cuda_kernel.ipynb) —
+compiles both kernels, runs the tests, prints the bandwidth roofline, and boots the
+serving system. Nothing to install.
+
+Locally:
+
 ```bash
 pip install -r requirements.txt
 python run_demo.py              # downloads GPT-2 (~550 MB) on first run
@@ -659,25 +712,28 @@ The load-bearing ones:
 
 ## Layout
 
-```
-heteroserve/
-  config.py            models, KV geometry, link budgets, cluster shape
-  metrics.py           TTFT / TPOT / E2E percentiles
-  kv/blocks.py         paged allocator, chain hashing, eviction, migration I/O
-  kv/torch_blocks.py   the same allocator with the pool resident on a GPU
-  model/
-    fetch.py           HuggingFace download + a dependency-free safetensors reader
-    tokenizer.py       GPT-2 byte-level BPE, from scratch
-    numpy_engine.py    reference transformer, paged KV
-    ov_engine.py       OpenVINO graph for CPU / GPU / NPU
-    torch_engine.py    CUDA engine: gather decode + fused paged decode
-    paged_attn.py      v1 CUDA kernel + torch reference + backend reporting
-    paged_attn_v2.py   v2 CUDA kernel: online softmax, warp-per-head, roofline
-  net/
-    shaper.py          token bucket + propagation delay
-    transport.py       length-prefixed framing over TCP
-  worker/worker.py     one device, one KV pool, continuous batching
-  sched/router.py      prefix directory, cost model, placement, migration
-  bench/               workload generation, sweep harness, charts
-  dashboard/           live view
-```
+Every file below is a link.
+
+| | |
+|---|---|
+| [`config.py`](heteroserve/config.py) | models, KV geometry, link budgets, cluster shape |
+| [`metrics.py`](heteroserve/metrics.py) | TTFT / TPOT / E2E percentiles |
+| [`kv/blocks.py`](heteroserve/kv/blocks.py) | paged allocator, chain hashing, eviction, migration I/O |
+| [`kv/torch_blocks.py`](heteroserve/kv/torch_blocks.py) | the same allocator with the pool resident on a GPU |
+| [`model/fetch.py`](heteroserve/model/fetch.py) | HuggingFace download + a dependency-free safetensors reader |
+| [`model/tokenizer.py`](heteroserve/model/tokenizer.py) | GPT-2 byte-level BPE, from scratch |
+| [`model/numpy_engine.py`](heteroserve/model/numpy_engine.py) | reference transformer, paged KV — the correctness oracle |
+| [`model/ov_engine.py`](heteroserve/model/ov_engine.py) | OpenVINO graph for Intel CPU / GPU / NPU |
+| [`model/torch_engine.py`](heteroserve/model/torch_engine.py) | CUDA engine: gather decode + fused paged decode |
+| [`model/paged_attn.py`](heteroserve/model/paged_attn.py) | **v1 CUDA kernel** + torch reference + backend reporting |
+| [`model/paged_attn_v2.py`](heteroserve/model/paged_attn_v2.py) | **v2 CUDA kernel**: online softmax, warp-per-head, roofline |
+| [`net/shaper.py`](heteroserve/net/shaper.py) | token bucket + propagation delay |
+| [`net/transport.py`](heteroserve/net/transport.py) | length-prefixed framing over TCP |
+| [`worker/worker.py`](heteroserve/worker/worker.py) | one device, one KV pool, continuous batching |
+| [`sched/router.py`](heteroserve/sched/router.py) | prefix directory, cost model, placement, migration |
+| [`bench/sweep.py`](heteroserve/bench/sweep.py) · [`bench/workload.py`](heteroserve/bench/workload.py) · [`bench/plot.py`](heteroserve/bench/plot.py) | benchmark harness, workload generation, charts |
+| [`dashboard/server.py`](heteroserve/dashboard/server.py) | live view over SSE |
+
+**Scripts:** [`probe_devices.py`](scripts/probe_devices.py) · [`profile_decode.py`](scripts/profile_decode.py) · [`bench_kernel.py`](scripts/bench_kernel.py) · [`smoke.py`](scripts/smoke.py)
+
+**Tests:** [`test_model.py`](tests/test_model.py) · [`test_distributed.py`](tests/test_distributed.py) · [`test_torch_engine.py`](tests/test_torch_engine.py)
