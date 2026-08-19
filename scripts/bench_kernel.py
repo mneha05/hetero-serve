@@ -7,12 +7,18 @@ baseline. This reports both.
 
 Three paths, same data:
 
-  gather + dense   host materialises each sequence's context, then attends.
-                   What every non-CUDA engine in this repo does.
-  v1 kernel        naive fused kernel: scores in shared memory, scalar loads,
-                   shared-memory tree reduction.
-  v2 kernel        online softmax (no score vector at all), one warp per
-                   (sequence, head), coalesced per-lane slices, warp shuffles.
+  gather + dense    host materialises each sequence's context, then attends with
+                    einsum. What every non-CUDA engine in this repo does.
+  gather + SDPA     the same gather, then PyTorch's scaled_dot_product_attention
+                    (cuDNN / FlashAttention under the hood). The honest strong
+                    baseline: what you would actually write if you had no paged
+                    kernel. Beating my own slow einsum proves nothing; this does.
+  v1 kernel         naive fused: scores in shared memory, scalar loads,
+                    shared-memory tree reduction.
+  v2 kernel         online softmax (no score vector), one warp per (sequence,
+                    head), coalesced per-lane slices, warp shuffles.
+  v3 kernel         v2 plus a context split, because Nsight said v2 was
+                    occupancy-starved at 0.1 waves, not bandwidth-starved.
 
 Correctness is checked against the torch reference before any timing is printed,
 and a path that disagrees is reported as FAILED rather than timed.
@@ -33,6 +39,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from heteroserve.config import KVConfig, ModelConfig
 from heteroserve.model import paged_attn_v2 as v2mod
+from heteroserve.model import paged_attn_v3 as v3mod
 from heteroserve.model.paged_attn import (
     build_error,
     paged_attention,
@@ -60,6 +67,8 @@ def main() -> int:
     ap.add_argument("--iters", type=int, default=50)
     ap.add_argument("--model", default="gpt2", choices=["gpt2", "tiny"])
     ap.add_argument("--dtype", default="float16", choices=["float16", "float32"])
+    ap.add_argument("--splits", type=int, default=0,
+                    help="v3 context splits; 0 = pick from the device SM count")
     args = ap.parse_args()
 
     try:
@@ -88,6 +97,8 @@ def main() -> int:
           + ("" if which_backend() == "cuda" else f"  ({build_error()})"))
     print(f"v2 kernel: {'ready' if v2mod.is_available() else 'unavailable'}"
           + ("" if v2mod.is_available() else f"  ({v2mod.build_error()})"))
+    print(f"v3 kernel: {'ready' if v3mod.is_available() else 'unavailable'}"
+          + ("" if v3mod.is_available() else f"  ({v3mod.build_error()})"))
     print("=" * 74)
 
     cfg = ModelConfig() if args.model == "gpt2" else ModelConfig.tiny()
@@ -120,7 +131,25 @@ def main() -> int:
         s = torch.einsum("bhd,bkhd->bhk", q, ks.float()) * scale
         return torch.einsum("bhk,bkhd->bhd", torch.softmax(s, -1), vs.float())
 
-    candidates = [("gather + dense attention", gather_path)]
+    def sdpa_path():
+        """Gather, then PyTorch's own fused attention. The baseline that counts."""
+        ks, vs = alloc.gather_kv_batch(tables, args.context, layer=0)
+        # SDPA wants [B, H, L, D]; decode is a single query against the context.
+        qq = q.unsqueeze(2)                                   # [B, H, 1, D]
+        kk = ks.permute(0, 2, 1, 3).float()                   # [B, H, ctx, D]
+        vv = vs.permute(0, 2, 1, 3).float()
+        o = torch.nn.functional.scaled_dot_product_attention(qq, kk, vv, scale=scale)
+        return o.squeeze(2)
+
+    splits = args.splits
+    if v3mod.is_available() and splits <= 0:
+        splits = v3mod.choose_num_splits(args.batch, cfg.n_head,
+                                         bt.shape[1] * args.block_size)
+
+    candidates = [
+        ("gather + dense attention", gather_path),
+        ("gather + PyTorch SDPA", sdpa_path),
+    ]
     if which_backend() == "cuda":
         candidates.append(
             ("v1 kernel (naive fused)",
@@ -130,6 +159,12 @@ def main() -> int:
         candidates.append(
             ("v2 kernel (online softmax)",
              lambda: v2mod.paged_attention_v2(q, k_pool, v_pool, bt, ctx_lens, scale))
+        )
+    if v3mod.is_available():
+        candidates.append(
+            (f"v3 kernel ({splits}-way split)",
+             lambda: v3mod.paged_attention_v3(q, k_pool, v_pool, bt, ctx_lens,
+                                              scale, splits))
         )
     if not on_cuda:
         candidates.append(
@@ -145,7 +180,7 @@ def main() -> int:
           f"dtype={args.dtype}  one layer")
     print(f"minimum traffic per call: {moved/1e6:.1f} MB (K and V, read once each)\n")
 
-    hdr = f"{'path':30s} {'per call':>10s} {'speedup':>8s} {'GB/s':>8s}"
+    hdr = f"{'path':32s} {'per call':>10s} {'speedup':>8s} {'GB/s':>8s}"
     if peak:
         hdr += f" {'% peak':>7s}"
     hdr += "   correctness"
@@ -158,7 +193,7 @@ def main() -> int:
         err = (got - ref).abs().max().item()
         ok = err < 2e-2
         if not ok:
-            print(f"{name:30s} {'--':>10s} {'--':>8s} {'--':>8s}"
+            print(f"{name:32s} {'--':>10s} {'--':>8s} {'--':>8s}"
                   + (f" {'--':>7s}" if peak else "")
                   + f"   FAILED (max diff {err:.2e})")
             continue
@@ -166,7 +201,7 @@ def main() -> int:
         t = _time(fn, args.iters, sync)
         base = base if base is not None else t
         gbs = moved / t / 1e9
-        row = (f"{name:30s} {t*1e6:8.1f}us {base/t:7.2f}x {gbs:7.1f}")
+        row = (f"{name:32s} {t*1e6:8.1f}us {base/t:7.2f}x {gbs:7.1f}")
         if peak:
             row += f" {100*gbs/peak:6.1f}%"
         row += f"   ok ({err:.1e})"

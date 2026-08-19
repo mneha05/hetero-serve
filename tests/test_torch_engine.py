@@ -317,3 +317,154 @@ def test_v2_matches_v1():
     a = paged_attention(qt, alloc.pool[0, 0], alloc.pool[0, 1], bt, ctx_lens, scale)
     b = paged_attention_v2(qt, alloc.pool[0, 0], alloc.pool[0, 1], bt, ctx_lens, scale)
     np.testing.assert_allclose(a.cpu().numpy(), b.cpu().numpy(), rtol=1e-3, atol=1e-3)
+
+
+# ---------------------------------------------------------------------------
+# v3: context-split attention, and fuzzing
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("n,splits,amp", [
+    (37, 1, 1.0), (37, 4, 1.0), (512, 8, 1.0), (512, 32, 1.0),
+    (5, 8, 1.0),        # more splits than tokens -> empty slices
+    (200, 7, 25.0),     # scores large enough that a naive exp() overflows
+    (1, 4, 1.0),        # single token
+])
+def test_split_merge_matches_dense_attention(n, splits, amp):
+    """Splitting the context and merging the softmax states must be exact.
+
+    This is the associativity claim v3 rests on: independent online-softmax
+    runs over slices, recombined by rescaling against a global max, equal one
+    pass over the whole context.
+    """
+    from heteroserve.model.paged_attn_v3 import split_merge_reference
+
+    rng = np.random.default_rng(n * 31 + splits)
+    H, D = 4, 64
+    q = (rng.standard_normal((H, D)) * amp).astype(np.float32)
+    k = (rng.standard_normal((n, H, D)) * amp).astype(np.float32)
+    v = rng.standard_normal((n, H, D)).astype(np.float32)
+    scale = 1.0 / np.sqrt(D)
+
+    got = split_merge_reference(q, k, v, scale, splits)
+
+    s = np.einsum("hd,nhd->hn", q, k) * scale
+    p = np.exp(s - s.max(-1, keepdims=True))
+    p /= p.sum(-1, keepdims=True)
+    want = np.einsum("hn,nhd->hd", p, v)
+
+    np.testing.assert_allclose(got, want, rtol=1e-4, atol=1e-4)
+
+
+def test_paged_attention_fuzz_cpu():
+    """Fuzz the block-table walk across random geometries.
+
+    Randomised sequence counts, lengths, block sizes and (crucially) *shuffled,
+    non-contiguous* block tables, since a prefix-shared cache never lays a
+    sequence out in consecutive blocks.
+    """
+    rng = np.random.default_rng(1234)
+    for trial in range(40):
+        n_seqs = int(rng.integers(1, 6))
+        block_size = int(rng.choice([4, 8, 16]))
+        lens = [int(rng.integers(1, 200)) for _ in range(n_seqs)]
+
+        cfg = ModelConfig.tiny()
+        need = sum(-(-n // block_size) for n in lens) + 8
+        kv = KVConfig(block_size=block_size, num_blocks=max(16, need), dtype="float32")
+        alloc = TorchBlockAllocator(kv, cfg, device="cpu")
+
+        tables, truth = [], []
+        for n in lens:
+            a = alloc.allocate([int(t) for t in rng.integers(1, 4000, size=n)])
+            L, H, D = cfg.n_layer, cfg.n_head, cfg.head_dim
+            k = rng.standard_normal((L, H, n, D)).astype(np.float32)
+            v = rng.standard_normal((L, H, n, D)).astype(np.float32)
+            alloc.write_kv(a.block_ids, 0, k, v)
+            tables.append(a.block_ids)
+            truth.append((k, v))
+
+        q = rng.standard_normal((n_seqs, cfg.n_head, cfg.head_dim)).astype(np.float32)
+        bt = alloc.block_table_tensor(tables, pad_to=max(len(t) for t in tables))
+        scale = 1.0 / np.sqrt(cfg.head_dim)
+        got = paged_attention_torch(
+            torch.as_tensor(q), alloc.pool[0, 0], alloc.pool[0, 1],
+            bt, torch.tensor(lens, dtype=torch.int32), scale,
+        ).numpy()
+
+        for b, (k, v) in enumerate(truth):
+            want = _reference_attention(
+                q[b], k[0].transpose(1, 0, 2), v[0].transpose(1, 0, 2), scale
+            )
+            np.testing.assert_allclose(
+                got[b], want, rtol=1e-4, atol=1e-4,
+                err_msg=f"trial {trial}, seq {b}, len {lens[b]}, block {block_size}",
+            )
+
+
+@cuda_only
+def test_v3_kernel_matches_reference():
+    from heteroserve.model.paged_attn_v3 import build_error, is_available, paged_attention_v3
+
+    assert is_available(), f"v3 kernel did not compile: {build_error()}"
+    cfg, alloc, tables, truth, q = _build_paged_case("cuda:0")
+    lens = [t[0].shape[2] for t in truth]
+    bt = alloc.block_table_tensor(tables, pad_to=max(len(t) for t in tables))
+    ctx_lens = torch.tensor(lens, dtype=torch.int32, device="cuda:0")
+    scale = 1.0 / np.sqrt(cfg.head_dim)
+    qt = torch.as_tensor(q, device="cuda:0")
+    ref = paged_attention_torch(
+        qt, alloc.pool[0, 0], alloc.pool[0, 1], bt, ctx_lens, scale
+    ).cpu().numpy()
+
+    # Every split count must give the same answer, including more splits than
+    # tokens (empty slices) and the auto-chosen value.
+    for splits in (0, 1, 2, 4, 8, 16, 64):
+        got = paged_attention_v3(
+            qt, alloc.pool[0, 0], alloc.pool[0, 1], bt, ctx_lens, scale, splits
+        )
+        np.testing.assert_allclose(
+            got.cpu().numpy(), ref, rtol=1e-3, atol=1e-3,
+            err_msg=f"num_splits={splits}",
+        )
+
+
+@cuda_only
+def test_all_three_kernels_agree_under_fuzz():
+    """v1, v2 and v3 must agree with each other and the reference, always."""
+    from heteroserve.model.paged_attn_v2 import paged_attention_v2
+    from heteroserve.model.paged_attn_v3 import paged_attention_v3
+
+    rng = np.random.default_rng(7)
+    for trial in range(15):
+        n_seqs = int(rng.integers(1, 9))
+        block_size = int(rng.choice([8, 16, 32]))
+        lens = [int(rng.integers(1, 700)) for _ in range(n_seqs)]
+
+        cfg = ModelConfig.tiny()
+        need = sum(-(-n // block_size) for n in lens) + 8
+        kv = KVConfig(block_size=block_size, num_blocks=max(32, need), dtype="float16")
+        alloc = TorchBlockAllocator(kv, cfg, device="cuda:0")
+
+        tables = []
+        for n in lens:
+            a = alloc.allocate([int(t) for t in rng.integers(1, 4000, size=n)])
+            L, H, D = cfg.n_layer, cfg.n_head, cfg.head_dim
+            k = rng.standard_normal((L, H, n, D)).astype(np.float16)
+            alloc.write_kv(a.block_ids, 0, k, k)
+            tables.append(a.block_ids)
+
+        q = torch.randn(n_seqs, cfg.n_head, cfg.head_dim, device="cuda:0")
+        bt = alloc.block_table_tensor(tables, pad_to=max(len(t) for t in tables))
+        ctx = torch.tensor(lens, dtype=torch.int32, device="cuda:0")
+        scale = 1.0 / np.sqrt(cfg.head_dim)
+        kp, vp = alloc.pool[0, 0], alloc.pool[0, 1]
+
+        ref = paged_attention_torch(q, kp, vp, bt, ctx, scale).float()
+        for name, got in (
+            ("v1", paged_attention(q, kp, vp, bt, ctx, scale)),
+            ("v2", paged_attention_v2(q, kp, vp, bt, ctx, scale)),
+            ("v3", paged_attention_v3(q, kp, vp, bt, ctx, scale, 0)),
+        ):
+            err = (got.float() - ref).abs().max().item()
+            assert err < 5e-3, f"{name} trial {trial} lens={lens} bs={block_size} err={err:.2e}"
