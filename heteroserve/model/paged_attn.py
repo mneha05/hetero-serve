@@ -219,8 +219,14 @@ def _try_build():
         )
         _backend = "cuda"
     except Exception as exc:  # noqa: BLE001 - compilation is genuinely optional
+        msg = str(exc)
+        if "ninja" in msg.lower():
+            # By far the most common failure, and the message torch gives is easy
+            # to misread as "the CUDA code is broken". It is not.
+            msg = ("ninja is missing -- torch builds CUDA extensions through it. "
+                   "Fix: pip install ninja")
         _ext, _backend = None, "torch"
-        _error = f"{type(exc).__name__}: {str(exc).splitlines()[-1][:200]}"
+        _error = f"{type(exc).__name__}: {msg.splitlines()[-1][:200]}"
 
 
 def which_backend() -> str:

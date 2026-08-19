@@ -199,7 +199,9 @@ def test_paged_attention_torch_matches_dense_attention():
 @cuda_only
 def test_cuda_kernel_matches_torch_reference():
     """The fused kernel must agree with the torch paged implementation."""
-    assert which_backend() == "cuda", "CUDA kernel did not compile"
+    from heteroserve.model.paged_attn import build_error
+
+    assert which_backend() == "cuda", f"v1 kernel did not compile: {build_error()}"
     cfg, alloc, tables, truth, q = _build_paged_case("cuda:0")
     lens = [t[0].shape[2] for t in truth]
     bt = alloc.block_table_tensor(tables, pad_to=max(len(t) for t in tables))

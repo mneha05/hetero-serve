@@ -235,9 +235,15 @@ whole serving system on the GPU.
 Or locally on any CUDA box:
 
 ```bash
+pip install ninja                        # torch builds CUDA extensions through it
 pytest tests/test_torch_engine.py -v     # the 4 skipped tests run
 python scripts/bench_kernel.py --batch 16 --context 512 --dtype float16
 ```
+
+> **If the kernels report `torch` instead of `cuda`**, read the reason —
+> `which_backend()` and `build_error()` always say why. The usual answer is a missing
+> `ninja`, which torch shells out to in order to build extensions and which Colab does
+> not ship. It is a build-tool problem, not a CUDA one.
 
 `bench_kernel.py` checks correctness **before** it prints any timing and refuses to
 report a speedup if the kernel disagrees with the reference. On a machine without CUDA

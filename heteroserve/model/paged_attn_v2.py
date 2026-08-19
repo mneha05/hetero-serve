@@ -239,8 +239,14 @@ def _try_build():
         )
         _state = "ready"
     except Exception as exc:  # noqa: BLE001
+        msg = str(exc)
+        if "ninja" in msg.lower():
+            # By far the most common failure, and easy to misread as "the CUDA
+            # code is broken". It is not.
+            msg = ("ninja is missing -- torch builds CUDA extensions through it. "
+                   "Fix: pip install ninja")
         _ext, _state = None, "unavailable"
-        _error = f"{type(exc).__name__}: {str(exc).splitlines()[-1][:200]}"
+        _error = f"{type(exc).__name__}: {msg.splitlines()[-1][:200]}"
 
 
 def is_available() -> bool:
