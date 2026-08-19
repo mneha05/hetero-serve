@@ -6,6 +6,14 @@ paged KV cache, continuous batching, and a **fused CUDA paged-attention kernel**
 
 [![Verify the CUDA kernels in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/mneha05/hetero-serve/blob/main/notebooks/verify_cuda_kernel.ipynb)
 
+**The headline, measured on a Tesla T4:** profiling my own decode step showed a third
+of it was the host gathering KV blocks into contiguous tensors — pure overhead created
+by paging. So I wrote the kernel that removes it. The fused online-softmax kernel runs
+**7.8x faster than the gather path and reaches 30% of the card's peak memory
+bandwidth, up from 3.8%.** Nsight then showed the remaining gap is occupancy, not
+bandwidth — [details below](#what-nsight-says-to-do-next). Click the badge to
+reproduce all of it on a free GPU.
+
 Runs on NVIDIA (CUDA), on Intel Arc GPU / NPU / CPU (OpenVINO), or on nothing but numpy.
 Real GPT-2 weights, real worker processes, real TCP sockets, a real token-bucket
 bandwidth shaper. Every number below was measured, and where something is *not*
@@ -196,6 +204,73 @@ almost no arithmetic happens per byte. So the number worth reporting is not a sp
 over an arbitrary baseline, it is **achieved GB/s against the card's peak**, and
 `scripts/bench_kernel.py` prints exactly that.
 
+### Measured on a Tesla T4
+
+Both kernels compile and pass, and here is what they actually achieve. Decode
+attention must read every cached K and V exactly once, so the honest score is
+achieved bandwidth against the card's 320 GB/s peak:
+
+**batch 16, context 512** (25.2 MB of KV per call)
+
+| path | per call | speedup | GB/s | % of peak | max err |
+|---|---:|---:|---:|---:|---:|
+| gather + dense attention | 3897 us | 1.00x | 6.5 | 2.0% | — |
+| v1 kernel (naive fused) | 787 us | 4.95x | 32.0 | 10.0% | 8.3e-07 |
+| **v2 kernel (online softmax)** | **580 us** | **6.73x** | **43.4** | **13.6%** | 6.9e-07 |
+
+**batch 32, context 2048** (201.3 MB of KV per call)
+
+| path | per call | speedup | GB/s | % of peak | max err |
+|---|---:|---:|---:|---:|---:|
+| gather + dense attention | 16348 us | 1.00x | 12.3 | 3.8% | — |
+| v1 kernel (naive fused) | 3093 us | 5.29x | 65.1 | 20.3% | 8.0e-07 |
+| **v2 kernel (online softmax)** | **2098 us** | **7.79x** | **96.0** | **30.0%** | 1.2e-06 |
+
+Three things worth reading off these:
+
+- **The gather path is catastrophic** — 2-4% of peak. That is the real cost of
+  paging a KV cache when attention cannot read the block table directly, and it is
+  what the whole kernel exists to remove.
+- **v2's lead over v1 grows with context** (1.35x at 512, 1.47x at 2048), which is
+  precisely what online softmax predicts: v1's shared-memory score vector gets more
+  expensive as the context lengthens, v2's does not exist.
+- **Both are still far from peak.** 30% is not a good number, and the next section
+  says why.
+
+End to end, the kernel moved the serving system too: decode went from **110 ms to
+57 ms per step**, and end-to-end p50 from **0.67 s to 0.22 s**.
+
+### What Nsight says to do next
+
+Profiling v2 with `ncu --set full` is unambiguous about the bottleneck, and it is not
+the one I expected:
+
+```
+Memory Throughput          13.67 %
+Compute (SM) Throughput    11.34 %
+grid (48,1,1) x (32,4,1)
+
+OPT  This kernel grid is too small to fill the available resources on this
+     device, resulting in only 0.1 full waves across all SMs.
+```
+
+Neither memory nor compute is saturated. The kernel is **occupancy-starved**: 16
+sequences x 12 heads = 192 warps = 48 blocks, spread over a T4's 40 SMs, is *0.1 full
+waves*. There simply is not enough work in flight to keep the card busy, which caps
+everything else.
+
+That names v3 exactly: **split the context across blocks** (FlashDecoding, and what
+vLLM's own paged-attention v2 does). Each block handles a slice of the context and
+produces a partial `(m, l, acc)`; a small second pass merges them with the same
+online-softmax rescale the kernel already uses. With 8 splits the grid goes from 48
+blocks to 384 and the occupancy problem disappears.
+
+It is worth being precise about why this is the interesting finding: the obvious
+optimisations — vectorised loads, better reductions, avoiding shared memory — are all
+already in v2, and they bought a real 1.35-1.47x. The profiler says none of that is
+what is holding it back now. Guessing would have sent me to tune the inner loop; the
+measurement says restructure the grid.
+
 ### What is verified, and what is not
 
 I do not own an NVIDIA GPU, so I will be precise about this rather than imply more
@@ -222,8 +297,8 @@ the fused kernel instead of the torch fallback.
   and checked at four context lengths including one with scores 25x amplified, where a
   naive `exp()` would overflow and the running-max rescale is the entire point
 
-**Not verified — needs a GPU:** that the CUDA compiles, and that the kernels agree with
-the reference at speed. Four tests are written and skip cleanly without hardware.
+The four GPU tests skip cleanly on a machine without CUDA, and **all of them pass on a
+T4** — the numbers above are that run.
 
 **Verify it yourself in about two minutes, free**, on a Colab T4 — no GPU required:
 
@@ -306,6 +381,28 @@ that already owned it.
 Cache-aware at 10 Gbps is worse at p99 (674 ms) because every migrated request pays
 the transfer on its critical path. If your SLO is first-token latency, the boring
 policy is a completely reasonable answer.
+
+### The same sweep on a T4
+
+The results table above is the Intel machine. Running the identical sweep on a T4 with
+the fused kernel active (two workers on one card, 32 requests, 2 repeats):
+
+| policy | link | tok/s | TTFT p50 | TTFT p99 | E2E p50 | E2E p95 | hit | migrations |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| round robin | 50 Mbps | 93.3 | 37 ms | 187 ms | 0.33 s | 0.87 s | 62.9% | 0 |
+| least loaded | 50 Mbps | 93.3 | 32 ms | 102 ms | 0.30 s | 0.42 s | 62.9% | 0 |
+| prefix affinity | 50 Mbps | 93.2 | 23 ms | 111 ms | **0.215 s** | 0.42 s | 77.1% | 0 |
+| cache aware | 200 Mbps | 93.8 | 24 ms | **77 ms** | 0.243 s | 0.44 s | 75.7% | 0 |
+| cache aware | 1 Gbps | 93.8 | 25 ms | 176 ms | 0.236 s | **0.37 s** | 77.1% | 4 |
+| cache aware | 10 Gbps | 93.4 | 30 ms | 123 ms | 0.266 s | 0.38 s | 77.1% | 10 |
+
+The ranking changes, and that is the interesting part. On a T4 prefill costs
+**0.59 ms/token**, so recomputing a 256-token prefix is ~150 ms — cheap enough that
+plain prefix affinity nearly ties the cost model, and migration has much less room to
+help. **The migrate-vs-recompute crossover moves with device speed, not just link
+speed:** the faster your accelerator, the less attractive moving KV becomes, because
+the thing you are avoiding got cheaper. That is not a conclusion I could have reached
+on one machine.
 
 ### Where the migration crossover actually is
 
