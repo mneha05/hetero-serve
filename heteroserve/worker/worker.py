@@ -501,19 +501,27 @@ class Worker:
             seq.state = SeqState.RUNNING
             return events
 
-        past_k = past_v = None
-        if start:
-            past_k, past_v = self.alloc.gather_kv(seq.block_ids, start)
-
         toks = np.asarray(ctx[start:end], dtype=np.int64)
-        logits, k, v = self.engine.prefill(toks, start, past_k, past_v)
 
+        # Reserve the blocks before computing anything: the fused path writes
+        # straight into the pool, and running out afterwards would waste the
+        # whole chunk's compute.
         try:
             self.alloc.grow(seq.block_ids, end)
         except OutOfBlocks:
             return self._preempt(seq, events)
 
-        self.alloc.write_kv(seq.block_ids, start, k, v)
+        if self.paged_decode:
+            # Fused: the chunk's K/V goes into the pool and attention walks the
+            # block table from there, so the cached prefix is never gathered.
+            logits = self.engine.prefill_paged(toks, start, seq.block_ids, self.alloc)
+        else:
+            past_k = past_v = None
+            if start:
+                past_k, past_v = self.alloc.gather_kv(seq.block_ids, start)
+            logits, k, v = self.engine.prefill(toks, start, past_k, past_v)
+            self.alloc.write_kv(seq.block_ids, start, k, v)
+
         seq.n_kv = end
         seq.prefill_tokens_computed += end - start
         self.tokens_prefilled += end - start

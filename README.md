@@ -390,6 +390,40 @@ That is the second time on this project that the number I would have guessed and
 number the hardware reported disagreed, and both times the measurement was the
 interesting one.
 
+### Prefill, not just decode
+
+v1/v2/v3 all answer one question: *one* query token against N cached keys. That is
+only half of paged attention. Chunked prefill runs S query tokens at once, causally
+masked, and until this the engine fell back to gathering the cache into a contiguous
+tensor for that phase — precisely the copy the kernels exist to delete.
+
+[`paged_attn_prefill.py`](heteroserve/model/paged_attn_prefill.py) closes it. Two
+things about prefill differ enough to justify a separate kernel rather than a flag:
+
+**Parallelism is free.** Decode needed v3's context split because `B×H` warps could
+not fill the device — Nsight measured 0.1 waves. Prefill has `B×S×H` warps; at a
+256-token chunk that is hundreds of times more work in flight, so this kernel keeps
+the simple one-warp-per-(sequence, query, head) mapping and the occupancy problem
+never arises. The right structure follows from the phase, not from a preference.
+
+**The causal mask is a loop bound, not a comparison.** Query *s* of a chunk sits at
+absolute position `context_len − S + s`, because a chunk is always the trailing
+tokens of the context at the moment it is computed. Each warp therefore stops its
+stream at its own position and no masked work is done at all.
+
+The chunk's K/V is written into the pool first, then attention walks the block table —
+same ordering as decode, and what makes that mask expressible as *"stop at my own
+position"*.
+
+Verified without a GPU across six shapes: a fresh chunk, a chunk against 48 cached
+tokens, a ragged batch, GQA 2:1, MQA, and `S=1`. That last one is the useful
+cross-check — with a single query token prefill degenerates to decode, and
+`test_prefill_kernel_with_one_query_equals_the_decode_kernel` asserts the two kernels
+agree. They were written separately and share no code, so agreement is evidence
+rather than tautology.
+
+Benchmark it with `python scripts/bench_kernel.py --prefill 256`.
+
 ### Grouped-query attention, and what it does to the crossover
 
 GPT-2 is MHA — every query head carries its own KV head. **Nothing current does that.**
@@ -437,10 +471,16 @@ Memory Throughput        13.67 %
 Compute (SM) Throughput  11.34 %
 ```
 
-Compute was never the constraint. Tensor cores belong in **prefill**, which is a genuine
-GEMM over many query tokens at once — that is a real extension, and it is not what any
-of these three kernels do. Reaching for WMMA in a memory-bound decode kernel would be
-motion without movement.
+Compute was never the constraint. Reaching for WMMA in a memory-bound decode kernel
+would be motion without movement.
+
+Tensor cores belong in **prefill**, which is a genuine GEMM over many query tokens at
+once — and there is now a prefill kernel for them to go into. It does not use them yet,
+and I would rather say that than imply otherwise. The structure is already half right:
+a 16-token page is exactly a 16×16×16 WMMA fragment's K tile, so the block table indexes
+whole fragments rather than straddling them. What is missing is the tiled Q×Kᵀ and P×V
+with fragment accumulators and a shared-memory staging buffer — a real piece of work,
+not a flag.
 
 ### What is verified, and what is not
 
@@ -838,14 +878,14 @@ copying `web/index.html` there.
 
 ## Tests
 
-**81 tests across three suites, no mocks** — 47 Python, 22 front-end scheduler, 12 UI.
+**89 tests across three suites, no mocks** — 55 Python, 22 front-end scheduler, 12 UI.
 The UI suite loads the built page in a real DOM (jsdom) and dispatches genuine click and
 input events, so "does the button work" is a test rather than a click: Send, Send-twice
 (asserts the cache-hit chip appears), Burst ×8, Clear, all four policy options, the
 interconnect and speed sliders, the cluster switch, all four presets, and a full drive of
 the page asserting nothing throws.
 
-The Python suite is 47 tests, no mocks — the distributed ones spawn real worker processes and talk over
+The Python suite is 55 tests, no mocks — the distributed ones spawn real worker processes and talk over
 real sockets. [CI](.github/workflows/ci.yml) runs the whole suite on Python 3.11 and
 3.12, plus the two-worker smoke test, plus a Docker build that runs the suite again
 inside the container — so "it works on my machine" is not load-bearing anywhere. On a bare clone **38 run and pass**; 2 more once GPT-2 weights are
@@ -921,6 +961,7 @@ Every file below is a link.
 | [`model/paged_attn.py`](heteroserve/model/paged_attn.py) | **v1 CUDA kernel** + torch reference + backend reporting |
 | [`model/paged_attn_v2.py`](heteroserve/model/paged_attn_v2.py) | **v2 CUDA kernel**: online softmax, warp-per-head, roofline |
 | [`model/paged_attn_v3.py`](heteroserve/model/paged_attn_v3.py) | **v3 CUDA kernel**: context split + merge (FlashDecoding) |
+| [`model/paged_attn_prefill.py`](heteroserve/model/paged_attn_prefill.py) | **prefill kernel**: many query tokens, causal, straight off the block table |
 | [`net/shaper.py`](heteroserve/net/shaper.py) | token bucket + propagation delay |
 | [`net/transport.py`](heteroserve/net/transport.py) | length-prefixed framing over TCP |
 | [`worker/worker.py`](heteroserve/worker/worker.py) | one device, one KV pool, continuous batching |

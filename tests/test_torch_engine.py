@@ -468,3 +468,122 @@ def test_all_three_kernels_agree_under_fuzz():
         ):
             err = (got.float() - ref).abs().max().item()
             assert err < 5e-3, f"{name} trial {trial} lens={lens} bs={block_size} err={err:.2e}"
+
+
+# ---------------------------------------------------------------------------
+# prefill: many query tokens against the paged cache, causally masked
+# ---------------------------------------------------------------------------
+
+
+def _dense_causal(q, k, v, scale, q_start):
+    """q [S,H,D] starting at absolute position q_start; k/v [N,Hkv,D]."""
+    S, H, D = q.shape
+    N, HKV, _ = k.shape
+    if H != HKV:
+        g = H // HKV
+        k = np.repeat(k, g, axis=1)
+        v = np.repeat(v, g, axis=1)
+    out = np.zeros((S, H, D), np.float32)
+    for s in range(S):
+        end = q_start + s + 1
+        sc = np.einsum("hd,nhd->hn", q[s], k[:end]) * scale
+        p = np.exp(sc - sc.max(-1, keepdims=True))
+        p /= p.sum(-1, keepdims=True)
+        out[s] = np.einsum("hn,nhd->hd", p, v[:end])
+    return out
+
+
+def _prefill_case(lens, S, n_kv_head, device="cpu", seed=0):
+    cfg = ModelConfig.tiny(n_kv_head=n_kv_head)
+    H, D, HKV = cfg.n_head, cfg.head_dim, cfg.kv_heads
+    kv = KVConfig(block_size=16, num_blocks=96, dtype="float32")
+    alloc = TorchBlockAllocator(kv, cfg, device=device)
+    rng = np.random.default_rng(seed)
+
+    tables, truth = [], []
+    for n in lens:
+        a = alloc.allocate([int(t) for t in rng.integers(1, 4000, size=n)])
+        k = rng.standard_normal((cfg.n_layer, HKV, n, D)).astype(np.float32)
+        v = rng.standard_normal((cfg.n_layer, HKV, n, D)).astype(np.float32)
+        alloc.write_kv(a.block_ids, 0, k, v)
+        tables.append(a.block_ids)
+        truth.append((k[0], v[0]))
+
+    q = rng.standard_normal((len(lens), S, H, D)).astype(np.float32)
+    bt = alloc.block_table_tensor(tables, pad_to=max(len(t) for t in tables))
+    ctx = torch.tensor(lens, dtype=torch.int32, device=device)
+    return cfg, alloc, bt, ctx, q, truth
+
+
+@pytest.mark.parametrize("lens,S,kvh", [
+    ([64], 64, None),          # fresh chunk, nothing cached
+    ([64], 16, None),          # chunked: 48 already cached, 16 new
+    ([37, 64, 19], 16, None),  # ragged batch
+    ([64], 32, 2),             # GQA 2:1
+    ([48], 48, 1),             # MQA
+    ([80], 1, None),           # degenerates to the decode case
+])
+def test_prefill_paged_matches_dense_causal(lens, S, kvh):
+    """Causal paged prefill must equal dense causal attention over the real context.
+
+    The mask is implicit: query s of a chunk sits at `ctx_len - S + s`, so each
+    query row attends to a different number of keys. Getting that off by one in
+    either direction still produces plausible-looking output, which is why this
+    is asserted against a dense reference rather than eyeballed.
+    """
+    from heteroserve.model.paged_attn_prefill import paged_attention_prefill_torch
+
+    cfg, alloc, bt, ctx, q, truth = _prefill_case(lens, S, kvh, seed=len(lens) * 7 + S)
+    scale = 1.0 / np.sqrt(cfg.head_dim)
+    got = paged_attention_prefill_torch(
+        torch.as_tensor(q), alloc.pool[0, 0], alloc.pool[0, 1], bt, ctx, scale
+    ).numpy()
+
+    for b, (k, v) in enumerate(truth):
+        want = _dense_causal(q[b], k.transpose(1, 0, 2), v.transpose(1, 0, 2),
+                             scale, lens[b] - S)
+        np.testing.assert_allclose(got[b], want, rtol=1e-4, atol=1e-4,
+                                   err_msg=f"sequence {b}, len {lens[b]}, S={S}")
+
+
+@cuda_only
+def test_prefill_kernel_matches_reference():
+    from heteroserve.model.paged_attn_prefill import (
+        build_error, is_available, paged_attention_prefill,
+        paged_attention_prefill_torch,
+    )
+
+    assert is_available(), f"prefill kernel did not compile: {build_error()}"
+    for lens, S, kvh in [([64], 64, None), ([37, 64, 19], 16, None),
+                         ([64], 32, 2), ([48], 48, 1)]:
+        cfg, alloc, bt, ctx, q, _ = _prefill_case(lens, S, kvh, device="cuda:0", seed=S)
+        scale = 1.0 / np.sqrt(cfg.head_dim)
+        qt = torch.as_tensor(q, device="cuda:0")
+        got = paged_attention_prefill(qt, alloc.pool[0, 0], alloc.pool[0, 1], bt, ctx, scale)
+        ref = paged_attention_prefill_torch(qt, alloc.pool[0, 0], alloc.pool[0, 1],
+                                            bt, ctx, scale)
+        np.testing.assert_allclose(got.cpu().numpy(), ref.cpu().numpy(),
+                                   rtol=1e-3, atol=1e-3,
+                                   err_msg=f"lens={lens} S={S} kv={kvh}")
+
+
+@cuda_only
+def test_prefill_kernel_with_one_query_equals_the_decode_kernel():
+    """S=1 is the decode case, so the two kernels must agree exactly there.
+
+    A useful cross-check: the prefill and decode kernels were written separately
+    and share no code, so agreement is real evidence rather than a tautology.
+    """
+    from heteroserve.model.paged_attn_prefill import paged_attention_prefill
+    from heteroserve.model.paged_attn_v2 import paged_attention_v2
+
+    lens = [31, 64, 17]
+    cfg, alloc, bt, ctx, q, _ = _prefill_case(lens, 1, None, device="cuda:0", seed=3)
+    scale = 1.0 / np.sqrt(cfg.head_dim)
+    qt = torch.as_tensor(q, device="cuda:0")                     # [B, 1, H, D]
+
+    pre = paged_attention_prefill(qt, alloc.pool[0, 0], alloc.pool[0, 1], bt, ctx, scale)
+    dec = paged_attention_v2(qt[:, 0], alloc.pool[0, 0], alloc.pool[0, 1], bt, ctx, scale)
+
+    np.testing.assert_allclose(pre[:, 0].cpu().numpy(), dec.cpu().numpy(),
+                               rtol=1e-3, atol=1e-3)

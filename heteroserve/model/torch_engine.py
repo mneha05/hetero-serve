@@ -252,6 +252,64 @@ class TorchEngine:
 
         return self._out(logits)
 
+    # -- prefill: fused paged path ------------------------------------------
+
+    def prefill_paged(self, token_ids, start_pos, block_ids, alloc):
+        """Run a prefill chunk entirely against the paged pool.
+
+        The counterpart to `decode_batch_paged`, and the half that used to be
+        missing: previously a prefill chunk gathered the cached prefix into a
+        contiguous tensor, which is the copy this whole project exists to
+        remove. Here the chunk's K/V is written into the pool first, then
+        attention walks the block table with a causal bound per query row.
+
+        Returns logits for the final token only -- that is all sampling needs,
+        and emitting [T, vocab] would move ~50 MB per chunk for nothing.
+        """
+        torch = self.torch
+        cfg = self.cfg
+        H, D, E = cfg.n_head, cfg.head_dim, cfg.n_embd
+        HKV = self.kv_heads
+
+        from .paged_attn_prefill import paged_attention_prefill
+
+        ids = torch.as_tensor(np.asarray(token_ids), dtype=torch.long, device=self.device)
+        T = int(ids.shape[0])
+        pos_np = np.arange(start_pos, start_pos + T)
+        pos = torch.as_tensor(pos_np, dtype=torch.long, device=self.device)
+        x = self._embed(ids, pos)                                  # [T, E]
+
+        tables = alloc.block_table_tensor([block_ids])
+        ctx_len = torch.tensor([start_pos + T], dtype=torch.int32, device=self.device)
+        slots = alloc.slots_for(block_ids, pos_np)                 # [T]
+
+        with torch.inference_mode():
+            for li, lw in enumerate(self.layers):
+                h = self._ln(x, lw["ln1_g"], lw["ln1_b"])
+                qkv = h @ lw["attn_w"] + lw["attn_b"]
+                KVD = cfg.kv_dim
+                q = qkv[:, :E].view(1, T, H, D)
+                k = qkv[:, E:E + KVD].view(T, HKV, D)
+                v = qkv[:, E + KVD:].view(T, HKV, D)
+
+                # the chunk must be resident before attention can see it
+                fk, fv = alloc.flat_kv(li)
+                fk[slots] = k.to(alloc.torch_dtype)
+                fv[slots] = v.to(alloc.torch_dtype)
+
+                ctx = paged_attention_prefill(
+                    q.float(), alloc.pool[li, 0], alloc.pool[li, 1],
+                    tables, ctx_len, self.scale,
+                )                                                  # [1, T, H, D]
+
+                attn = ctx.to(self.tdtype).reshape(T, E)
+                x = x + (attn @ lw["proj_w"] + lw["proj_b"])
+                x = x + self._mlp(self._ln(x, lw["ln2_g"], lw["ln2_b"]), lw)
+
+            logits = self._logits(x[-1:])[0]
+
+        return self._out(logits)
+
     # -- conversion ---------------------------------------------------------
 
     def _to_dev(self, a):

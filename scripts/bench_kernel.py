@@ -67,6 +67,8 @@ def main() -> int:
     ap.add_argument("--iters", type=int, default=50)
     ap.add_argument("--model", default="gpt2", choices=["gpt2", "tiny"])
     ap.add_argument("--dtype", default="float16", choices=["float16", "float32"])
+    ap.add_argument("--prefill", type=int, default=0, metavar="S",
+                    help="also benchmark the prefill path with S query tokens")
     ap.add_argument("--splits", type=int, default=0,
                     help="v3 context splits; 0 = pick from the device SM count")
     args = ap.parse_args()
@@ -213,7 +215,75 @@ def main() -> int:
         print("matters -- a kernel at 80% of peak has almost nothing left to win.")
     else:
         print("Run this on a CUDA device for the numbers that actually count.")
+
+    if args.prefill:
+        _bench_prefill(args, cfg, alloc, tables, bt, k_pool, v_pool, scale, sync, on_cuda)
     return 0
+
+
+def _bench_prefill(args, cfg, alloc, tables, bt, k_pool, v_pool, scale, sync, on_cuda):
+    """The other half of paged attention: S query tokens, causally masked.
+
+    Different regime from decode. Prefill does S times the arithmetic for the
+    same cache reads, so it is compute-bound rather than bandwidth-bound, and
+    '% of peak bandwidth' stops being the right score -- what matters is whether
+    the fused path beats gathering the cache first.
+    """
+    import torch
+
+    from heteroserve.model import paged_attn_prefill as pf
+
+    S = args.prefill
+    B = args.batch
+    print("\n" + "=" * 74)
+    print(f"PREFILL  batch={B}  chunk={S} query tokens  context={args.context}")
+    print(f"prefill kernel: {'ready' if pf.is_available() else 'unavailable'}"
+          + ("" if pf.is_available() else f"  ({pf.build_error()})"))
+    print("=" * 74)
+
+    q = torch.randn(B, S, cfg.n_head, cfg.head_dim,
+                    device=alloc.pool.device)
+    ctx = torch.full((B,), args.context, dtype=torch.int32, device=alloc.pool.device)
+
+    ref = pf.paged_attention_prefill_torch(q, k_pool, v_pool, bt, ctx, scale).float()
+
+    def gather_path():
+        """Materialise the context, then attend -- what the engine did before."""
+        ks, vs = alloc.gather_kv_batch(tables, args.context, layer=0)
+        kk, vv = ks.float(), vs.float()
+        if cfg.kv_group > 1:
+            kk = kk.repeat_interleave(cfg.kv_group, dim=2)
+            vv = vv.repeat_interleave(cfg.kv_group, dim=2)
+        s = torch.einsum("bshd,bkhd->bshk", q, kk) * scale
+        key = torch.arange(args.context, device=q.device).view(1, 1, -1)
+        qp = (ctx.long().view(B, 1) - S
+              + torch.arange(S, device=q.device).view(1, S)).unsqueeze(-1)
+        s = s.masked_fill(~(key <= qp).unsqueeze(2), float("-inf"))
+        return torch.einsum("bshk,bkhd->bshd", torch.softmax(s, -1), vv)
+
+    paths = [("gather + dense causal", gather_path)]
+    if pf.is_available():
+        paths.append(("prefill kernel (fused)",
+                      lambda: pf.paged_attention_prefill(q, k_pool, v_pool, bt, ctx, scale)))
+    elif not on_cuda:
+        paths.append(("torch paged (not a kernel)",
+                      lambda: pf.paged_attention_prefill_torch(q, k_pool, v_pool, bt, ctx, scale)))
+
+    hdr = f"{'path':32s} {'per call':>11s} {'speedup':>9s}   correctness"
+    print(f"\n{hdr}\n" + "-" * len(hdr))
+    base = None
+    for name, fn in paths:
+        err = (fn().float() - ref).abs().max().item()
+        if err > 2e-2:
+            print(f"{name:32s} {'--':>11s} {'--':>9s}   FAILED (max diff {err:.2e})")
+            continue
+        t = _time(fn, max(5, args.iters // 3), sync)
+        base = base if base is not None else t
+        print(f"{name:32s} {t*1e6:9.1f}us {base/t:8.2f}x   ok ({err:.1e})")
+
+    print("\nPrefill is compute-bound, not bandwidth-bound: S query rows reuse the")
+    print("same cache reads, so the win here is deleting the gather, not saturating")
+    print("memory. It is also where tensor cores would pay off -- see the README.")
 
 
 if __name__ == "__main__":
