@@ -272,6 +272,16 @@ class TorchEngine:
         HKV = self.kv_heads
 
         from .paged_attn_prefill import paged_attention_prefill
+        from .paged_attn_wmma import paged_attention_prefill_wmma
+        from .paged_attn_wmma import supports as wmma_supports
+
+        # Prefill is a GEMM, so tensor cores are worth taking when the cache
+        # geometry allows it: a 16-token page is exactly one WMMA fragment.
+        # Asked, not assumed -- a 32-token block or an fp32 cache falls back to
+        # the scalar kernel rather than silently producing nothing.
+        use_wmma = wmma_supports(
+            alloc.block_size, cfg.head_dim, alloc.torch_dtype)
+        attend = paged_attention_prefill_wmma if use_wmma else paged_attention_prefill
 
         ids = torch.as_tensor(np.asarray(token_ids), dtype=torch.long, device=self.device)
         T = int(ids.shape[0])
@@ -297,7 +307,7 @@ class TorchEngine:
                 fk[slots] = k.to(alloc.torch_dtype)
                 fv[slots] = v.to(alloc.torch_dtype)
 
-                ctx = paged_attention_prefill(
+                ctx = attend(
                     q.float(), alloc.pool[li, 0], alloc.pool[li, 1],
                     tables, ctx_len, self.scale,
                 )                                                  # [1, T, H, D]

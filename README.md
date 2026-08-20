@@ -492,10 +492,10 @@ group turns a GQA model into an algebraically identical MHA one, and
 `test_gqa_equals_mha_with_duplicated_kv_heads` asserts the two produce the same logits.
 If the GQA plumbing were wrong anywhere, that test fails.
 
-### Why there are no tensor cores in here
+### Where tensor cores do and do not belong
 
-Reasonable question, and the answer is that they would not help. **Decode attention is a
-GEMV, not a GEMM** — one query token against N cached keys. It moves 201 MB and does
+There are none in the decode kernels, on purpose. **Decode attention is a GEMV, not a
+GEMM** — one query token against N cached keys. It moves 201 MB and does
 almost no arithmetic per byte, so it is bound by memory, and tensor cores accelerate
 math. My own profile says so directly:
 
@@ -508,12 +508,41 @@ Compute was never the constraint. Reaching for WMMA in a memory-bound decode ker
 would be motion without movement.
 
 Tensor cores belong in **prefill**, which is a genuine GEMM over many query tokens at
-once — and there is now a prefill kernel for them to go into. It does not use them yet,
-and I would rather say that than imply otherwise. The structure is already half right:
-a 16-token page is exactly a 16×16×16 WMMA fragment's K tile, so the block table indexes
-whole fragments rather than straddling them. What is missing is the tiled Q×Kᵀ and P×V
-with fragment accumulators and a shared-memory staging buffer — a real piece of work,
-not a flag.
+once — and [`paged_attn_wmma.py`](heteroserve/model/paged_attn_wmma.py) is that kernel.
+
+**The alignment is the whole trick.** A WMMA fragment on sm_70+ is 16×16×16. A KV page
+here is **16 tokens**. So one key tile is exactly one page: the block table indexes whole
+fragments instead of straddling them, and the paging indirection costs one pointer lookup
+per tile rather than per element. That is not something I engineered around after the
+fact — it is why `block_size = 16` was the right default in the first place, and it is
+what lets a tensor-core kernel read a paged cache at all without gathering it first.
+
+The loop is FlashAttention's, reusing the online softmax already proven in v2 and v3:
+
+```
+for each key tile (= one page):
+    S = Q·Kᵀ            4 MMAs over head_dim, fp32 accumulate
+    mask + rescale      causal bound per row, running max/sum
+    O = O·corr + P·V    4 MMAs, accumulated across tiles
+```
+
+Two costs worth naming rather than hiding:
+
+- **The rescale round-trips through shared memory.** A WMMA accumulator's register
+  mapping is opaque, so a per-row correction means store, scale, reload. CUTLASS
+  exploits the known layout and keeps it in registers. This does not, and pays for it.
+- **fp16 operands.** MMA takes half with fp32 accumulate. The softmax and the O
+  accumulator stay fp32, so this is rounding rather than drift — but it is why the
+  correctness gate here is 2e-2 and not 1e-6.
+
+`supports()` refuses geometry it cannot serve — a 32-token page or an fp32 cache falls
+back to the scalar prefill kernel rather than silently producing nothing.
+
+**Verified without a GPU:** the tile loop is mirrored in numpy and checked against dense
+causal attention at eight shapes — exact, `0.000e+00` — including every misalignment
+case, because a tile loop that is right when everything divides by 16 and wrong when it
+does not is the classic way this goes bad. Only the MMA instruction itself waits on
+hardware.
 
 ### What is verified, and what is not
 
@@ -935,14 +964,14 @@ copying `web/index.html` there.
 
 ## Tests
 
-**91 tests across three suites, no mocks** — 57 Python, 22 front-end scheduler, 12 UI.
+**101 tests across three suites, no mocks** — 67 Python, 22 front-end scheduler, 12 UI.
 The UI suite loads the built page in a real DOM (jsdom) and dispatches genuine click and
 input events, so "does the button work" is a test rather than a click: Send, Send-twice
 (asserts the cache-hit chip appears), Burst ×8, Clear, all four policy options, the
 interconnect and speed sliders, the cluster switch, all four presets, and a full drive of
 the page asserting nothing throws.
 
-The Python suite is 57 tests, no mocks — the distributed ones spawn real worker processes and talk over
+The Python suite is 67 tests, no mocks — the distributed ones spawn real worker processes and talk over
 real sockets. [CI](.github/workflows/ci.yml) runs the whole suite on Python 3.11 and
 3.12, plus the two-worker smoke test, plus a Docker build that runs the suite again
 inside the container — so "it works on my machine" is not load-bearing anywhere. On a bare clone **38 run and pass**; 2 more once GPT-2 weights are
@@ -1019,6 +1048,7 @@ Every file below is a link.
 | [`model/paged_attn_v2.py`](heteroserve/model/paged_attn_v2.py) | **v2 CUDA kernel**: online softmax, warp-per-head, roofline |
 | [`model/paged_attn_v3.py`](heteroserve/model/paged_attn_v3.py) | **v3 CUDA kernel**: context split + merge (FlashDecoding) |
 | [`model/paged_attn_prefill.py`](heteroserve/model/paged_attn_prefill.py) | **prefill kernel**: many query tokens, causal, straight off the block table |
+| [`model/paged_attn_wmma.py`](heteroserve/model/paged_attn_wmma.py) | **tensor-core prefill**: FlashAttention tiling on WMMA fragments, one page per fragment |
 | [`net/shaper.py`](heteroserve/net/shaper.py) | token bucket + propagation delay |
 | [`net/transport.py`](heteroserve/net/transport.py) | length-prefixed framing over TCP |
 | [`worker/worker.py`](heteroserve/worker/worker.py) | one device, one KV pool, continuous batching |

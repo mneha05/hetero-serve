@@ -232,6 +232,7 @@ def _bench_prefill(args, cfg, alloc, tables, bt, k_pool, v_pool, scale, sync, on
     import torch
 
     from heteroserve.model import paged_attn_prefill as pf
+    from heteroserve.model import paged_attn_wmma as wm
 
     S = args.prefill
     B = args.batch
@@ -239,6 +240,11 @@ def _bench_prefill(args, cfg, alloc, tables, bt, k_pool, v_pool, scale, sync, on
     print(f"PREFILL  batch={B}  chunk={S} query tokens  context={args.context}")
     print(f"prefill kernel: {'ready' if pf.is_available() else 'unavailable'}"
           + ("" if pf.is_available() else f"  ({pf.build_error()})"))
+    wmma_ok = wm.supports(alloc.block_size, cfg.head_dim, alloc.torch_dtype)
+    print(f"WMMA kernel   : {'ready' if wm.is_available() else 'unavailable'}"
+          + ("" if wm.is_available() else f"  ({wm.build_error()})")
+          + ("" if wmma_ok or not wm.is_available()
+             else "  (geometry unsupported: needs block_size 16 + fp16 KV)"))
     print("=" * 74)
 
     q = torch.randn(B, S, cfg.n_head, cfg.head_dim,
@@ -263,8 +269,12 @@ def _bench_prefill(args, cfg, alloc, tables, bt, k_pool, v_pool, scale, sync, on
 
     paths = [("gather + dense causal", gather_path)]
     if pf.is_available():
-        paths.append(("prefill kernel (fused)",
+        paths.append(("prefill kernel (scalar fused)",
                       lambda: pf.paged_attention_prefill(q, k_pool, v_pool, bt, ctx, scale)))
+    if wmma_ok:
+        paths.append(("prefill kernel (tensor cores)",
+                      lambda: wm.paged_attention_prefill_wmma(
+                          q, k_pool, v_pool, bt, ctx, scale)))
     elif not on_cuda:
         paths.append(("torch paged (not a kernel)",
                       lambda: pf.paged_attention_prefill_torch(q, k_pool, v_pool, bt, ctx, scale)))
@@ -274,16 +284,20 @@ def _bench_prefill(args, cfg, alloc, tables, bt, k_pool, v_pool, scale, sync, on
     base = None
     for name, fn in paths:
         err = (fn().float() - ref).abs().max().item()
-        if err > 2e-2:
+        # Looser than the decode gate: MMA takes fp16 operands, so Q and P are
+        # rounded before each GEMM. Accumulation is still fp32.
+        if err > 3e-2:
             print(f"{name:32s} {'--':>11s} {'--':>9s}   FAILED (max diff {err:.2e})")
             continue
         t = _time(fn, max(5, args.iters // 3), sync)
         base = base if base is not None else t
         print(f"{name:32s} {t*1e6:9.1f}us {base/t:8.2f}x   ok ({err:.1e})")
 
-    print("\nPrefill is compute-bound, not bandwidth-bound: S query rows reuse the")
-    print("same cache reads, so the win here is deleting the gather, not saturating")
-    print("memory. It is also where tensor cores would pay off -- see the README.")
+    print("")
+    print("Prefill is compute-bound, not bandwidth-bound: S query rows reuse the")
+    print("same cache reads, so the win is deleting the gather and then doing the")
+    print("arithmetic on tensor cores -- which is why WMMA belongs here and not in")
+    print("decode, where compute throughput measured 11%.")
 
 
 if __name__ == "__main__":

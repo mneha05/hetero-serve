@@ -587,3 +587,113 @@ def test_prefill_kernel_with_one_query_equals_the_decode_kernel():
 
     np.testing.assert_allclose(pre[:, 0].cpu().numpy(), dec.cpu().numpy(),
                                rtol=1e-3, atol=1e-3)
+
+
+# ---------------------------------------------------------------------------
+# tensor-core prefill
+# ---------------------------------------------------------------------------
+
+
+def _dense_causal_1h(q, k, v, scale, ctx_len):
+    """Single-head dense causal attention, queries being the trailing rows."""
+    S, D = q.shape
+    out = np.zeros((S, D), np.float64)
+    for s in range(S):
+        end = ctx_len - S + s + 1
+        sc = (q[s] @ k[:end].T) * scale
+        p = np.exp(sc - sc.max())
+        p /= p.sum()
+        out[s] = p @ v[:end]
+    return out.astype(np.float32)
+
+
+@pytest.mark.parametrize("ctx,S,D", [
+    (64, 32, 64),     # everything aligned
+    (64, 19, 64),     # query count not a multiple of the tile
+    (57, 16, 64),     # context not a multiple of the tile
+    (91, 23, 64),     # neither
+    (48, 48, 64),     # full prefill, S == ctx
+    (80, 1, 64),      # single query row
+    (100, 40, 128),   # head_dim 128 -> 8 fragments per GEMM
+    (512, 16, 64),    # long context, small chunk
+])
+def test_wmma_tiling_matches_dense_causal(ctx, S, D):
+    """The kernel's tile loop, mirrored in numpy, against dense attention.
+
+    This is the half of the WMMA kernel that can be checked without a GPU: the
+    tiling, the per-row causal bound, and the online rescale across tiles. Only
+    the MMA instruction itself is left to hardware. The misaligned cases matter
+    most -- a tile loop that is right when everything divides by 16 and wrong
+    when it does not is the classic way this goes bad.
+    """
+    from heteroserve.model.paged_attn_wmma import tiled_prefill_reference
+
+    rng = np.random.default_rng(ctx * 31 + S)
+    q = rng.standard_normal((S, D))
+    k = rng.standard_normal((ctx, D))
+    v = rng.standard_normal((ctx, D))
+    scale = 1.0 / np.sqrt(D)
+
+    got = tiled_prefill_reference(q, k, v, scale, ctx)
+    want = _dense_causal_1h(q, k, v, scale, ctx)
+    np.testing.assert_allclose(got, want, rtol=1e-5, atol=1e-5)
+
+
+def test_wmma_declines_geometry_it_cannot_serve():
+    """`supports()` must refuse a cache the kernel cannot read.
+
+    A 32-token page is not a WMMA fragment and an fp32 cache is not an MMA
+    operand. Getting this wrong would mean silently wrong output rather than a
+    clean fall back to the scalar kernel.
+    """
+    from heteroserve.model.paged_attn_wmma import supports
+
+    assert supports(32, 64, torch.float16) is False, "block_size must be 16"
+    assert supports(16, 64, torch.float32) is False, "MMA needs fp16 operands"
+    assert supports(16, 48, torch.float16) is False, "head_dim must tile by 16"
+
+
+@cuda_only
+def test_wmma_kernel_matches_the_scalar_prefill_kernel():
+    """Tensor-core and scalar prefill must compute the same function.
+
+    Tolerance is looser than elsewhere because MMA takes fp16 operands: Q and P
+    are rounded before each GEMM. The accumulation stays fp32, so this is
+    rounding, not drift.
+    """
+    from heteroserve.model.paged_attn_prefill import paged_attention_prefill_torch
+    from heteroserve.model.paged_attn_wmma import (
+        build_error, is_available, paged_attention_prefill_wmma, supports,
+    )
+
+    assert is_available(), f"WMMA kernel did not compile: {build_error()}"
+
+    for lens, S, kvh in [([64], 64, None), ([37, 64, 19], 16, None), ([64], 32, 2)]:
+        cfg = ModelConfig.tiny(n_kv_head=kvh)
+        kv = KVConfig(block_size=16, num_blocks=96, dtype="float16")
+        alloc = TorchBlockAllocator(kv, cfg, device="cuda:0")
+        rng = np.random.default_rng(S + len(lens))
+
+        tables = []
+        for n in lens:
+            a = alloc.allocate([int(t) for t in rng.integers(1, 4000, size=n)])
+            k = rng.standard_normal(
+                (cfg.n_layer, cfg.kv_heads, n, cfg.head_dim)).astype(np.float16)
+            alloc.write_kv(a.block_ids, 0, k, k)
+            tables.append(a.block_ids)
+
+        assert supports(alloc.block_size, cfg.head_dim, alloc.torch_dtype)
+
+        q = torch.randn(len(lens), S, cfg.n_head, cfg.head_dim, device="cuda:0")
+        bt = alloc.block_table_tensor(tables, pad_to=max(len(t) for t in tables))
+        ctx = torch.tensor(lens, dtype=torch.int32, device="cuda:0")
+        scale = 1.0 / np.sqrt(cfg.head_dim)
+
+        got = paged_attention_prefill_wmma(
+            q, alloc.pool[0, 0], alloc.pool[0, 1], bt, ctx, scale)
+        ref = paged_attention_prefill_torch(
+            q, alloc.pool[0, 0], alloc.pool[0, 1], bt, ctx, scale)
+
+        np.testing.assert_allclose(
+            got.cpu().numpy(), ref.cpu().numpy(), rtol=2e-2, atol=2e-2,
+            err_msg=f"lens={lens} S={S} kv={kvh}")
