@@ -838,7 +838,14 @@ copying `web/index.html` there.
 
 ## Tests
 
-47 tests, no mocks — the distributed ones spawn real worker processes and talk over
+**81 tests across three suites, no mocks** — 47 Python, 22 front-end scheduler, 12 UI.
+The UI suite loads the built page in a real DOM (jsdom) and dispatches genuine click and
+input events, so "does the button work" is a test rather than a click: Send, Send-twice
+(asserts the cache-hit chip appears), Burst ×8, Clear, all four policy options, the
+interconnect and speed sliders, the cluster switch, all four presets, and a full drive of
+the page asserting nothing throws.
+
+The Python suite is 47 tests, no mocks — the distributed ones spawn real worker processes and talk over
 real sockets. [CI](.github/workflows/ci.yml) runs the whole suite on Python 3.11 and
 3.12, plus the two-worker smoke test, plus a Docker build that runs the suite again
 inside the container — so "it works on my machine" is not load-bearing anywhere. On a bare clone **38 run and pass**; 2 more once GPT-2 weights are

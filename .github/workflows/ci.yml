@@ -51,6 +51,13 @@ jobs:
       - name: Artifact bundle still builds
         run: python scripts/build_artifact.py
 
+      - name: UI tests — click every control in a real DOM
+        # jsdom runs the built bundle and dispatches genuine events, so this
+        # covers the wiring between the buttons and the scheduler.
+        run: |
+          npm --prefix tests/ui install --no-audit --no-fund
+          BUNDLE="$PWD/build/artifact.html" node --test tests/ui/ui.test.mjs
+
   docker:
     name: docker build + test
     runs-on: ubuntu-latest

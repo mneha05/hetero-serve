@@ -13,3 +13,5 @@ results/*.json
 .venv/
 venv/
 build/
+tests/ui/node_modules/
+tests/ui/package-lock.json
