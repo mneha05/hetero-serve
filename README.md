@@ -44,6 +44,7 @@ reproduce all of it on a free GPU.
 | [`sched/router.py`](heteroserve/sched/router.py) | the migrate-vs-recompute cost model |
 | [`worker/worker.py`](heteroserve/worker/worker.py) | one device, one KV pool, continuous batching |
 | [`net/shaper.py`](heteroserve/net/shaper.py) | the token bucket that makes the link budget real |
+| [`net/kvlink.py`](heteroserve/net/kvlink.py) | device-to-device KV transport (NCCL / gloo) |
 
 <details>
 <summary><b>Full contents</b></summary>
@@ -424,6 +425,38 @@ rather than tautology.
 
 Benchmark it with `python scripts/bench_kernel.py --prefill 256`.
 
+### Two transports, and why both stay
+
+Migration used to go **GPU -> host -> TCP -> host -> GPU**: two PCIe crossings and a
+memcpy on hardware where the GPUs can talk to each other directly.
+[`net/kvlink.py`](heteroserve/net/kvlink.py) adds a `torch.distributed` path where the
+payload never leaves the device, and `export_blocks_device` hands the block tensor
+straight to `dist.send`.
+
+Both paths stay, because they are not rivals:
+
+| transport | route | bandwidth | what it is for |
+|---|---|---|---|
+| shaped TCP | GPU → host → socket → host → GPU | **a knob** | sweeping the crossover at 50 Mbps, 1 Gbps, 10 Gbps |
+| dist (NCCL/gloo) | GPU → GPU | whatever the hardware gives | what you would actually run on a multi-GPU node |
+
+The shaped path is not a fallback — it is the instrument. A real interconnect has no
+dial, so studying *where* migration stops being worth it requires an emulated one. The
+device path is what you want once you have stopped studying and started serving.
+`kv_transport="auto" | "tcp" | "nccl" | "gloo"` chooses.
+
+Coordination stays on the existing TCP peer connection: the sender ships a small
+metadata frame, the receiver posts a matching `recv`, and only the bulk payload takes
+the fast path. So the two transports differ in exactly one place — who carries the
+bytes.
+
+**Tested without a GPU.** The backend is `gloo` on a CPU-only machine, and the
+rendezvous, handshake, tensor shapes and byte-exactness are all the same code NCCL
+runs. `test_migration_over_torch_distributed_is_byte_exact` asserts the generated
+tokens are unchanged after a migration across the link — because a transfer that
+corrupts one block still produces fluent-looking output, so "it arrived" is not the
+property worth checking.
+
 ### Grouped-query attention, and what it does to the crossover
 
 GPT-2 is MHA — every query head carries its own KV head. **Nothing current does that.**
@@ -757,6 +790,30 @@ hypotheses too. I nearly rewrote a memory layout that was already fine.
 
 ---
 
+### 5. The process group deadlocked on the workers that were meant to join it
+
+Adding the device transport, every migration silently kept using TCP. The workers
+reported `state: "off"`, which was a lie told by two separate mistakes stacked on top
+of each other.
+
+The first was ordering. `Worker.start()` awaited the rendezvous *before* printing
+`WORKER_READY`, and the router spawns workers one at a time, waiting for that line
+before starting the next. So worker 0 sat in `init_process_group` waiting for a peer
+the router would not create until worker 0 said it was ready. It resolved itself after
+the 30-second timeout by failing, and everything fell back to TCP looking healthy.
+
+The second was plainer: `_amain` never forwarded `--rank`, `--world-size` or
+`--dist-url` to the `Worker` constructor. A patch had matched a differently-wrapped
+line and silently applied to nothing.
+
+Neither produced an error. The system worked, migrations succeeded, tests passed — it
+just quietly used the slow path forever. What found it was checking the *mechanism*
+rather than the outcome: asserting `via == "dist"`, not merely that the KV arrived.
+
+> **Fix:** the rendezvous is now a background task created after the port is announced,
+> and the router waits for every worker's transport to leave `pending` before serving —
+> so a migration can never take a different path run to run. Both facts are asserted.
+
 ## The NPU tax
 
 The NPU rejects dynamic shapes *and* rejects tensors above 4D. Both constraints are
@@ -878,14 +935,14 @@ copying `web/index.html` there.
 
 ## Tests
 
-**89 tests across three suites, no mocks** — 55 Python, 22 front-end scheduler, 12 UI.
+**91 tests across three suites, no mocks** — 57 Python, 22 front-end scheduler, 12 UI.
 The UI suite loads the built page in a real DOM (jsdom) and dispatches genuine click and
 input events, so "does the button work" is a test rather than a click: Send, Send-twice
 (asserts the cache-hit chip appears), Burst ×8, Clear, all four policy options, the
 interconnect and speed sliders, the cluster switch, all four presets, and a full drive of
 the page asserting nothing throws.
 
-The Python suite is 55 tests, no mocks — the distributed ones spawn real worker processes and talk over
+The Python suite is 57 tests, no mocks — the distributed ones spawn real worker processes and talk over
 real sockets. [CI](.github/workflows/ci.yml) runs the whole suite on Python 3.11 and
 3.12, plus the two-worker smoke test, plus a Docker build that runs the suite again
 inside the container — so "it works on my machine" is not load-bearing anywhere. On a bare clone **38 run and pass**; 2 more once GPT-2 weights are
@@ -934,9 +991,9 @@ The load-bearing ones:
   ratio is what drives the trade, and it grows with model depth.
 - **p99 on 144 samples** is still only the second-worst request. Treat p50 and p95 as
   solid and p99 as directional.
-- **KV migration bounces through host memory.** `export_blocks` copies GPU -> CPU ->
-  socket -> CPU -> GPU. A real deployment would use GPUDirect RDMA and skip both hops,
-  which would move the migrate-vs-recompute crossover further in migration's favour.
+- **The device link is verified on gloo, not NCCL.** The rendezvous, handshake, shapes
+  and byte-exactness are tested; the NCCL backend itself needs two GPUs I do not have.
+  Switching is one string, and the code path is identical.
 - **The control plane is unshaped** — only worker-to-worker KV transfers pay the link
   budget. That isolates the variable under study but is not what a real deployment
   would experience.

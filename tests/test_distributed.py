@@ -364,3 +364,103 @@ def test_torch_paged_decode_path_serves_requests():
     assert cold.generated_tokens == 6
     assert warm.generated_tokens == 6
     assert warm.cached_prefix_tokens == 96      # paging + prefix reuse still work
+
+
+# ---------------------------------------------------------------------------
+# 8. KV migration over a device-to-device link
+# ---------------------------------------------------------------------------
+
+
+def test_migration_over_torch_distributed_is_byte_exact():
+    """Move a prefix over torch.distributed instead of the shaped socket.
+
+    The backend here is gloo, because that is what runs without a GPU -- but the
+    rendezvous, the metadata handshake, the tensor shapes and the byte-exactness
+    are the same code the NCCL path executes. Swapping the backend is one string,
+    which is exactly why this is worth testing on CPU: everything except the wire
+    itself is covered.
+
+    The assertion that matters is not "it arrived" but "the output is
+    unchanged": a migration that corrupts one block still produces fluent-looking
+    tokens, so correctness has to be pinned to the generated sequence.
+    """
+    pytest.importorskip("torch")
+    import torch.distributed as dist
+
+    if not dist.is_available():
+        pytest.skip("torch.distributed not available")
+
+    kv = KVConfig(block_size=16, num_blocks=128)
+    cluster = ClusterConfig(
+        model=ModelConfig.tiny(),
+        workers=[
+            WorkerConfig("w0", device="cpu", engine="torch", kv=kv, max_batch=4),
+            WorkerConfig("w1", device="cpu", engine="torch", kv=kv, max_batch=4),
+        ],
+        policy="cache_aware",
+        kv_transport="gloo",
+        dist_port=29731,
+    )
+
+    async def scenario(router: Router):
+        shared = list(range(7100, 7100 + 96))
+        prompt = shared + [5, 5, 5]
+
+        baseline = await (await router.submit_nowait(
+            Request(prompt_ids=prompt, max_new_tokens=8, seed=4), worker_id="w0"))
+        base_out = _output_of(router, baseline.req_id)
+
+        req = Request(prompt_ids=prompt, max_new_tokens=8, seed=4)
+        router.records[req.req_id] = _blank_record(req)
+        ok = await router._migrate(
+            req, Placement("w1", donor_id="w0", skip_blocks=0), router.records[req.req_id])
+        assert ok, "migration did not complete"
+
+        rec = await (await router.submit_nowait(req, worker_id="w1"))
+        return baseline, base_out, rec, _output_of(router, rec.req_id), router.last_push
+
+    base, base_out, rec, out, push = asyncio.run(_with_router(cluster, scenario))
+
+    assert push.get("via") == "dist", (
+        f"expected the device link, got {push.get('via')!r} -- "
+        "the process group did not form"
+    )
+    assert rec.worker_id == "w1"
+    assert rec.cached_prefix_tokens >= 80, "migrated blocks were not adopted"
+    assert out == base_out, "migration over the device link changed the output"
+
+
+def test_tcp_transport_still_works_when_dist_is_disabled():
+    """`kv_transport="tcp"` must keep the shaped path, knob and all.
+
+    This is not a fallback -- it is the mode the bandwidth sweep depends on. A
+    real interconnect has no dial, so studying the crossover requires the
+    emulated one.
+    """
+    pytest.importorskip("torch")
+
+    kv = KVConfig(block_size=16, num_blocks=128)
+    cluster = ClusterConfig(
+        model=ModelConfig.tiny(),
+        workers=[
+            WorkerConfig("w0", device="cpu", engine="torch", kv=kv, max_batch=4),
+            WorkerConfig("w1", device="cpu", engine="torch", kv=kv, max_batch=4),
+        ],
+        policy="cache_aware",
+        kv_transport="tcp",
+    )
+
+    async def scenario(router: Router):
+        shared = list(range(7300, 7300 + 96))
+        await (await router.submit_nowait(
+            Request(prompt_ids=shared + [1], max_new_tokens=2), worker_id="w0"))
+        req = Request(prompt_ids=shared + [1], max_new_tokens=2)
+        router.records[req.req_id] = _blank_record(req)
+        ok = await router._migrate(
+            req, Placement("w1", donor_id="w0", skip_blocks=0), router.records[req.req_id])
+        return ok, router.last_push
+
+    ok, push = asyncio.run(_with_router(cluster, scenario))
+    assert ok
+    assert push.get("via") == "tcp"
+    assert push.get("bytes", 0) > 0

@@ -11,9 +11,12 @@ so `pool[layer, 0]` is exactly the `[num_blocks, block_size, H, D]` view the
 kernel indexes through the block table. Nothing is ever gathered into a
 contiguous per-sequence buffer first.
 
-Migration still crosses the network as host bytes, so `export_blocks` /
-`import_blocks` move through CPU — a real deployment would use GPUDirect RDMA
-and skip the bounce, which is noted as future work rather than pretended away.
+Migration has two paths. `export_blocks` / `import_blocks` serialise through host
+memory for the shaped-TCP transport, which is what lets the benchmark dial the
+link down to 50 Mbps and watch the scheduler change its mind. `export_blocks_device`
+/ `import_blocks_device` keep the payload on the device for the torch.distributed
+transport, so a GPU-to-GPU move is one hop rather than four. Both produce the same
+shape, so the two transports carry byte-identical payloads.
 """
 
 from __future__ import annotations
@@ -130,6 +133,31 @@ class TorchBlockAllocator(BlockAllocator):
         slots = torch.stack([self.slots_for(t, pos) for t in tables])   # [B, length]
         fk, fv = self.flat_kv(layer)
         return fk[slots], fv[slots]
+
+    def export_blocks_device(self, block_ids):
+        """Same payload as `export_blocks`, but left on the device.
+
+        This is the whole point of the NCCL path: the tensor never crosses PCIe
+        to host memory, so a migration between two GPUs is one hop instead of
+        four. Shape matches `export_blocks` exactly, so both transports move
+        byte-identical payloads.
+        """
+        torch = self.torch
+        idx = torch.as_tensor(block_ids, dtype=torch.long, device=self.device)
+        sel = self.pool[:, :, idx]                      # [L, 2, n, BS, H, D]
+        return sel.permute(2, 0, 1, 3, 4, 5).contiguous()
+
+    def write_blocks_device(self, block_ids, payload) -> None:
+        """Copy an already-on-device payload into the given blocks."""
+        data = payload.to(device=self.device, dtype=self.torch_dtype)
+        for i, blk in enumerate(block_ids):
+            self.pool[:, :, blk] = data[i]
+
+    def import_blocks_device(self, payload) -> list[int]:
+        """Inverse of `export_blocks_device`; payload is already on the device."""
+        ids = self.reserve_blocks(int(payload.shape[0]))
+        self.write_blocks_device(ids, payload)
+        return ids
 
     def export_blocks(self, block_ids) -> np.ndarray:
         """Serialise for migration. Bounces via host — see module docstring."""

@@ -183,6 +183,14 @@ class ClusterConfig:
     max_running: int = 16
     watermark: float = 0.90        # KV utilisation at which we stop admitting
     enable_migration: bool = True
+    # How KV migration crosses between workers.
+    #   "auto" -- device-to-device via torch.distributed when the workers can
+    #             form a group, falling back to shaped TCP when they cannot
+    #   "tcp"  -- always the shaped socket. What the bandwidth sweep needs,
+    #             because a real interconnect has no knob to turn.
+    #   "nccl" / "gloo" -- force a specific torch.distributed backend
+    kv_transport: str = "auto"
+    dist_port: int | None = None
     seed: int = 0
 
     def worker(self, worker_id: str) -> WorkerConfig:

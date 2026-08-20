@@ -97,6 +97,10 @@ class Worker:
         seed: int = 0,
         eos_token_id: int = 50256,
         max_ctx: int = 512,
+        rank: int = 0,
+        world_size: int = 1,
+        dist_url: str = "",
+        dist_backend: str = "auto",
     ):
         self.max_ctx = max_ctx
         self.cfg = cfg
@@ -106,6 +110,19 @@ class Worker:
         self.eos_token_id = eos_token_id
 
         self.link = ShapedLink(link or LinkConfig())
+        # Device-to-device transport for KV migration. Set up in start(); stays
+        # None when there is nothing to pair with or the rendezvous fails, and
+        # the shaped TCP path carries everything as before.
+        self.rank = rank
+        self.world_size = world_size
+        self.dist_url = dist_url
+        self.dist_backend = dist_backend
+        self.dist = None
+        self._dist_pool = None
+        # "off" (not configured) | "pending" | "ready" | "failed". The router
+        # waits for every worker to leave "pending" before serving, so a request
+        # is never routed while the transport is still being decided.
+        self.dist_state = "pending" if (dist_url and world_size >= 2) else "off"
         self.alloc = self._new_allocator()
         self.engine = None
         self.engine_name = "?"
@@ -221,6 +238,51 @@ class Worker:
 
     # -- lifecycle ----------------------------------------------------------
 
+    async def _setup_dist(self) -> None:
+        """Join the KV process group, if one was configured.
+
+        Failure here is not fatal: a worker that cannot rendezvous simply keeps
+        migrating over shaped TCP, which is correct, just slower on hardware
+        that could have done it directly.
+        """
+        if self.dist_state == "off":
+            return
+        import concurrent.futures
+
+        from ..net.kvlink import DistLink
+
+        self.dist = DistLink(
+            rank=self.rank,
+            world_size=self.world_size,
+            init_method=self.dist_url,
+            device=self._torch_device() if self._wants_torch() else "cpu",
+            backend=self.dist_backend,
+        )
+        # One dedicated thread: torch.distributed point-to-point ops are
+        # blocking and must not run on the event loop, and NCCL wants its
+        # collectives issued in a consistent order from one thread.
+        self._dist_pool = concurrent.futures.ThreadPoolExecutor(
+            max_workers=1, thread_name_prefix=f"kvlink-{self.cfg.worker_id}")
+        loop = asyncio.get_running_loop()
+        ok = await loop.run_in_executor(self._dist_pool, self.dist.start)
+        self.dist_state = "ready" if ok else "failed"
+        if not ok:
+            print(f"[{self.cfg.worker_id}] KV device link unavailable "
+                  f"({self.dist.error}); using shaped TCP", flush=True)
+
+    def _can_use_dist(self, peer: dict) -> bool:
+        """Both ends on the group, both holding device-resident KV."""
+        return (
+            self.dist is not None
+            and self.dist_state == "ready"
+            and peer.get("rank") is not None
+            and hasattr(self.alloc, "export_blocks_device")
+        )
+
+    async def _run_dist(self, fn):
+        loop = asyncio.get_running_loop()
+        return await loop.run_in_executor(self._dist_pool, fn)
+
     async def start(self) -> int:
         self.build_engine()
         self.server = await asyncio.start_server(
@@ -228,6 +290,11 @@ class Worker:
         )
         self.port = self.server.sockets[0].getsockname()[1]
         asyncio.create_task(self._engine_loop())
+        # Deliberately not awaited: the process group cannot form until every
+        # worker exists, and the router only spawns the next one after this one
+        # reports ready. Awaiting here deadlocks until the rendezvous times out
+        # and silently drops everyone back to TCP.
+        asyncio.create_task(self._setup_dist())
         return self.port
 
     async def run_forever(self) -> None:
@@ -373,30 +440,51 @@ class Worker:
         # queued behind a full engine step on both ends -- with GPT-2 that is
         # ~200 ms each way, which swamped the actual transfer and capped
         # effective migration throughput at ~20 MB/s no matter the link speed.
-        payload = self.alloc.export_blocks(blocks) if blocks else None
+        use_dist = self._can_use_dist(target) and bool(blocks)
+        payload = None
+        if blocks:
+            # On the fast path the payload stays on the device and never
+            # crosses PCIe to host memory.
+            payload = (self.alloc.export_blocks_device(blocks) if use_dist
+                       else self.alloc.export_blocks(blocks))
 
         if payload is None:
             await self._emit({"kind": P.PUSH_DONE, "ok": False,
                               "seq_id": meta.get("seq_id"), "reason": "no_local_prefix"})
             return
 
+        nbytes = 0
         try:
-            desc, blob = encode_array(payload)
             ch = await connect(target["host"], target["port"], link=self.link,
                                name=f"{self.cfg.worker_id}->{target['worker_id']}")
-            await ch.send(
-                {"kind": P.KV_PUSH, "from": self.cfg.worker_id, "desc": desc,
-                 "tokens": tokens[:n_tokens], "n_tokens": n_tokens,
-                 "first_block": skip, "seq_id": meta.get("seq_id")},
-                blob,
-            )
+            head = {"kind": P.KV_PUSH, "from": self.cfg.worker_id,
+                    "tokens": tokens[:n_tokens], "n_tokens": n_tokens,
+                    "first_block": skip, "seq_id": meta.get("seq_id")}
+
+            if use_dist:
+                # Metadata on the control socket, bulk over the device link. The
+                # receiver posts a matching recv when it sees this frame.
+                nbytes = payload.numel() * payload.element_size()
+                head |= {"via": "dist", "src_rank": self.dist.rank,
+                         "shape": list(payload.shape),
+                         "dtype": str(payload.dtype).replace("torch.", ""),
+                         "bytes": nbytes}
+                await ch.send(head)
+                await self._run_dist(
+                    lambda: self.dist.send_tensor(payload, target["rank"]))
+            else:
+                desc, blob = encode_array(payload)
+                nbytes = len(blob)
+                head |= {"via": "tcp", "desc": desc}
+                await ch.send(head, blob)
+
             ack, _ = await ch.recv()
             await ch.close()
             ok = bool(ack.get("ok"))
             self.migrations_out += 1
-            self.bytes_migrated_out += len(blob)
+            self.bytes_migrated_out += nbytes
         except Exception as exc:  # noqa: BLE001
-            ok, blob = False, b""
+            ok = False
             await self._emit({"kind": P.ERROR, "worker_id": self.cfg.worker_id,
                               "error": f"push_prefix: {exc}"})
         finally:
@@ -407,7 +495,8 @@ class Worker:
         await self._emit(
             {"kind": P.PUSH_DONE, "ok": ok, "seq_id": meta.get("seq_id"),
              "target": meta["target"], "from": self.cfg.worker_id,
-             "n_tokens": n_tokens, "bytes": len(blob),
+             "n_tokens": n_tokens, "bytes": nbytes,
+             "via": "dist" if use_dist else "tcp",
              "elapsed": round(time.time() - t0, 4)}
         )
 
@@ -415,13 +504,29 @@ class Worker:
         if meta.get("kind") != P.KV_PUSH:
             return
         try:
-            payload = decode_array(meta["desc"], blob)
             tokens = list(meta["tokens"])
             first_block = int(meta.get("first_block", 0))
+            via_dist = meta.get("via") == "dist"
+
+            if via_dist:
+                # The sender has already posted its send; post the matching recv
+                # and take delivery straight into device memory.
+                payload = await self._run_dist(
+                    lambda: self.dist.recv_tensor(
+                        meta["shape"], meta["dtype"], int(meta["src_rank"]))
+                )
+                nbytes = int(meta.get("bytes", 0))
+            else:
+                payload = decode_array(meta["desc"], blob)
+                nbytes = len(blob)
+
             # Reserve under the lock (cheap), copy outside it (expensive).
             async with self._state_lock:
                 new_ids = self.alloc.reserve_blocks(int(payload.shape[0]))
-            self.alloc.write_blocks(new_ids, payload)
+            if via_dist:
+                self.alloc.write_blocks_device(new_ids, payload)
+            else:
+                self.alloc.write_blocks(new_ids, payload)
             async with self._state_lock:
                 self.alloc.adopt_migrated(
                     tokens, new_ids, meta["n_tokens"], first_index=first_block
@@ -430,7 +535,7 @@ class Worker:
                 for b in new_ids:
                     self.alloc.decref(b)
             self.migrations_in += 1
-            self.bytes_migrated_in += len(blob)
+            self.bytes_migrated_in += nbytes
             await ch.send({"kind": P.KV_ACK, "ok": True, "blocks": len(new_ids)})
             await self._emit(
                 {"kind": P.CACHE_ADD, "worker_id": self.cfg.worker_id,
@@ -701,6 +806,8 @@ class Worker:
             "bytes_migrated_in": self.bytes_migrated_in,
             "bytes_migrated_out": self.bytes_migrated_out,
             "link": self.link.stats.as_dict(),
+            "kvlink": ({**self.dist.info(), "state": self.dist_state} if self.dist
+                       else {"backend": "tcp", "state": self.dist_state}),
             "t": time.time(),
         }
 
@@ -726,7 +833,9 @@ async def _amain(args) -> None:
     weights = Path(args.weights) if args.weights and args.model == "gpt2" else None
 
     w = Worker(cfg, model_cfg, weights, LinkConfig(), seed=args.seed,
-               max_ctx=args.max_ctx)
+               max_ctx=args.max_ctx,
+               rank=args.rank, world_size=args.world_size,
+               dist_url=args.dist_url, dist_backend=args.dist_backend)
     port = await w.start()
     # The parent reads this line to learn the port.
     print(f"WORKER_READY {args.worker_id} {port} {w.engine_name}", flush=True)
@@ -749,6 +858,12 @@ def main() -> None:
     ap.add_argument("--max-prefill-tokens", dest="max_prefill_tokens", type=int, default=256)
     ap.add_argument("--max-ctx", dest="max_ctx", type=int, default=512)
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--rank", type=int, default=0)
+    ap.add_argument("--world-size", dest="world_size", type=int, default=1)
+    ap.add_argument("--dist-url", dest="dist_url", default="",
+                    help="torch.distributed rendezvous, e.g. tcp://127.0.0.1:29677")
+    ap.add_argument("--dist-backend", dest="dist_backend", default="auto",
+                    help="auto | nccl | gloo")
     asyncio.run(_amain(ap.parse_args()))
 
 

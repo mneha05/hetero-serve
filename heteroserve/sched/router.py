@@ -128,6 +128,7 @@ class Router:
         self.migrations = 0
         self.migration_bytes = 0
         self.migration_s = 0.0
+        self.last_push: dict = {}      # most recent PUSH_DONE, for tests/telemetry
         # Bytes committed to the wire but not yet delivered. The placement cost
         # model queues new transfers behind this, so a burst of individually
         # cheap migrations cannot all price themselves against an idle link.
@@ -140,9 +141,22 @@ class Router:
     # -- lifecycle ----------------------------------------------------------
 
     async def start(self) -> None:
+        # Every worker gets a rank up front so the KV process group can rendezvous
+        # while they boot. A group of one has nothing to migrate to, so we do not
+        # bother forming one.
+        self._ranks = {w.worker_id: i for i, w in enumerate(self.cluster.workers)}
+        self._world = len(self.cluster.workers)
+        if self._world >= 2 and self.cluster.kv_transport != "tcp":
+            from ..net.kvlink import default_init_method
+
+            self._dist_url = default_init_method(self.cluster.dist_port)
+        else:
+            self._dist_url = ""
+
         for wcfg in self.cluster.workers:
             await self._spawn(wcfg)
         await self._broadcast_peers()
+        await self._await_kv_links()
         self.log(f"cluster up: {[f'{h.worker_id}({h.engine})' for h in self.workers.values()]}")
 
     async def _spawn(self, wcfg: WorkerConfig) -> None:
@@ -158,6 +172,11 @@ class Router:
             "--max-prefill-tokens", str(wcfg.max_prefill_tokens),
             "--max-ctx", str(self.max_ctx),
             "--seed", str(self.cluster.seed),
+            "--rank", str(self._ranks[wcfg.worker_id]),
+            "--world-size", str(self._world),
+            "--dist-url", self._dist_url,
+            "--dist-backend", self.cluster.kv_transport
+            if self.cluster.kv_transport in ("nccl", "gloo") else "auto",
         ]
         if self.weights_dir:
             args += ["--weights", str(self.weights_dir)]
@@ -200,9 +219,37 @@ class Router:
                 return
             self.log(f"{wid}: {line.decode(errors='replace').rstrip()}")
 
+    async def _await_kv_links(self, timeout: float = 25.0) -> None:
+        """Block until every worker's KV transport has settled.
+
+        Without this a request can be routed while a worker is still deciding
+        whether it has a device link, so the same migration would take different
+        paths run to run -- which is exactly the kind of nondeterminism that
+        makes a benchmark untrustworthy.
+        """
+        if not self._dist_url:
+            return
+        deadline = time.time() + timeout
+        while time.time() < deadline:
+            await self.poll_states()
+            await asyncio.sleep(0.2)
+            states = [
+                (h.last_state.get("kvlink") or {}).get("state", "pending")
+                for h in self.workers.values()
+            ]
+            if states and all(s != "pending" for s in states):
+                ready = sum(1 for s in states if s == "ready")
+                backends = {(h.last_state.get("kvlink") or {}).get("backend")
+                            for h in self.workers.values()}
+                self.log(f"KV transport: {ready}/{len(states)} on the device link "
+                         f"({', '.join(sorted(str(b) for b in backends))})")
+                return
+        self.log("KV transport: rendezvous timed out; continuing on shaped TCP")
+
     async def _broadcast_peers(self) -> None:
         peers = [
-            {"worker_id": h.worker_id, "host": h.host, "port": h.port}
+            {"worker_id": h.worker_id, "host": h.host, "port": h.port,
+             "rank": self._ranks.get(h.worker_id)}
             for h in self.workers.values()
         ]
         for h in self.workers.values():
@@ -492,6 +539,7 @@ class Router:
             self._finish(meta, h)
 
         elif kind == P.PUSH_DONE:
+            self.last_push = meta
             fut = self._push_futures.pop(meta.get("seq_id", ""), None)
             if fut and not fut.done():
                 fut.set_result(meta)
