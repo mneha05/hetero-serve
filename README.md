@@ -1,23 +1,83 @@
+<div align="center">
+
 # hetero-serve
 
-A KV-cache-aware LLM serving scheduler that decides, per request, whether it is cheaper
-to **ship a KV cache across the network** or to **recompute it from scratch** — with a
-paged KV cache, continuous batching, and a **fused CUDA paged-attention kernel**.
+**A KV-cache-aware LLM serving scheduler with hand-written CUDA paged-attention kernels.**
+It decides, per request, whether it is cheaper to *ship a KV cache across the network* or
+to *recompute it from scratch* — and the kernels exist because profiling said a third of
+every decode step was the host moving bytes it should not have been moving.
 
-<p align="center">
-  <img src="docs/hero.svg" alt="Two accelerators sharing a KV cache prefix: blocks fill on the first worker, a second request reuses them, then the cached prefix migrates across the interconnect." width="100%">
-</p>
+<img src="docs/hero.gif" width="100%" alt="Two accelerators sharing a KV cache prefix: blocks fill on the first worker, a second request reuses them, then the cached prefix crosses the interconnect to the second worker."/>
+
+<br/>
 
 [![tests](https://github.com/mneha05/hetero-serve/actions/workflows/ci.yml/badge.svg)](https://github.com/mneha05/hetero-serve/actions/workflows/ci.yml)
-[![Verify the CUDA kernels in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/mneha05/hetero-serve/blob/main/notebooks/verify_cuda_kernel.ipynb)
+[![live demo](https://img.shields.io/badge/%E2%96%B6_live_demo-run_the_scheduler-8B5CF6?style=flat-square)](https://mneha05.github.io/hetero-serve/)
+[![Colab](https://img.shields.io/badge/%E2%96%B6_Colab-compile_the_kernels-F9AB00?style=flat-square&logo=googlecolab&logoColor=white)](https://colab.research.google.com/github/mneha05/hetero-serve/blob/main/notebooks/verify_cuda_kernel.ipynb)
+[![CUDA](https://img.shields.io/badge/CUDA-5_kernels-76B900?style=flat-square&logo=nvidia&logoColor=white)](heteroserve/model/paged_attn_v3.py)
+[![tests count](https://img.shields.io/badge/tests-101-3FB950?style=flat-square)](#tests)
 
-**The headline, measured on a Tesla T4:** profiling my own decode step showed a third
-of it was the host gathering KV blocks into contiguous tensors — pure overhead created
-by paging. So I wrote the kernel that removes it. The fused online-softmax kernel runs
-**7.8x faster than the gather path and reaches 30% of the card's peak memory
-bandwidth, up from 3.8%.** Nsight then showed the remaining gap is occupancy, not
-bandwidth — [details below](#what-nsight-says-to-do-next). Click the badge to
-reproduce all of it on a free GPU.
+</div>
+
+---
+
+<table>
+<tr>
+<td width="25%" align="center"><h3>55.4%</h3><sub>of a Tesla T4's peak<br/>memory bandwidth</sub></td>
+<td width="25%" align="center"><h3>10–22×</h3><sub>faster than PyTorch<br/>SDPA on paged KV</sub></td>
+<td width="25%" align="center"><h3>3.60s → 1.94s</h3><sub>end-to-end p50, from<br/>cache-aware routing</sub></td>
+<td width="25%" align="center"><h3>101</h3><sub>tests, no mocks,<br/>real sockets</sub></td>
+</tr>
+</table>
+
+---
+
+## ▶ Try it without installing anything
+
+<table>
+<tr>
+<td width="50%">
+
+### [Run the scheduler →](https://mneha05.github.io/hetero-serve/)
+
+Type a prompt. Send another one starting the same way and watch the **prefix hit the
+cache** — blocks turn green, prefill is skipped, TTFT collapses. Drag the interconnect
+slider down and the cost model stops migrating.
+
+The real scheduling logic runs in your browser: 16-token paged blocks, chain-hashed
+prefix matching, refcounts and LRU eviction, four routing policies, the contention-aware
+cost model. Device timings are the ones measured on real hardware.
+
+</td>
+<td width="50%">
+
+### [Compile the CUDA kernels →](https://colab.research.google.com/github/mneha05/hetero-serve/blob/main/notebooks/verify_cuda_kernel.ipynb)
+
+One click on a **free Colab T4**. It builds all five kernels, runs the correctness suite,
+prints the bandwidth roofline against the card's 320 GB/s peak, and boots the serving
+system on the GPU.
+
+Correctness is verified **before** any timing is printed, and the benchmark refuses to
+report a speedup if a kernel disagrees with the reference.
+
+</td>
+</tr>
+</table>
+
+---
+
+## How it fits together
+
+<p align="center">
+  <img src="docs/architecture.png" width="100%" alt="Architecture: a router control plane with a global prefix directory and a migrate-vs-recompute cost model; three workers on CUDA, Intel Arc GPU and NPU, each with a paged KV cache and continuous batching; a data plane carrying KV blocks over shaped TCP or NCCL; and the five CUDA kernels."/>
+</p>
+
+**The router decides *where*; each worker decides *when*.** Requests are placed by a cost
+model priced in seconds — queue depth, prefix-hit length, and what the link would charge
+to move the missing blocks — against device speeds the router *measures* at startup rather
+than assumes. Each worker then runs vLLM-shaped iteration-level scheduling over whatever
+landed on it: prefill first but chunked, decode as one batch, recompute-preemption when
+the KV pool runs dry.
 
 ---
 
@@ -25,26 +85,26 @@ reproduce all of it on a free GPU.
 
 | | |
 |---|---|
-| ▶ **Run the kernels on a free GPU** | [open in Colab](https://colab.research.google.com/github/mneha05/hetero-serve/blob/main/notebooks/verify_cuda_kernel.ipynb) · [notebook source](notebooks/verify_cuda_kernel.ipynb) |
+| ▶ **Drive the scheduler in a browser** | **[live demo](https://mneha05.github.io/hetero-serve/)** · [source](web/) |
+| ▶ **Run the kernels on a free GPU** | [open in Colab](https://colab.research.google.com/github/mneha05/hetero-serve/blob/main/notebooks/verify_cuda_kernel.ipynb) · [notebook](notebooks/verify_cuda_kernel.ipynb) |
 | 🚀 **See it work in 60 seconds** | [`run_demo.py`](run_demo.py) |
 | 📊 **The measurements** | [T4 kernel results](#measured-on-a-tesla-t4) · [Nsight profile](#what-nsight-says-to-do-next) · [policy sweep](#results) · [raw data](results/) |
-| 🐛 **What I got wrong** | [four bugs, found by measuring](#what-went-wrong-the-useful-part) |
+| 🐛 **What I got wrong** | [five bugs, every one found by measuring](#what-went-wrong-the-useful-part) |
 | 🐳 **Reproduce it anywhere** | [`Dockerfile`](Dockerfile) (CPU) · [`Dockerfile.cuda`](Dockerfile.cuda) (kernels) · [CI](.github/workflows/ci.yml) |
-| 🕹 **Drive the scheduler in a browser** | [`web/`](web/) — send prompts, watch blocks fill and caches migrate |
 
 **The code, in the order it is worth reading:**
 
 | file | what it is |
 |---|---|
-| [`model/paged_attn_v3.py`](heteroserve/model/paged_attn_v3.py) | the **fastest kernel** — context-split, written because the profiler said so |
-| [`model/paged_attn_v2.py`](heteroserve/model/paged_attn_v2.py) | the online-softmax kernel it builds on |
-| [`model/paged_attn.py`](heteroserve/model/paged_attn.py) | the naive v1 kernel it is measured against, plus the torch reference |
-| [`config.py`](heteroserve/config.py) | model geometry incl. GQA — `n_kv_head` is what moves the crossover |
-| [`kv/blocks.py`](heteroserve/kv/blocks.py) | paged KV cache: chain hashing, refcounts, eviction, migration |
+| [`model/paged_attn_v3.py`](heteroserve/model/paged_attn_v3.py) | the **fastest decode kernel** — context-split, written because the profiler said so |
+| [`model/paged_attn_wmma.py`](heteroserve/model/paged_attn_wmma.py) | **tensor-core prefill** — FlashAttention tiling where one KV page *is* one WMMA fragment |
+| [`model/paged_attn_v2.py`](heteroserve/model/paged_attn_v2.py) | the online-softmax kernel v3 builds on |
+| [`model/paged_attn.py`](heteroserve/model/paged_attn.py) | the naive v1 it is all measured against, plus the torch reference |
 | [`sched/router.py`](heteroserve/sched/router.py) | the migrate-vs-recompute cost model |
-| [`worker/worker.py`](heteroserve/worker/worker.py) | one device, one KV pool, continuous batching |
-| [`net/shaper.py`](heteroserve/net/shaper.py) | the token bucket that makes the link budget real |
+| [`kv/blocks.py`](heteroserve/kv/blocks.py) | paged KV cache: chain hashing, refcounts, eviction, migration |
 | [`net/kvlink.py`](heteroserve/net/kvlink.py) | device-to-device KV transport (NCCL / gloo) |
+| [`net/shaper.py`](heteroserve/net/shaper.py) | the token bucket that makes the link budget real |
+| [`worker/worker.py`](heteroserve/worker/worker.py) | one device, one KV pool, continuous batching |
 
 <details>
 <summary><b>Full contents</b></summary>
@@ -53,16 +113,10 @@ reproduce all of it on a free GPU.
 - [The hardware I had (and didn't have)](#the-hardware-i-had-and-didnt-have)
 - [What it's made of](#what-its-made-of)
 - [Running on NVIDIA, and a fused paged-attention kernel](#running-on-nvidia-and-a-fused-paged-attention-kernel)
-  - [Two kernels, because the first one was naive](#two-kernels-because-the-first-one-was-naive)
-  - [Measured on a Tesla T4](#measured-on-a-tesla-t4)
-  - [What Nsight says to do next](#what-nsight-says-to-do-next)
-  - [What is verified, and what is not](#what-is-verified-and-what-is-not)
 - [Results](#results)
-  - [The same sweep on a T4](#the-same-sweep-on-a-t4)
-  - [Where the migration crossover actually is](#where-the-migration-crossover-actually-is)
-  - [Where a decode step really goes](#where-a-decode-step-really-goes)
 - [What went wrong (the useful part)](#what-went-wrong-the-useful-part)
 - [The NPU tax](#the-npu-tax)
+- [The browser front end](#the-browser-front-end)
 - [Run it](#run-it)
 - [Tests](#tests)
 - [Honest limitations](#honest-limitations)
@@ -926,8 +980,10 @@ stop happening.
 
 ## The browser front end
 
-[`web/index.html`](web/index.html) is a self-contained page that runs the scheduler's
-real logic in the browser: 16-token paged blocks, chain-hashed prefix matching, refcounts
+**[▶ mneha05.github.io/hetero-serve](https://mneha05.github.io/hetero-serve/)** — no
+install, no signup.
+
+[`web/index.html`](web/index.html) runs the scheduler's real logic in the browser: 16-token paged blocks, chain-hashed prefix matching, refcounts
 and LRU eviction, continuous batching, all four routing policies, and the
 contention-aware migrate-vs-recompute cost model priced against a token-bucket link.
 Device timings are the ones measured on real hardware.
@@ -943,14 +999,16 @@ otherwise; the Python system it mirrors runs the real model on real CUDA.
 
 Static HTML with no build step, so any host works.
 
-**Vercel** — import the GitHub repo at [vercel.com/new](https://vercel.com/new). It reads
-[`vercel.json`](vercel.json) and serves `web/` automatically; every push to `main`
-redeploys. Or from the CLI:
+**GitHub Pages** — already live at
+[mneha05.github.io/hetero-serve](https://mneha05.github.io/hetero-serve/), published by
+[`pages.yml`](.github/workflows/pages.yml) on every push.
 
-```bash
-npm i -g vercel
-vercel --prod
-```
+**Vercel** — import the repo at [vercel.com/new](https://vercel.com/new); it reads
+[`vercel.json`](vercel.json) and serves `web/`. One gotcha worth knowing: Vercel enables
+**Deployment Protection** by default on some accounts, which puts the preview behind a
+Vercel login — a demo link that asks a stranger to authenticate is worse than no demo
+link. Turn it off under *Settings → Deployment Protection*. Pages has no such setting,
+which is why it is the canonical URL here.
 
 **Anything else** — `web/` is one file plus a Google Fonts link:
 

@@ -1,0 +1,46 @@
+name: pages
+
+# Publishes web/ to GitHub Pages so the live demo has a URL that is public by
+# construction. (The Vercel deployment sits behind Vercel Authentication unless
+# that is explicitly turned off, which is easy to miss and turns a demo link
+# into a login wall.)
+
+on:
+  push:
+    branches: [main]
+    paths: ["web/**", "docs/**", ".github/workflows/pages.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Assemble the site
+        # docs/ carries the hero and diagram the page and READMEs share.
+        run: |
+          mkdir -p _site
+          cp -r web/* _site/
+          mkdir -p _site/docs
+          cp docs/hero.gif docs/hero.svg docs/architecture.png _site/docs/
+          test -f _site/index.html && test -f _site/sim.mjs
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deploy
+        uses: actions/deploy-pages@v4
