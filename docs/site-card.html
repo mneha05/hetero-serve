@@ -1,0 +1,82 @@
+<!--
+  ============================================================================
+  hetero-serve — project card for nehamahesh.netlify.app
+  ============================================================================
+
+  Paste this whole <article> into the "Selected work" section of that site's
+  index.html, next to the other <article class="proj reveal"> blocks.
+
+  It uses the classes the site already defines (proj / reveal / sheen / metric /
+  knum / kind / stk / howbox / howcap), so it inherits the existing look. The
+  only inline styles are on the two images, so nothing needs adding to the
+  stylesheet.
+
+  Two things to adjust when you place it:
+
+    1. The `knum` below says "/ 01". The cards are numbered in order, so put
+       this one where you want it and renumber the rest.
+    2. The images load from raw.githubusercontent.com. They are already live and
+       serve with the right content types, so no assets need copying.
+
+  Regenerate the images with:
+      python scripts/make_gif.py
+      python scripts/make_diagram.py
+  ============================================================================
+-->
+
+<article class="proj reveal" data-tilt><div class="sheen"></div>
+  <span class="metric">55.4% of peak</span>
+  <span class="knum">/ 01</span>
+  <h3>hetero-serve</h3>
+  <div class="kind">CUDA · distributed serving</div>
+
+  <p>When a request shares a long prefix with an earlier one — a system prompt, a RAG
+  document, an earlier turn — its <b>KV cache already exists, but on the wrong
+  accelerator</b>. Run it where the cache is and wait behind a busy device, recompute the
+  prefix, or drag the cache across the interconnect? That is a bandwidth-versus-compute
+  trade, and this is a serving system built to find where it flips: a <b>paged KV cache</b>
+  with 16-token blocks, refcounts, chain-hashed prefix sharing and LRU eviction,
+  <b>continuous batching</b> with chunked prefill and recompute-preemption, and a router
+  whose cost model prices <i>stay</i> against <i>migrate</i> in seconds using device speeds
+  it <b>measures at startup rather than assumes</b>. Workers are real OS processes over real
+  TCP through a token-bucket shaper, so transfers genuinely contend — at 50 Mbps moving an
+  18.9 MB prefix loses to recomputing it, at 10 Gbps it wins, and cache-aware routing cuts
+  end-to-end p50 from <b>3.60 s to 1.94 s</b>.</p>
+
+  <p>Then profiling said a third of every decode step was not accelerator time at all — it
+  was the host gathering KV blocks into contiguous tensors, overhead invented by paging. So
+  I wrote the kernel that deletes it, and then four more. <b>Nsight</b> showed the
+  online-softmax kernel was <i>occupancy</i>-starved rather than bandwidth-starved — 0.1
+  waves across 40 SMs — which produced a context split that took it from <b>13.4% to 55.4%
+  of a Tesla T4's peak memory bandwidth</b>, or <b>10–22× PyTorch's own SDPA</b> on paged
+  data. Sweeping the split count caught my own heuristic being wrong: it targeted occupancy
+  and picked 2 where 32 was 2.1× faster, because the online softmax is <i>sequential</i> and
+  splitting shortens a dependent chain, not a wave count. There is also a prefill kernel and
+  a <b>tensor-core</b> version where a 16-token KV page is exactly one 16×16×16 WMMA
+  fragment. <b>101 tests</b>, no mocks, and five bugs documented — every one found by
+  measuring rather than reading.</p>
+
+  <div class="stk"><span>CUDA</span><span>C++</span><span>WMMA</span><span>Nsight</span><span>PyTorch</span><span>NCCL</span><span>paged attention</span></div>
+
+  <div class="howbox">
+    <div class="howcap">watch it work</div>
+    <img src="https://raw.githubusercontent.com/mneha05/hetero-serve/main/docs/hero.gif"
+         alt="A shared KV-cache prefix fills on one accelerator, a second request reuses it instead of recomputing, then the cache crosses the interconnect to a second GPU"
+         loading="lazy"
+         style="display:block;width:100%;height:auto;border-radius:10px;border:1px solid rgba(255,255,255,.10);background:#0d1117" />
+  </div>
+
+  <div class="howbox">
+    <div class="howcap">how it fits together</div>
+    <img src="https://raw.githubusercontent.com/mneha05/hetero-serve/main/docs/architecture.png"
+         alt="Architecture: a router control plane with a global prefix directory and migrate-vs-recompute cost model; three workers on CUDA, Intel Arc GPU and NPU each with a paged KV cache and continuous batching; a data plane carrying KV blocks over shaped TCP or NCCL; and the five CUDA kernels"
+         loading="lazy"
+         style="display:block;width:100%;height:auto;border-radius:10px;border:1px solid rgba(255,255,255,.10);background:#0d1117" />
+  </div>
+
+  <div class="stk" style="margin-top:14px">
+    <a href="https://mneha05.github.io/hetero-serve/" target="_blank" rel="noopener"><span>▶ live demo</span></a>
+    <a href="https://github.com/mneha05/hetero-serve" target="_blank" rel="noopener"><span>GitHub</span></a>
+    <a href="https://colab.research.google.com/github/mneha05/hetero-serve/blob/main/notebooks/verify_cuda_kernel.ipynb" target="_blank" rel="noopener"><span>compile the kernels ↗</span></a>
+  </div>
+</article>
