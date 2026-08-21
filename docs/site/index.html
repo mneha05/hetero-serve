@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Neha Mahesh — Signals into Meaning</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A0E1A;
+    --bg2:#111726;
+    --card:#141B2C;
+    --ink:#EAF0F5;
+    --muted:#8B95A8;
+    --faint:#5A6479;
+    --cyan:#55E6C6;
+    --amber:#FFB454;
+    --coral:#FF7A6B;
+    --line:rgba(255,255,255,0.08);
+    --line2:rgba(255,255,255,0.14);
+    --display:'Space Grotesk',sans-serif;
+    --body:'IBM Plex Sans',sans-serif;
+    --mono:'IBM Plex Mono',monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    color:var(--ink);font-family:var(--body);line-height:1.6;overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+    background:
+      radial-gradient(1100px 640px at 84% -10%, rgba(85,230,198,.075), transparent 60%),
+      radial-gradient(920px 540px at -10% 106%, rgba(255,180,84,.055), transparent 60%),
+      radial-gradient(700px 700px at 50% 120%, rgba(176,79,208,.05), transparent 60%),
+      #080B14;
+    background-attachment:fixed;
+  }
+  body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+    background-image:
+      linear-gradient(rgba(140,170,200,.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(140,170,200,.05) 1px, transparent 1px);
+    background-size:52px 52px;
+    -webkit-mask-image:radial-gradient(ellipse 92% 82% at 50% 38%, #000 55%, transparent 100%);
+    mask-image:radial-gradient(ellipse 92% 82% at 50% 38%, #000 55%, transparent 100%);}
+  body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.035;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");}
+  ::selection{background:var(--amber);color:#0A0E1A}
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 28px}
+  .mono{font-family:var(--mono);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase}
+
+  /* ---------- NAV ---------- */
+  nav{position:fixed;top:0;left:0;right:0;z-index:50;
+    display:flex;justify-content:space-between;align-items:center;
+    padding:18px 28px;backdrop-filter:blur(10px);
+    background:rgba(10,14,26,.6);border-bottom:1px solid transparent;transition:border-color .4s}
+  nav.scrolled{border-color:var(--line)}
+  nav .logo{font-family:var(--display);font-weight:700;font-size:1.05rem;letter-spacing:-.01em}
+  nav .logo b{color:var(--cyan)}
+  nav .links{display:flex;gap:26px}
+  nav .links a{font-family:var(--mono);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);transition:color .25s}
+  nav .links a:hover{color:var(--ink)}
+  @media(max-width:720px){nav .links{display:none}}
+
+  /* ---------- HERO ---------- */
+  header{position:relative;min-height:100vh;display:flex;align-items:center;overflow:hidden}
+  #wave{position:absolute;inset:0;width:100%;height:100%;z-index:1;opacity:.9}
+  .hero-glow{position:absolute;z-index:0;width:900px;height:900px;border-radius:50%;
+    background:radial-gradient(circle,rgba(85,230,198,.10),transparent 62%);
+    top:-260px;right:-200px;pointer-events:none}
+  .hero-glow.two{background:radial-gradient(circle,rgba(255,180,84,.08),transparent 62%);
+    top:auto;bottom:-320px;left:-260px;right:auto}
+  .hero-inner{position:relative;z-index:3;width:100%}
+  .eyebrow{color:var(--cyan);margin-bottom:26px;display:flex;align-items:center;gap:12px}
+  .eyebrow::before{content:"";width:34px;height:1px;background:var(--cyan);display:inline-block}
+  h1{font-family:var(--display);font-weight:700;
+    font-size:clamp(3rem,9vw,7rem);line-height:.95;letter-spacing:-.03em;margin-bottom:26px}
+  h1 .l2{display:block;color:transparent;-webkit-text-stroke:1.3px var(--muted)}
+  .lede{font-size:clamp(1.05rem,2.2vw,1.4rem);max-width:640px;color:#C4CDDB;font-weight:400}
+  .lede b{color:var(--amber);font-weight:500}
+  .hero-meta{margin-top:40px;display:flex;flex-wrap:wrap;gap:10px 26px;align-items:center}
+  .chip{font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--muted);border:1px solid var(--line2);border-radius:100px;padding:7px 15px;transition:.25s}
+  .chip:hover{color:var(--ink);border-color:var(--cyan)}
+  .scrollcue{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);z-index:3;
+    font-family:var(--mono);font-size:.65rem;letter-spacing:.2em;text-transform:uppercase;color:var(--faint);
+    display:flex;flex-direction:column;align-items:center;gap:10px}
+  .scrollcue .bar{width:1px;height:44px;background:linear-gradient(var(--cyan),transparent);animation:drop 2s infinite}
+  @keyframes drop{0%{transform:scaleY(0);transform-origin:top}50%{transform:scaleY(1);transform-origin:top}
+    50.1%{transform-origin:bottom}100%{transform:scaleY(0);transform-origin:bottom}}
+
+  /* ---------- SECTION SHELL ---------- */
+  section{position:relative;padding:110px 0;scroll-margin-top:72px}
+  .sec-head{display:flex;align-items:baseline;gap:16px;margin-bottom:54px}
+  .sec-head .idx{font-family:var(--mono);font-size:.72rem;color:var(--cyan);letter-spacing:.14em}
+  .sec-head h2{font-family:var(--display);font-weight:600;font-size:clamp(1.8rem,4vw,2.9rem);letter-spacing:-.02em}
+  .sec-head .rule{flex:1;height:1px;background:var(--line);align-self:center}
+
+  /* reveal */
+  .reveal{opacity:0;transform:translateY(28px);transition:opacity .8s cubic-bezier(.2,.7,.2,1),transform .8s cubic-bezier(.2,.7,.2,1)}
+  .reveal.in{opacity:1;transform:none}
+
+  /* ---------- ABOUT ---------- */
+  .about-grid{display:grid;grid-template-columns:1.5fr 1fr;gap:56px}
+  @media(max-width:820px){.about-grid{grid-template-columns:1fr;gap:36px}}
+  .thesis{font-family:var(--display);font-weight:400;font-size:clamp(1.4rem,3vw,2.05rem);line-height:1.3;letter-spacing:-.01em}
+  .thesis b{color:var(--cyan);font-weight:500}
+  .about-body p{color:var(--muted);margin-bottom:16px}
+  .about-body p b{color:var(--ink);font-weight:600}
+  .sidecard{border:1px solid var(--line);border-radius:14px;padding:24px;background:var(--bg2)}
+  .sidecard h4{font-family:var(--mono);font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin-bottom:16px}
+  .sidecard .row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px dashed var(--line);font-size:.92rem}
+  .sidecard .row:last-child{border-bottom:0}
+  .sidecard .row span:first-child{color:var(--muted)}
+  .sidecard .row span:last-child{color:var(--ink);font-family:var(--mono);font-size:.82rem}
+
+
+  /* ---------- ABOUT v2 ---------- */
+  .thesis-big{font-family:var(--display);font-weight:600;font-size:clamp(1.7rem,4.4vw,3.1rem);line-height:1.12;letter-spacing:-.02em;max-width:16ch}
+  .thesis-big .hl{color:var(--cyan)}
+  .thesis-big .hl2{color:var(--amber)}
+  .thesis-sub{color:var(--muted);font-size:1.05rem;margin-top:22px;max-width:44ch;border-left:2px solid var(--cyan);padding-left:16px}
+  .about-split{display:grid;grid-template-columns:1.15fr 1fr;gap:54px;align-items:center}
+  @media(max-width:880px){.about-split{grid-template-columns:1fr;gap:40px}}
+  .good-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:520px){.good-grid{grid-template-columns:1fr}}
+  .good{position:relative;border:1px solid var(--line);border-radius:14px;padding:18px 18px 16px;background:var(--card);overflow:hidden;transition:transform .35s,border-color .35s}
+  .good:hover{transform:translateY(-4px);border-color:var(--accent,var(--cyan))}
+  .good::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent,var(--cyan));transform:scaleY(.25);transform-origin:top;transition:transform .35s}
+  .good:hover::before{transform:scaleY(1)}
+  .good .gk{font-family:var(--mono);font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;color:var(--accent,var(--cyan))}
+  .good h4{font-family:var(--display);font-size:1.05rem;font-weight:600;margin:7px 0 5px;letter-spacing:-.01em}
+  .good p{color:var(--muted);font-size:.83rem;line-height:1.5}
+  .creed{margin-top:44px;border-top:1px solid var(--line);padding-top:28px;max-width:70ch}
+  .creed p{font-family:var(--display);font-weight:400;font-size:clamp(1.15rem,2.4vw,1.6rem);line-height:1.4;letter-spacing:-.01em;color:var(--ink)}
+  .creed p b{color:var(--amber);font-weight:600}
+  .creed .tiny{font-family:var(--mono);font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin-bottom:14px}
+
+  /* ---------- RESEARCH ---------- */
+  .labs{display:grid;gap:20px}
+  .lab{display:grid;grid-template-columns:auto 1fr auto;gap:26px;align-items:start;
+    border:1px solid var(--line);border-radius:16px;padding:30px 32px;background:var(--card);
+    position:relative;overflow:hidden;transition:border-color .35s,transform .35s}
+  .lab:hover{border-color:var(--line2);transform:translateY(-3px)}
+  .lab::after{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent,var(--cyan));opacity:.8}
+  .lab .tag{font-family:var(--mono);font-size:.66rem;writing-mode:vertical-rl;transform:rotate(180deg);
+    letter-spacing:.18em;text-transform:uppercase;color:var(--accent,var(--cyan));padding-top:4px}
+  .lab h3{font-family:var(--display);font-size:1.3rem;font-weight:600;margin-bottom:4px;letter-spacing:-.01em}
+  .lab .loc{font-family:var(--mono);font-size:.72rem;color:var(--faint);margin-bottom:14px;letter-spacing:.06em}
+  .lab p{color:var(--muted);font-size:.95rem;max-width:60ch}
+  .lab p em{color:var(--amber);font-style:normal}
+  .lab .yr{font-family:var(--mono);font-size:.78rem;color:var(--faint);white-space:nowrap}
+  @media(max-width:720px){.lab{grid-template-columns:1fr;gap:12px}.lab .tag{writing-mode:horizontal-tb;transform:none}.lab .yr{order:-1}}
+
+  /* ---------- WORK ---------- */
+  .work-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px}
+  @media(max-width:820px){.work-grid{grid-template-columns:1fr}}
+  .proj{border:1px solid var(--line);border-radius:16px;padding:28px;background:var(--card);
+    position:relative;overflow:hidden;transition:transform .4s,border-color .4s;min-height:210px;display:flex;flex-direction:column}
+  .proj:hover{transform:translateY(-4px);border-color:var(--line2)}
+  .proj .sheen{position:absolute;inset:0;background:radial-gradient(500px circle at var(--mx,50%) var(--my,0%),rgba(85,230,198,.09),transparent 45%);opacity:0;transition:opacity .4s;pointer-events:none}
+  .proj:hover .sheen{opacity:1}
+  .proj.amber .sheen{background:radial-gradient(500px circle at var(--mx,50%) var(--my,0%),rgba(255,180,84,.10),transparent 45%)}
+  .proj .knum{font-family:var(--mono);font-size:.7rem;color:var(--faint);letter-spacing:.1em}
+  .proj h3{font-family:var(--display);font-size:1.35rem;font-weight:600;margin:10px 0 4px;letter-spacing:-.01em}
+  .proj .kind{font-family:var(--mono);font-size:.68rem;color:var(--cyan);letter-spacing:.08em;text-transform:uppercase;margin-bottom:12px}
+  .proj.amber .kind{color:var(--amber)}
+  .proj p{color:var(--muted);font-size:.9rem;flex:1}
+  .proj .stk{margin-top:16px;display:flex;flex-wrap:wrap;gap:6px}
+  .proj .stk span{font-family:var(--mono);font-size:.64rem;color:var(--faint);border:1px solid var(--line);border-radius:5px;padding:3px 8px}
+  .proj .metric{position:absolute;top:24px;right:26px;font-family:var(--display);font-weight:700;font-size:1.05rem;color:var(--amber)}
+
+
+  .howbox{margin-top:16px;border:1px solid var(--line);border-radius:10px;background:#0c1220;padding:10px 8px 4px;overflow:hidden}
+  .howbox .howcap{font-family:var(--mono);font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);padding:0 4px 6px}
+  .howsvg{width:100%;height:auto;display:block}
+  .proj,.lab,.good,.sidecard{background:linear-gradient(168deg,#182133 0%,#101725 100%)}
+  .proj::before,.good::before{}
+  .proj,.lab,.good{box-shadow:0 1px 0 rgba(255,255,255,.04) inset, 0 18px 40px -24px rgba(0,0,0,.8)}
+  h1{text-shadow:0 0 46px rgba(85,230,198,.10)}
+  .howbox{background:linear-gradient(180deg,#0b1220,#0a0f1a)}
+  /* scroll progress + section rail */
+  #prog{position:fixed;top:0;left:0;height:2px;width:0;z-index:60;
+    background:linear-gradient(90deg,var(--cyan),var(--amber));box-shadow:0 0 10px rgba(85,230,198,.5)}
+  .rail{position:fixed;right:22px;top:50%;transform:translateY(-50%);z-index:40;
+    display:flex;flex-direction:column;gap:14px;align-items:center}
+  .rail a{display:flex;align-items:center;gap:9px;justify-content:flex-end;text-decoration:none;
+    font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;color:var(--faint);
+    text-transform:uppercase;opacity:.55;transition:opacity .3s,color .3s}
+  .rail a .dot{width:7px;height:7px;border-radius:50%;background:var(--faint);transition:.3s;flex:none}
+  .rail a .rlab{opacity:0;transform:translateX(6px);transition:.3s;white-space:nowrap}
+  .rail a:hover{opacity:1;color:var(--muted)}
+  .rail a:hover .rlab{opacity:1;transform:none}
+  .rail a.on{opacity:1;color:var(--cyan)}
+  .rail a.on .dot{background:var(--cyan);box-shadow:0 0 10px var(--cyan);transform:scale(1.25)}
+  .rail a.on .rlab{opacity:1;transform:none;color:var(--cyan)}
+  @media(max-width:900px){.rail{display:none}}
+  nav .links a.navon{color:var(--ink)}
+  @media(prefers-reduced-motion:reduce){.howsvg animate,.howsvg animateMotion,.howsvg animateTransform{display:none}}
+  .more{margin-top:22px;display:flex;flex-wrap:wrap;gap:10px}
+  .more span{font-family:var(--mono);font-size:.72rem;color:var(--muted);border:1px dashed var(--line2);border-radius:8px;padding:8px 13px;transition:.25s}
+  .more span:hover{color:var(--ink);border-color:var(--cyan)}
+
+  /* ---------- EXPERIENCE ---------- */
+  .tl{position:relative;margin-left:8px;border-left:1px solid var(--line);padding-left:34px}
+  .tl-item{position:relative;padding-bottom:40px}
+  .tl-item:last-child{padding-bottom:0}
+  .tl-item::before{content:"";position:absolute;left:-42px;top:5px;width:11px;height:11px;border-radius:50%;
+    background:var(--bg);border:2px solid var(--cyan);box-shadow:0 0 0 4px rgba(85,230,198,.12)}
+  .tl-item .when{font-family:var(--mono);font-size:.72rem;color:var(--faint);letter-spacing:.08em}
+  .tl-item h3{font-family:var(--display);font-size:1.2rem;font-weight:600;margin:4px 0 2px}
+  .tl-item .role{color:var(--cyan);font-size:.9rem;margin-bottom:8px}
+  .tl-item p{color:var(--muted);font-size:.92rem;max-width:70ch}
+
+  /* ---------- LEGO ---------- */
+  .lego-sec{background:linear-gradient(180deg,var(--bg),#0C1120)}
+  .lego-intro{text-align:center;max-width:560px;margin:0 auto 44px}
+  .lego-intro p{color:var(--muted);margin-top:12px}
+  .lego-stage{display:grid;grid-template-columns:auto 1fr;gap:30px;align-items:start;justify-content:center}
+  @media(max-width:760px){.lego-stage{grid-template-columns:1fr;justify-items:center}}
+  .palette{display:flex;flex-direction:column;gap:14px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px}
+  .palette h4{font-family:var(--mono);font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin-bottom:4px}
+  .swatches{display:flex;gap:10px;flex-wrap:wrap;max-width:170px}
+  .sw{width:34px;height:34px;border-radius:7px;cursor:pointer;border:2px solid transparent;position:relative;transition:transform .15s}
+  .sw:hover{transform:scale(1.1)}
+  .sw.active{border-color:#fff}
+  .sw::after{content:"";position:absolute;left:50%;top:6px;transform:translateX(-50%);width:11px;height:6px;border-radius:50%;background:rgba(255,255,255,.35)}
+  .sizes{display:flex;gap:8px}
+  .szbtn{font-family:var(--mono);font-size:.72rem;background:var(--bg2);color:var(--muted);border:1px solid var(--line2);
+    border-radius:7px;padding:8px 11px;cursor:pointer;transition:.2s}
+  .szbtn.active{background:var(--cyan);color:#08111a;border-color:var(--cyan);font-weight:600}
+  .lego-actions{display:flex;gap:10px;margin-top:4px}
+  .legobtn{flex:1;font-family:var(--mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;
+    background:transparent;color:var(--muted);border:1px solid var(--line2);border-radius:7px;padding:9px;cursor:pointer;transition:.2s}
+  .legobtn:hover{color:var(--ink);border-color:var(--coral)}
+  .legobtn.on{background:var(--coral);color:#1a0d0b;border-color:var(--coral);font-weight:600}
+  #board{position:relative;width:min(520px,86vw);aspect-ratio:1/1;border-radius:14px;
+    background:#0e1524;border:1px solid var(--line2);cursor:crosshair;touch-action:none;overflow:hidden;
+    background-image:radial-gradient(circle at center,rgba(255,255,255,.06) 20%,transparent 22%);
+    background-size:calc(100%/16) calc(100%/16);box-shadow:inset 0 0 60px rgba(0,0,0,.55)}
+  #board.erase{cursor:cell}
+  .brick{position:absolute;border-radius:4px;pointer-events:none;
+    box-shadow:inset 0 -5px 0 rgba(0,0,0,.28),inset 0 3px 0 rgba(255,255,255,.30),0 3px 7px rgba(0,0,0,.45);
+    animation:pop .26s cubic-bezier(.2,1.5,.4,1)}
+  .brick .stud{position:absolute;top:12%;height:26%;aspect-ratio:1/1;border-radius:50%;
+    background:radial-gradient(circle at 38% 32%,rgba(255,255,255,.55),rgba(0,0,0,.15));transform:translateX(-50%)}
+  .ghost{position:absolute;border-radius:4px;pointer-events:none;opacity:.55;z-index:5;
+    border:1.5px dashed rgba(255,255,255,.7);background:rgba(255,255,255,.10);transition:left .04s,top .04s}
+  .ghost.bad{border-color:var(--coral);background:rgba(255,122,107,.14)}
+  @keyframes pop{0%{transform:translateY(-14px) scale(.72);opacity:0}100%{transform:none;opacity:1}}
+  .lego-count{font-family:var(--mono);font-size:.7rem;color:var(--faint);text-align:center;margin-top:16px;letter-spacing:.1em}
+
+  /* ---------- FOOTER ---------- */
+  footer{border-top:1px solid var(--line);padding:70px 0 50px;text-align:center}
+  footer h3{font-family:var(--display);font-size:clamp(1.6rem,4vw,2.4rem);font-weight:600;margin-bottom:22px;letter-spacing:-.02em}
+  footer h3 b{color:var(--cyan)}
+  .flinks{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-bottom:34px}
+  .flinks a{font-family:var(--mono);font-size:.78rem;letter-spacing:.06em;border:1px solid var(--line2);border-radius:100px;padding:11px 20px;color:var(--muted);transition:.25s}
+  .flinks a:hover{color:var(--bg);background:var(--cyan);border-color:var(--cyan)}
+  footer .fine{font-family:var(--mono);font-size:.66rem;color:var(--faint);letter-spacing:.1em}
+
+  @media(prefers-reduced-motion:reduce){
+    *{animation:none!important;transition:none!important}
+    .reveal{opacity:1;transform:none}
+    html{scroll-behavior:auto}
+  }
+</style>
+</head>
+<body>
+<div id="prog"></div>
+<div class="rail" aria-hidden="true">
+  <a href="#about" data-s="about"><span class="rlab">about</span><span class="dot"></span></a>
+  <a href="#research" data-s="research"><span class="rlab">research</span><span class="dot"></span></a>
+  <a href="#work" data-s="work"><span class="rlab">work</span><span class="dot"></span></a>
+  <a href="#experience" data-s="experience"><span class="rlab">experience</span><span class="dot"></span></a>
+  <a href="#build" data-s="build"><span class="rlab">build</span><span class="dot"></span></a>
+</div>
+
+<nav id="nav">
+  <div class="logo">neha<b>.</b>mahesh</div>
+  <div class="links">
+    <a href="#about">About</a>
+    <a href="#research">Research</a>
+    <a href="#work">Work</a>
+    <a href="#experience">Experience</a>
+    <a href="#build">Build</a>
+  </div>
+</nav>
+
+<header>
+  <canvas id="wave"></canvas>
+  <div class="hero-glow"></div>
+  <div class="hero-glow two"></div>
+  <div class="wrap hero-inner">
+    <div class="eyebrow mono">CS @ Purdue · Machine Intelligence</div>
+    <h1>Neha Mahesh<span class="l2">signals → meaning</span></h1>
+    <p class="lede">I build systems that pull <b>hidden state out of noisy signals</b> — from Wi-Fi distortions and heartbeat waveforms to order flow, packet streams, and GPU throughput. Low-level where it counts, intelligent where it matters.</p>
+    <div class="hero-meta">
+      <span class="chip">CUDA</span>
+      <span class="chip">Agentic AI</span>
+      <span class="chip">Embedded ML</span>
+      <span class="chip">Low-Latency Systems</span>
+      <span class="chip">Wearable Sensing</span>
+    </div>
+  </div>
+  <div class="scrollcue"><span>scroll</span><span class="bar"></span></div>
+</header>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="wrap">
+    <div class="sec-head reveal"><span class="idx">01</span><h2>Why I build</h2><span class="rule"></span></div>
+
+    <div class="about-split">
+      <div class="reveal">
+        <p class="thesis-big">I want to build things that reach <span class="hl">everyone</span> &mdash; <span class="hl2">especially</span> the people the world keeps building around.</p>
+        <p class="thesis-sub">The CUDA, the models, the systems &mdash; I don't build them to be clever. I build them so something finally reaches the person standing outside the door.</p>
+      </div>
+
+      <div class="good-grid reveal">
+        <div class="good" style="--accent:var(--coral)">
+          <div class="gk">built it for myself</div>
+          <h4>PostureGuard</h4>
+          <p>I have spinal stenosis, so I built the wearable that catches my posture before it catches up with me.</p>
+        </div>
+        <div class="good" style="--accent:var(--amber)">
+          <div class="gk">built it for others</div>
+          <h4>IndiaHelp.org</h4>
+          <p>An AI-driven fundraising tool so the orgs doing the hardest work reach the people who want to help.</p>
+        </div>
+        <div class="good" style="--accent:var(--cyan)">
+          <div class="gk">taught it forward</div>
+          <h4>Girls Who Code</h4>
+          <p>Showing middle-school girls they can build too &mdash; the fastest way to hand someone real power.</p>
+        </div>
+        <div class="good" style="--accent:#B04FD0">
+          <div class="gk">taught it forward</div>
+          <h4>Bhumi Foundation</h4>
+          <p>Teaching students who don't usually get the keys to the thing that changed my own life.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="creed reveal">
+      <div class="tiny">what i actually believe</div>
+      <p>I don't think computing for good is the soft version of the work. I think it's the <b>hardest</b> version: I have to make it <b>fast</b>, make it <b>correct</b>, and make it reach <b>everyone</b> &mdash; not just the people already inside the system. I want to work where getting that right moves <b>millions of lives at once</b>, not one at a time. That's the scale I'm chasing, and it's exactly why I'm chasing it.</p>
+    </div>
+  </div>
+</section>
+
+<!-- RESEARCH --><!-- RESEARCH -->
+<section id="research">
+  <div class="wrap">
+    <div class="sec-head reveal"><span class="idx">02</span><h2>Research</h2><span class="rule"></span></div>
+    <div class="labs">
+      <div class="lab reveal" style="--accent:var(--coral)">
+        <div class="tag">Wearables</div>
+        <div>
+          <h3>Snowball Lab</h3>
+          <div class="loc">Purdue University · Computer Science</div>
+          <p>Designing <em>wearable health devices</em> with AI/ML and embedded systems — turning everyday accessories into low-power sensing platforms for passive, real-world health monitoring. Work at the intersection of signal processing, embedded intelligence, and human-centered design.</p>
+        </div>
+        <div class="yr">2026 →</div>
+      </div>
+      <div class="lab reveal" style="--accent:var(--amber)">
+        <div class="tag">Quantum</div>
+        <div>
+          <h3>Supercomputing Lab</h3>
+          <div class="loc">UC San Diego · High-Performance Computing</div>
+          <p>Building a <em>noise-aware quantum compiler</em>. A quantum program can't run on hardware as written: a compiler has to map logical qubits onto physical ones, insert routing (SWAP) operations, schedule gates, and account for hardware noise. I'm investigating whether <em>reinforcement learning can choose qubit mappings that yield lower-error circuits than Qiskit's SABRE</em>, measured on circuit depth, SWAP count, estimated fidelity, and compiler runtime.</p>
+        </div>
+        <div class="yr">2025 – 26</div>
+      </div>
+      <div class="lab reveal" style="--accent:var(--cyan)">
+        <div class="tag">Sensing</div>
+        <div>
+          <h3>Wireless Sensing Lab</h3>
+          <div class="loc">IIT Madras · Undergraduate Research</div>
+          <p>Built a real-time <em>CNN + bidirectional-LSTM</em> pipeline that recognizes human activity from the distortions a body makes in ambient <em>Wi-Fi CSI</em> signals — no camera involved. 94% accuracy across 6 classes, ~9 points over the lab baseline, most of it from how the raw signal was represented.</p>
+        </div>
+        <div class="yr">2025</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WORK -->
+<section id="work">
+  <div class="wrap">
+    <div class="sec-head reveal"><span class="idx">03</span><h2>Selected work</h2><span class="rule"></span></div>
+    <div class="work-grid">
+
+      <article class="proj reveal" data-tilt><div class="sheen"></div>
+        <span class="metric">55.4% of peak</span>
+        <span class="knum">/ 01</span>
+        <h3>hetero-serve</h3>
+        <div class="kind">CUDA · distributed inference</div>
+        <p>When a request shares a long prefix with an earlier one — a system prompt, a RAG document, an earlier turn — its <b>KV cache already exists, but on the wrong accelerator</b>. Run it where the cache is and queue behind a busy device, recompute the prefix, or drag the cache across the interconnect? That is a bandwidth-versus-compute trade, and this is a serving system built to find where it flips. A <b>paged KV cache</b> with 16-token blocks, refcounts, chain-hashed prefix sharing and LRU eviction; <b>continuous batching</b> with chunked prefill and recompute-preemption; and a router that prices <i>stay</i> against <i>migrate</i> in seconds using device speeds it <b>measures at startup rather than assumes</b>. Workers are real OS processes over real TCP through a token-bucket shaper, so transfers genuinely contend — at 50 Mbps moving an 18.9 MB prefix loses to recomputing it, at 10 Gbps it wins, and cache-aware routing cuts end-to-end p50 from <b>3.60 s to 1.94 s</b>.</p>
+        <p>Then profiling said a third of every decode step was not accelerator time at all — it was the host gathering KV blocks into contiguous tensors, overhead invented by paging the cache. So I wrote the kernel that deletes it, and then four more. <b>Nsight</b> showed the online-softmax kernel was <i>occupancy</i>-starved rather than bandwidth-starved — 0.1 waves across 40 SMs — which produced a context split that took it from <b>13.4% to 55.4% of a Tesla T4's peak memory bandwidth</b>, or <b>10–22× PyTorch's own SDPA</b> on paged data. Sweeping the split count then caught my own heuristic being wrong: it targeted occupancy and chose 2 where 32 was 2.1× faster, because the online softmax is <i>sequential</i> and splitting shortens a dependent chain, not a wave count. There is a prefill kernel too, and a <b>tensor-core</b> version where a 16-token KV page is exactly one 16×16×16 WMMA fragment — which is why that block size was the right default before any kernel existed.</p>
+        <p><b>101 tests</b>, no mocks — real processes, real sockets, kernels fuzz-tested against a numpy oracle and against each other. Five bugs are documented, every one found by measuring rather than reading; the one worth keeping is the time I was <i>certain</i> the cause was a serialisation layout, benchmarked it first, and was wrong.</p>
+        <div class="stk"><span>CUDA</span><span>C++</span><span>WMMA</span><span>Nsight</span><span>PyTorch</span><span>NCCL</span><span>paged attention</span></div>
+        <div class="howbox"><div class="howcap">watch it work</div>
+          <img src="https://raw.githubusercontent.com/mneha05/hetero-serve/main/docs/hero.gif" loading="lazy" width="880" height="372" alt="A shared KV-cache prefix fills on one accelerator, a second request reuses it instead of recomputing, then 9.4 MB of cache crosses the interconnect to a second GPU" style="display:block;width:100%;height:auto;border-radius:10px;border:1px solid rgba(255,255,255,.10);background:#0d1117"/>
+        </div>
+        <div class="howbox"><div class="howcap">how it fits together</div>
+          <img src="https://raw.githubusercontent.com/mneha05/hetero-serve/main/docs/architecture.png" loading="lazy" width="860" height="574" alt="Architecture: a router control plane with a global prefix directory and migrate-or-recompute cost model; three workers on CUDA, Intel Arc GPU and NPU each with a paged KV cache and continuous batching; a data plane carrying KV blocks over shaped TCP or NCCL; and the five CUDA kernels" style="display:block;width:100%;height:auto;border-radius:10px;border:1px solid rgba(255,255,255,.10);background:#0d1117"/>
+        </div>
+        <div class="stk" style="margin-top:14px">
+          <a href="https://mneha05.github.io/hetero-serve/" target="_blank" rel="noopener"><span>&#9654; live demo</span></a>
+          <a href="https://github.com/mneha05/hetero-serve" target="_blank" rel="noopener"><span>GitHub</span></a>
+          <a href="https://colab.research.google.com/github/mneha05/hetero-serve/blob/main/notebooks/verify_cuda_kernel.ipynb" target="_blank" rel="noopener"><span>compile the kernels &#8599;</span></a>
+        </div>
+      </article>
+
+      <article class="proj amber reveal" data-tilt><div class="sheen"></div>
+        <span class="metric">≈ llama.cpp</span>
+        <span class="knum">/ 02</span>
+        <h3>Inference Engine</h3>
+        <div class="kind">CUDA · from scratch</div>
+        <p>An LLM served by code I wrote at every layer — no PyTorch, no frameworks, just raw CUDA. I hand-wrote the kernels a modern inference stack is built on: <b>fused attention</b> to kill memory-bandwidth waste, a <b>paged KV-cache</b> so long contexts don't blow up VRAM, <b>INT8/INT4 quantized matmuls</b>, and <b>speculative decoding</b> to draft-and-verify tokens in parallel. Loads real Llama-3-1B weights and, benchmarked end to end, holds its own against llama.cpp's tokens/sec. This is the project that taught me what actually happens between a prompt and a token.</p>
+        <div class="stk"><span>CUDA</span><span>C++</span><span>GPU</span><span>quantization</span></div>
+        <div class="howbox"><div class="howcap">how it works</div><svg viewBox="0 0 300 96" class="howsvg" role="img" aria-label="Inference pipeline">
+<defs>
+<filter id="gi" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1.8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+<linearGradient id="flow" x1="0" x2="1"><stop offset="0" stop-color="#55E6C6"/><stop offset="1" stop-color="#FFB454"/></linearGradient>
+<style>.lbl{font:600 6px 'IBM Plex Mono',monospace;fill:#8B95A8}.st{fill:#0f1626;stroke:rgba(255,255,255,.12)}</style>
+</defs>
+<line x1="8" y1="48" x2="292" y2="48" stroke="url(#flow)" stroke-width="1" opacity=".18"/>
+<g>
+<rect class="st" x="8" y="34" width="52" height="28" rx="7"/><text class="lbl" x="14" y="51">fused attn</text>
+<rect class="st" x="68" y="34" width="52" height="28" rx="7"/><text class="lbl" x="74" y="48">paged</text><text class="lbl" x="74" y="56">KV-cache</text>
+<rect class="st" x="128" y="34" width="52" height="28" rx="7"/><text class="lbl" x="134" y="48">INT4</text><text class="lbl" x="134" y="56">matmul</text>
+<rect class="st" x="188" y="34" width="54" height="28" rx="7"/><text class="lbl" x="194" y="48">spec.</text><text class="lbl" x="194" y="56">decode</text>
+<rect x="250" y="34" width="42" height="28" rx="7" fill="none" stroke="#FFB454" stroke-width="1.3"><animate attributeName="stroke-opacity" values=".4;1;.4" dur="2.6s" repeatCount="indefinite"/></rect>
+<text class="lbl" x="258" y="51" fill="#FFB454">token</text>
+</g>
+<g filter="url(#gi)">
+<circle r="3.2" fill="#55E6C6"><animateMotion path="M8 48 H292" dur="2.6s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1" calcMode="spline" keySplines="0.45 0 0.55 1"/><animate attributeName="fill" values="#55E6C6;#55E6C6;#FFB454" dur="2.6s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;1;1;1;0" keyTimes="0;.08;.5;.92;1" dur="2.6s" repeatCount="indefinite"/></circle>
+<circle r="2.6" fill="#55E6C6" opacity=".6"><animateMotion path="M8 48 H292" dur="2.6s" begin="0.13s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1" keyPoints="0;1" keyTimes="0;1"/></circle>
+<circle r="2" fill="#55E6C6" opacity=".3"><animateMotion path="M8 48 H292" dur="2.6s" begin="0.26s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1" keyPoints="0;1" keyTimes="0;1"/></circle>
+<circle r="3.2" fill="#55E6C6"><animateMotion path="M8 48 H292" dur="2.6s" begin="1.3s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1" keyPoints="0;1" keyTimes="0;1"/><animate attributeName="fill" values="#55E6C6;#55E6C6;#FFB454" dur="2.6s" begin="1.3s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;1;1;1;0" keyTimes="0;.08;.5;.92;1" dur="2.6s" begin="1.3s" repeatCount="indefinite"/></circle>
+</g>
+<text class="lbl" x="8" y="90" fill="#55E6C6" opacity=".8">prompt → tokens, one hand-written CUDA kernel at a time</text>
+</svg></div>
+      </article>
+
+      <article class="proj reveal" data-tilt><div class="sheen"></div>
+        <span class="metric">+$37/gm</span>
+        <span class="knum">/ 03</span>
+        <h3>Figment</h3>
+        <div class="kind">market microstructure</div>
+        <p>A trading simulator for Figgie — the card game Jane Street built to teach market intuition — engineered from the matching engine up. Underneath: a <b>continuous double auction</b> with four independent order books, price-time priority, and exact settlement. On top: a market maker that doesn't guess — it maintains an <b>exact multivariate-hypergeometric posterior</b> over which suit secretly scores, prices every card at expected value, and quotes two-sided <b>Avellaneda–Stoikov</b>, skewing on inventory and widening spread with belief entropy. An <b>evolutionary self-play</b> loop lifts it from +$6 to +$37/game over 14 generations. The punchline that makes it click: the noise traders win more pots yet lose money every game — because they overpay. Edge ≠ outcome.</p>
+        <div class="stk"><span>Python</span><span>NumPy</span><span>Bayesian</span><span>self-play</span></div>
+        <div class="howbox"><div class="howcap">how it works</div><svg viewBox="0 0 300 96" class="howsvg" role="img" aria-label="Bayesian belief">
+<defs>
+<filter id="gf" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1.4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+<style>.lbl{font:600 6px 'IBM Plex Mono',monospace;fill:#8B95A8}</style></defs>
+<text class="lbl" x="8" y="16">order flow</text>
+<g>
+<rect x="8" y="30" width="8" height="14" rx="1.5" fill="#55E6C6" opacity=".6"><animate attributeName="height" values="14;24;9;18;14" dur="3s" repeatCount="indefinite" calcMode="spline" keyTimes="0;.25;.5;.75;1" keySplines="0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1"/><animate attributeName="y" values="34;24;39;30;34" dur="3s" repeatCount="indefinite" calcMode="spline" keyTimes="0;.25;.5;.75;1" keySplines="0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1"/></rect>
+<rect x="20" y="30" width="8" height="18" rx="1.5" fill="#55E6C6" opacity=".6"><animate attributeName="height" values="18;9;22;13;18" dur="3s" repeatCount="indefinite" calcMode="spline" keyTimes="0;.25;.5;.75;1" keySplines="0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1"/><animate attributeName="y" values="30;39;26;35;30" dur="3s" repeatCount="indefinite" calcMode="spline" keyTimes="0;.25;.5;.75;1" keySplines="0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1"/></rect>
+<rect x="32" y="30" width="8" height="22" rx="1.5" fill="#55E6C6" opacity=".6"><animate attributeName="height" values="22;13;11;24;22" dur="3s" repeatCount="indefinite" calcMode="spline" keyTimes="0;.25;.5;.75;1" keySplines="0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1"/><animate attributeName="y" values="26;35;37;24;26" dur="3s" repeatCount="indefinite" calcMode="spline" keyTimes="0;.25;.5;.75;1" keySplines="0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1"/></rect>
+</g>
+<path d="M46 40 Q60 40 66 34" stroke="#8B95A8" stroke-width="1" fill="none" opacity=".4" stroke-dasharray="2 2"/>
+<text class="lbl" x="74" y="16">posterior P(scoring suit)</text>
+<g transform="translate(74,24)">
+<rect x="0" y="4" width="70" height="8" rx="4" fill="rgba(255,255,255,.08)"/><rect x="0" y="4" width="12" height="8" rx="4" fill="#FFB454" filter="url(#gf)"><animate attributeName="width" values="12;64;48;62;64" dur="3s" repeatCount="indefinite" calcMode="spline" keyTimes="0;.4;.6;.85;1" keySplines="0.3 0 0.3 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1"/></rect>
+<rect x="0" y="15" width="70" height="8" rx="4" fill="rgba(255,255,255,.08)"/><rect x="0" y="15" width="34" height="8" rx="4" fill="#55E6C6" opacity=".5"><animate attributeName="width" values="34;14;24;15;14" dur="3s" repeatCount="indefinite" calcMode="spline" keyTimes="0;.4;.6;.85;1" keySplines="0.3 0 0.3 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1"/></rect>
+<rect x="0" y="26" width="70" height="8" rx="4" fill="rgba(255,255,255,.08)"/><rect x="0" y="26" width="28" height="8" rx="4" fill="#55E6C6" opacity=".5"><animate attributeName="width" values="28;11;18;12;11" dur="3s" repeatCount="indefinite" calcMode="spline" keyTimes="0;.4;.6;.85;1" keySplines="0.3 0 0.3 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1"/></rect>
+<text class="lbl" x="80" y="11" fill="#FFB454">♦ found it</text>
+</g>
+<text class="lbl" x="8" y="90" fill="#55E6C6" opacity=".8">infer the hidden suit → quote a two-sided market</text>
+</svg></div>
+      </article>
+
+      <article class="proj reveal" data-tilt><div class="sheen"></div>
+        <span class="knum">/ 04</span>
+        <h3>PARALLAX</h3>
+        <div class="kind">multi-agent systems</div>
+        <p>Most "AI agents" summarize a problem. This one <b>investigates</b> it. A director agent decomposes a reliability incident into a task graph and fans out <b>specialized statistical worker agents in parallel</b>, each sandboxed with its own toolset and context. Their findings flow back through a <b>cross-validation layer</b> that reconciles conflicts before synthesis — because a multi-agent system without verification is just N chances to hallucinate. Per-worker <b>fault isolation</b> means one agent dying never kills the investigation, and every conclusion ships with linked evidence. Hypothesis generation, statistical testing, dead-end pruning — autonomously.</p>
+        <div class="stk"><span>TypeScript</span><span>orchestration</span><span>fault isolation</span></div>
+        <div class="howbox"><div class="howcap">how it works</div><svg viewBox="0 0 300 96" class="howsvg" role="img" aria-label="Multi-agent orchestration">
+<defs>
+<filter id="gp" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="1.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+<style>.lbl{font:600 6px 'IBM Plex Mono',monospace;fill:#8B95A8}.nd{fill:#0f1626;stroke:#55E6C6;stroke-width:1.2}</style></defs>
+<path id="p1" d="M40 48 C64 48 72 22 98 20" fill="none" stroke="#55E6C6" stroke-width="1" opacity=".25"/>
+<path id="p2" d="M40 48 L98 48" fill="none" stroke="#55E6C6" stroke-width="1" opacity=".25"/>
+<path id="p3" d="M40 48 C64 48 72 74 98 76" fill="none" stroke="#55E6C6" stroke-width="1" opacity=".25"/>
+<path id="q1" d="M134 20 C160 22 168 46 190 48" fill="none" stroke="#FFB454" stroke-width="1" opacity=".25"/>
+<path id="q3" d="M134 76 C160 74 168 50 190 48" fill="none" stroke="#FFB454" stroke-width="1" opacity=".25"/>
+<circle class="nd" cx="28" cy="48" r="13"/><text class="lbl" x="19" y="50">dir</text>
+<rect class="nd" x="98" y="12" width="36" height="16" rx="4"/><text class="lbl" x="103" y="23">agent</text>
+<rect class="nd" x="98" y="40" width="36" height="16" rx="4"/><text class="lbl" x="103" y="51">agent</text>
+<rect class="nd" x="98" y="68" width="36" height="16" rx="4"/><text class="lbl" x="103" y="79">agent</text>
+<rect x="190" y="36" width="44" height="24" rx="5" fill="none" stroke="#FFB454" stroke-width="1.3"><animate attributeName="stroke-opacity" values=".5;1;.5" dur="2.8s" repeatCount="indefinite"/></rect>
+<text class="lbl" x="195" y="45" fill="#FFB454">cross-</text><text class="lbl" x="195" y="53" fill="#FFB454">validate</text>
+<text class="lbl" x="242" y="50">root</text><text class="lbl" x="242" y="58">cause</text>
+<g filter="url(#gp)">
+<circle r="2.8" fill="#55E6C6"><animateMotion dur="2.8s" repeatCount="indefinite" calcMode="spline" keyPoints="0;1" keyTimes="0;1" keySplines="0.4 0 0.6 1"><mpath href="#p1"/></animateMotion></circle>
+<circle r="2.8" fill="#55E6C6"><animateMotion dur="2.8s" begin=".15s" repeatCount="indefinite" calcMode="spline" keyPoints="0;1" keyTimes="0;1" keySplines="0.4 0 0.6 1"><mpath href="#p2"/></animateMotion></circle>
+<circle r="2.8" fill="#55E6C6"><animateMotion dur="2.8s" begin=".3s" repeatCount="indefinite" calcMode="spline" keyPoints="0;1" keyTimes="0;1" keySplines="0.4 0 0.6 1"><mpath href="#p3"/></animateMotion></circle>
+<circle r="2.8" fill="#FFB454"><animateMotion dur="2.8s" begin="1.4s" repeatCount="indefinite" calcMode="spline" keyPoints="0;1" keyTimes="0;1" keySplines="0.4 0 0.6 1"><mpath href="#q1"/></animateMotion></circle>
+<circle r="2.8" fill="#FFB454"><animateMotion dur="2.8s" begin="1.55s" repeatCount="indefinite" calcMode="spline" keyPoints="0;1" keyTimes="0;1" keySplines="0.4 0 0.6 1"><mpath href="#q3"/></animateMotion></circle>
+</g>
+<text class="lbl" x="8" y="92" fill="#55E6C6" opacity=".8">decompose → investigate in parallel → reconcile</text>
+</svg></div>
+      </article>
+
+      <article class="proj amber reveal" data-tilt><div class="sheen"></div>
+        <span class="knum">/ 05</span>
+        <h3>Sentinel</h3>
+        <div class="kind">real-time telemetry</div>
+        <p>A triage room for streaming sensor telemetry. It ingests many channels at once and classifies every deviation as <b>noise, drift, or imminent failure</b> — then runs <b>cross-channel correlation</b> to answer the question that actually matters: is this one sensor dying, or the whole system? Built around a hard-won production truth: <b>alert fatigue kills monitoring faster than missed alerts do</b>. So every flag arrives with its supporting evidence, its correlated channels, and a recommended action — the human stays in the loop deciding, not deciphering. Explainability here isn't a feature bolted on; it's the architecture.</p>
+        <div class="stk"><span>TypeScript</span><span>streaming</span><span>explainable AI</span></div>
+        <div class="howbox"><div class="howcap">how it works</div><svg viewBox="0 0 300 96" class="howsvg" role="img" aria-label="Anomaly detection">
+<defs>
+<filter id="gs" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="1.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+<style>.lbl{font:600 6px 'IBM Plex Mono',monospace;fill:#8B95A8}</style></defs>
+<polyline fill="none" stroke="#55E6C6" stroke-width="1.4" opacity=".65" filter="url(#gs)" points="6,22 34,18 62,24 90,19 118,23 146,18 174,22 202,20 230,23 258,19 292,22"/>
+<polyline fill="none" stroke="#8B95A8" stroke-width="1.4" points="6,50 34,48 62,52 90,49 118,51 146,50 174,51 202,49 230,52 258,49 292,50">
+<animate attributeName="points" values="6,50 34,48 62,52 90,49 118,51 146,50 174,51 202,49 230,52 258,49 292,50; 6,50 34,48 62,52 90,49 118,51 146,66 174,32 202,60 230,52 258,49 292,50; 6,50 34,48 62,52 90,49 118,51 146,50 174,51 202,49 230,52 258,49 292,50" dur="3.4s" repeatCount="indefinite" calcMode="spline" keyTimes="0;.5;1" keySplines="0.4 0 0.6 1;0.4 0 0.6 1"/>
+<animate attributeName="stroke" values="#8B95A8;#FF7A6B;#8B95A8" dur="3.4s" repeatCount="indefinite"/></polyline>
+<polyline fill="none" stroke="#55E6C6" stroke-width="1.4" opacity=".65" filter="url(#gs)" points="6,78 34,76 62,80 90,77 118,79 146,75 174,79 202,77 230,80 258,76 292,78"/>
+<g><circle cx="160" cy="49" r="0" fill="none" stroke="#FF7A6B" stroke-width="1.5"><animate attributeName="r" values="0;15;15;0" keyTimes="0;.45;.75;.8" dur="3.4s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;.45;.75;.8" dur="3.4s" repeatCount="indefinite"/></circle>
+<text class="lbl" x="176" y="38" fill="#FF7A6B" opacity="0">drift<animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;.45;.5;.75;.8" dur="3.4s" repeatCount="indefinite"/></text></g>
+<text class="lbl" x="6" y="92" fill="#55E6C6" opacity=".8">many channels · cross-correlated · one flagged with evidence</text>
+</svg></div>
+      </article>
+
+      <article class="proj reveal" data-tilt><div class="sheen"></div>
+        <span class="knum">/ 06</span>
+        <h3>VibeGraph</h3>
+        <div class="kind">compiler techniques</div>
+        <p>An IDE for agentic workflows where the <b>YAML source and the visual DAG are two projections of one canonical state</b> — edit either, and a bidirectional reconciliation engine syncs them in real time with no drift and no destructive rewrites. The real engineering is underneath: a <b>custom static analyzer</b> that performs variable scope resolution and data-flow validation across steps, catching broken references before anything runs — compiler techniques aimed at workflow definitions. Plus a step-through simulator that debugs agent pipelines like code (breakpoints, state inspection, deterministic replay). 33 passing tests, because developer tooling doesn't get to be flaky.</p>
+        <div class="stk"><span>Next.js</span><span>static analysis</span><span>DAG layout</span></div>
+        <div class="howbox"><div class="howcap">how it works</div><svg viewBox="0 0 300 96" class="howsvg" role="img" aria-label="YAML DAG sync">
+<defs>
+<filter id="gv" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1.4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+<style>.lbl{font:600 6px 'IBM Plex Mono',monospace;fill:#8B95A8}.nn{fill:#0f1626;stroke:#55E6C6;stroke-width:1.2}</style></defs>
+<text class="lbl" x="10" y="16">yaml</text>
+<rect x="10" y="22" width="74" height="7" rx="2" fill="rgba(255,255,255,.08)"/>
+<rect x="10" y="33" width="58" height="7" rx="2" fill="#55E6C6"><animate attributeName="opacity" values=".2;1;.2" dur="2.6s" repeatCount="indefinite" calcMode="spline" keyTimes="0;.5;1" keySplines="0.4 0 0.6 1;0.4 0 0.6 1"/></rect>
+<rect x="10" y="44" width="66" height="7" rx="2" fill="rgba(255,255,255,.08)"/>
+<rect x="10" y="55" width="50" height="7" rx="2" fill="rgba(255,255,255,.08)"/>
+<g filter="url(#gv)"><path d="M96 42 H120" stroke="#FFB454" stroke-width="1.3" fill="none"/><path d="M114 38 L122 42 L114 46" stroke="#FFB454" stroke-width="1.3" fill="none"/><path d="M104 38 L96 42 L104 46" stroke="#FFB454" stroke-width="1.3" fill="none"/></g>
+<text class="lbl" x="98" y="34" fill="#FFB454">sync</text>
+<text class="lbl" x="150" y="16">dag</text>
+<circle class="nn" cx="166" cy="34" r="10"/><circle class="nn" cx="224" cy="34" r="10"/>
+<circle cx="195" cy="62" r="10" fill="#0f1626" stroke="#55E6C6" stroke-width="1.2" filter="url(#gv)"><animate attributeName="stroke" values="#55E6C6;#FFB454;#55E6C6" dur="2.6s" repeatCount="indefinite" calcMode="spline" keyTimes="0;.5;1" keySplines="0.4 0 0.6 1;0.4 0 0.6 1"/></circle>
+<g stroke="rgba(255,255,255,.22)" stroke-width="1.1"><path d="M173 41 L188 55"/><path d="M217 41 L202 55"/></g>
+<text class="lbl" x="243" y="64">1 state</text>
+<text class="lbl" x="150" y="92" fill="#55E6C6" opacity=".8">edit either side · no drift</text>
+</svg></div>
+      </article>
+
+      <article class="proj amber reveal" data-tilt><div class="sheen"></div>
+        <span class="metric">96%</span>
+        <span class="knum">/ 07</span>
+        <h3>PostureGuard</h3>
+        <div class="kind">edge AI · personal</div>
+        <p>I have spinal stenosis, so I built the thing I wished existed. A wearable that watches posture in <b>real time</b> and nudges me the instant I start to slump — before it becomes pain I pay for later. <b>MediaPipe pose estimation feeds a custom-trained LSTM running entirely on a Raspberry Pi</b>, closing the loop through Arduino haptics. <b>96% accuracy at 18 FPS, no cloud anywhere</b> — all inference on-device under real embedded compute and memory limits. The hardest part wasn't the model; it was the messy edge cases that only appear once a real body is wearing it.</p>
+        <div class="stk"><span>PyTorch</span><span>MediaPipe</span><span>Raspberry Pi</span><span>embedded</span></div>
+        <div class="howbox"><div class="howcap">how it works</div><svg viewBox="0 0 300 110" class="howsvg" role="img" aria-label="PostureGuard: pose to LSTM to haptic feedback">
+<defs>
+<filter id="gpo" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="1.7" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+<linearGradient id="sigpo" x1="0" x2="1"><stop offset="0" stop-color="#55E6C6"/><stop offset="1" stop-color="#FF7A6B"/></linearGradient>
+<style>.lbl{font:600 6px 'IBM Plex Mono',monospace;fill:#8B95A8}.jt{fill:#55E6C6}</style>
+</defs>
+
+<!-- LEFT: skeletal figure that slumps -->
+<text class="lbl" x="8" y="12">pose keypoints</text>
+<g stroke-width="2.4" stroke="#55E6C6" stroke-linecap="round" fill="none" filter="url(#gpo)">
+  <!-- head -->
+  <circle cx="34" cy="30" r="5" fill="#0f1626" stroke="#55E6C6" stroke-width="1.6">
+    <animate attributeName="cx" values="34;34;46;46;34" keyTimes="0;.35;.55;.7;1" dur="4s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1"/>
+    <animate attributeName="cy" values="30;30;40;40;30" keyTimes="0;.35;.55;.7;1" dur="4s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1"/>
+  </circle>
+  <!-- neck+spine: straight then curls forward -->
+  <path stroke="url(#sigpo)">
+    <animate attributeName="d"
+      values="M34 35 L34 64;M34 35 L34 64;M46 44 Q40 56 34 64;M46 44 Q40 56 34 64;M34 35 L34 64"
+      keyTimes="0;.35;.55;.7;1" dur="4s" repeatCount="indefinite" calcMode="spline"
+      keySplines="0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1"/>
+  </path>
+  <!-- shoulders -->
+  <path>
+    <animate attributeName="d" values="M22 44 L46 44;M22 44 L46 44;M28 50 L52 50;M28 50 L52 50;M22 44 L46 44"
+      keyTimes="0;.35;.55;.7;1" dur="4s" repeatCount="indefinite" calcMode="spline"
+      keySplines="0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1"/>
+  </path>
+  <!-- hips + legs (static base) -->
+  <path d="M26 64 L42 64"/>
+  <path d="M28 64 L26 86"/><path d="M40 64 L42 86"/>
+</g>
+<!-- joint dots -->
+<g class="jt" filter="url(#gpo)">
+  <circle cx="22" cy="44" r="1.8"/><circle cx="46" cy="44" r="1.8"/><circle cx="34" cy="64" r="1.8"/>
+</g>
+
+<!-- MIDDLE: on-device LSTM -->
+<g transform="translate(78,26)">
+  <rect x="0" y="8" width="56" height="40" rx="7" fill="#0f1626" stroke="rgba(255,255,255,.14)"/>
+  <text class="lbl" x="8" y="24" fill="#55E6C6">LSTM</text>
+  <text class="lbl" x="8" y="33">on Pi</text>
+  <text class="lbl" x="8" y="42">edge · no cloud</text>
+  <!-- little recurrent cells pulsing -->
+  <g fill="#55E6C6">
+    <rect x="36" y="18" width="4" height="4" rx="1"><animate attributeName="opacity" values=".3;1;.3" dur="1.2s" repeatCount="indefinite"/></rect>
+    <rect x="43" y="18" width="4" height="4" rx="1"><animate attributeName="opacity" values=".3;1;.3" dur="1.2s" begin=".2s" repeatCount="indefinite"/></rect>
+    <rect x="36" y="25" width="4" height="4" rx="1"><animate attributeName="opacity" values=".3;1;.3" dur="1.2s" begin=".4s" repeatCount="indefinite"/></rect>
+    <rect x="43" y="25" width="4" height="4" rx="1"><animate attributeName="opacity" values=".3;1;.3" dur="1.2s" begin=".6s" repeatCount="indefinite"/></rect>
+  </g>
+</g>
+<!-- flow arrows in -->
+<g stroke="rgba(255,255,255,.2)" stroke-width="1"><path d="M56 46 H78"/></g>
+<circle r="2.4" fill="#55E6C6" filter="url(#gpo)"><animateMotion path="M56 46 H78" dur="1.6s" repeatCount="indefinite" keyTimes="0;.4;1" keyPoints="0;1;1" calcMode="linear"/></circle>
+
+<!-- RIGHT: live spine-angle signal + threshold + buzz -->
+<text class="lbl" x="150" y="12">spine angle</text>
+<line x1="150" y1="40" x2="292" y2="40" stroke="#FF7A6B" stroke-width="1" stroke-dasharray="3 3" opacity=".55"/>
+<text class="lbl" x="150" y="37" fill="#FF7A6B" opacity=".7">threshold</text>
+<polyline fill="none" stroke="url(#sigpo)" stroke-width="1.8" filter="url(#gpo)"
+  points="150,58 168,56 186,59 204,57 222,58 240,57 258,58 276,57 292,58">
+  <animate attributeName="points"
+    values="150,58 168,56 186,59 204,57 222,58 240,57 258,58 276,57 292,58; 150,58 168,56 186,59 204,57 222,50 240,34 258,32 276,33 292,32; 150,58 168,56 186,59 204,57 222,58 240,57 258,58 276,57 292,58"
+    keyTimes="0;.55;1" dur="4s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.6 1;0.5 0 0.5 1"/>
+</polyline>
+
+<!-- haptic buzz burst -->
+<g transform="translate(276,34)" opacity="0">
+  <circle r="4" fill="none" stroke="#FFB454" stroke-width="1.4"/>
+  <circle r="8" fill="none" stroke="#FFB454" stroke-width="1"/>
+  <circle r="12" fill="none" stroke="#FFB454" stroke-width=".7"/>
+  <animate attributeName="opacity" values="0;0;1;0" keyTimes="0;.55;.62;.8" dur="4s" repeatCount="indefinite"/>
+  <animateTransform attributeName="transform" type="scale" additive="sum" values="1;1;1.25;1.5" keyTimes="0;.55;.65;.8" dur="4s" repeatCount="indefinite"/>
+</g>
+<text class="lbl" x="250" y="20" fill="#FFB454" opacity="0">buzz!<animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;.55;.6;.72;.8" dur="4s" repeatCount="indefinite"/></text>
+
+<text class="lbl" x="8" y="104" fill="#55E6C6" opacity=".85">real-time posture · 96% accuracy · 18 FPS · haptic nudge before you slump</text>
+</svg></div>
+      </article>
+
+    </div>
+
+    <div class="more reveal">
+      <span>MERIDIAN — zero-backend BI, in-browser SQL</span>
+      <span>NeuralDrive — autonomous C++/Jetson stack</span>
+      <span>BoilerExchange — campus marketplace, Stripe</span>
+      <span>PipelineForge · GridLens · QueryDesk</span>
+      <span>OSS: freeCodeCamp · OpenMRS</span>
+    </div>
+  </div>
+</section>
+
+<!-- EXPERIENCE -->
+<section id="experience">
+  <div class="wrap">
+    <div class="sec-head reveal"><span class="idx">04</span><h2>Experience</h2><span class="rule"></span></div>
+    <div class="tl">
+      <div class="tl-item reveal"><div class="when">MAY 2026 — AUG 2026</div>
+        <h3>Qualcomm</h3><div class="role">SWE Intern · Modem Software</div>
+        <p>I work in C/C++ on the modem's out-of-band recovery channel — the path that has to keep a device reachable precisely when the main one has already failed, which sets an unforgiving bar for correctness under partial failure. When latency was the problem, I <b>instrumented and profiled the reconnection path instead of guessing, and cut re-establishment latency ~30%</b>. Then I built the thing I'm proudest of: an <b>autonomous, agentic LLM crash-triage pipeline</b> that ingests raw crash reports, resolves build artifacts, retrieves source context, and localizes root cause before an engineer ever opens the log — and, critically, <b>defers to a human when its confidence is low</b> instead of guessing. Folded automated tests into CI along the way, raising regression coverage 45%.</p></div>
+
+      <div class="tl-item reveal"><div class="when">OCT 2025 — MAY 2026</div>
+        <h3>StudioX.AI</h3><div class="role">Intern · AI Workflows</div>
+        <p>Built an AI platform to help underserved people find and apply for the support they're entitled to but rarely reach — <b>food assistance, housing, healthcare, scholarships, legal aid, disability and mental-health services</b>. The system reads a person's situation in plain language, retrieves matching programs from <b>verified nonprofit and government sources</b>, explains eligibility in simple terms, <b>translates across languages</b>, and helps caseworkers triage the most urgent requests first. Under the hood it's a grounded <b>RAG</b> pipeline built for trust: answers are tied to cited source documents rather than free-form generation, because in this domain a confident wrong answer can cost someone their benefits. Designed against hard production targets for accuracy, groundedness, latency, and cost — with automated evaluation and adversarial testing to keep it honest. The kind of engineering I most want to do: real infrastructure, pointed at people who need it.</p><div class="howbox"><div class="howcap">how it works</div><svg viewBox="0 0 300 96" class="howsvg" role="img" aria-label="Benefits navigator">
+<defs>
+<filter id="gx" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+<style>.lbl{font:600 6px 'IBM Plex Mono',monospace;fill:#8B95A8}.bx{fill:#0f1626;stroke:rgba(255,255,255,.14)}</style></defs>
+<rect class="bx" x="6" y="36" width="48" height="24" rx="6"/><text class="lbl" x="12" y="46">user</text><text class="lbl" x="12" y="54">situation</text>
+<rect class="bx" x="78" y="28" width="58" height="40" rx="6" stroke="#55E6C6"/><text class="lbl" x="84" y="43" fill="#55E6C6">retrieve</text><text class="lbl" x="84" y="51">verified</text><text class="lbl" x="84" y="59">gov/nonprofit</text>
+<rect class="bx" x="160" y="28" width="62" height="40" rx="6" stroke="#FFB454"/><text class="lbl" x="166" y="43" fill="#FFB454">eligibility</text><text class="lbl" x="166" y="51">+ cited</text><text class="lbl" x="166" y="59">+ translated</text>
+<rect class="bx" x="246" y="36" width="48" height="24" rx="6"/><text class="lbl" x="252" y="46">plain-</text><text class="lbl" x="252" y="54">language</text>
+<g stroke="rgba(255,255,255,.2)" stroke-width="1"><path d="M54 48 H78"/><path d="M136 48 H160"/><path d="M222 48 H246"/></g>
+<g filter="url(#gx)">
+<circle r="3" fill="#55E6C6"><animateMotion path="M54 48 H78" dur="2.4s" repeatCount="indefinite" keyTimes="0;.34;1" keyPoints="0;1;1" calcMode="linear"/></circle>
+<circle r="3" fill="#FFB454"><animateMotion path="M136 48 H160" dur="2.4s" begin=".8s" repeatCount="indefinite" keyTimes="0;.34;1" keyPoints="0;1;1" calcMode="linear"/></circle>
+<circle r="3" fill="#55E6C6"><animateMotion path="M222 48 H246" dur="2.4s" begin="1.6s" repeatCount="indefinite" keyTimes="0;.34;1" keyPoints="0;1;1" calcMode="linear"/></circle>
+</g>
+<text class="lbl" x="6" y="90" fill="#55E6C6" opacity=".8">grounded in cited sources — no confident wrong answers</text>
+</svg></div></div>
+
+      <div class="tl-item reveal"><div class="when">JAN 2026 — MAY 2026</div>
+        <h3>Caterpillar</h3><div class="role">SWE Intern</div>
+        <p>Owned a generative-AI platform end to end — from sitting with non-technical business users to pin down what they actually needed, through design, build, test, and deployment. React front end, Python backend, <b>REST APIs, role-based access control, and audit logging over SQL</b>, all shipped through an automated CI/CD pipeline. It didn't stay a demo: <b>adopted by 150+ users across 4 business units</b>. The hard part, and the lesson, was that turning a vague request into a precise spec mattered more than any line of code I wrote.</p></div>
+
+      <div class="tl-item reveal"><div class="when">AUG 2025 — DEC 2025</div>
+        <h3>Lincoln Financial Group</h3><div class="role">SWE Intern</div>
+        <p>Worked inside financial services on real risk data: <b>SQL pipelines over 5M+ records</b> feeding models I trained to <b>lift prediction AUC from 0.74 to 0.83</b> — a gain that came from feature engineering and disciplined validation, not a bigger model. Then I automated the monitoring and scheduled retraining that keep a model honest after handoff, and <b>gave the team back ~8 analyst-hours a week</b>. Most of the real work was the quiet part: proving the improvement was real and not an artifact of how I'd split the data.</p></div>
+
+      <div class="tl-item reveal"><div class="when">MAY 2025 — AUG 2025</div>
+        <h3>IIT Madras</h3><div class="role">Undergraduate Research Intern · Wireless Sensing Lab</div>
+        <p>Taught a machine to recognize what a person is doing <b>from nothing but the way their body distorts ambient Wi-Fi signals</b> — no camera in the room. Built a real-time <b>CNN + bidirectional-LSTM</b> pipeline in PyTorch that hit <b>94% accuracy across 6 activity classes, ~9 points over the lab's baseline</b>, with most of that gain coming from how I represented the raw signal before it ever reached the network.</p></div>
+    </div>
+    </div>
+  </div>
+</section>
+
+<!-- LEGO -->
+<section id="build" class="lego-sec">
+  <div class="wrap">
+    <div class="sec-head reveal"><span class="idx">05</span><h2>Build something</h2><span class="rule"></span></div>
+    <div class="lego-intro reveal">
+      <p>I've loved LEGO since long before I loved compilers — same instinct, really: snap small correct pieces into something bigger. Click the board to build. Stay a while.</p>
+    </div>
+    <div class="lego-stage reveal">
+      <div class="palette">
+        <h4>Color</h4>
+        <div class="swatches" id="swatches"></div>
+        <h4 style="margin-top:8px">Brick</h4>
+        <div class="sizes" id="sizes">
+          <button class="szbtn active" data-w="1" data-h="1">1&times;1</button>
+          <button class="szbtn" data-w="2" data-h="1">1&times;2</button>
+          <button class="szbtn" data-w="3" data-h="1">1&times;3</button>
+          <button class="szbtn" data-w="2" data-h="2">2&times;2</button>
+        </div>
+        <div class="lego-actions">
+          <button class="legobtn" id="erase">Eraser</button>
+          <button class="legobtn" id="undo">Undo</button>
+        </div>
+        <div class="lego-actions">
+          <button class="legobtn" id="wavebtn">Draw a wave</button>
+          <button class="legobtn" id="clear">Knock down</button>
+        </div>
+        <p style="font-family:var(--mono);font-size:.62rem;color:var(--faint);line-height:1.7;margin-top:4px">Click or drag to build. Pick a color, size, and go.</p>
+      </div>
+      <div>
+        <div id="board" aria-label="LEGO build board"></div>
+        <div class="lego-count" id="count">0 bricks placed</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <h3>Let's build something that <b>matters</b>.</h3>
+    <div class="flinks">
+      <a href="mailto:mahesh54@purdue.edu">Email</a>
+      <a href="https://github.com/mneha05" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://linkedin.com/in/neha-mahesh" target="_blank" rel="noopener">LinkedIn</a>
+    </div>
+    <div class="fine">© 2026 NEHA MAHESH · SIGNALS INTO MEANING</div>
+  </div>
+</footer>
+
+<script>
+/* nav shadow */
+const nav=document.getElementById('nav');
+addEventListener('scroll',()=>nav.classList.toggle('scrolled',scrollY>20));
+
+/* scroll progress bar */
+const prog=document.getElementById('prog');
+function updProg(){const h=document.documentElement;const p=h.scrollTop/(h.scrollHeight-h.clientHeight||1);prog.style.width=(p*100)+'%';}
+addEventListener('scroll',updProg,{passive:true});updProg();
+
+/* scrollspy: light up rail + nav for the section in view */
+const spySecs=['about','research','work','experience','build'].map(id=>document.getElementById(id)).filter(Boolean);
+function spy(){const y=scrollY+innerHeight*0.35;let cur=spySecs[0];
+  for(const sec of spySecs){if(sec.offsetTop<=y)cur=sec;}
+  const id=cur&&cur.id;
+  document.querySelectorAll('.rail a').forEach(a=>a.classList.toggle('on',a.dataset.s===id));
+  document.querySelectorAll('nav .links a').forEach(a=>a.classList.toggle('navon',a.getAttribute('href')==='#'+id));}
+addEventListener('scroll',spy,{passive:true});spy();
+
+/* reveal on scroll — with hard fallbacks so nothing stays hidden/untouchable */
+const reveals=[...document.querySelectorAll('.reveal')];
+function showInView(){reveals.forEach(el=>{const r=el.getBoundingClientRect();if(r.top<innerHeight*0.92&&r.bottom>0)el.classList.add('in');});}
+if('IntersectionObserver'in window){
+  const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in')}),{threshold:.12});
+  reveals.forEach(el=>io.observe(el));
+}
+addEventListener('scroll',showInView,{passive:true});
+addEventListener('load',showInView);
+showInView();
+setTimeout(()=>reveals.forEach(el=>el.classList.add('in')),1500); /* safety net */
+
+/* project hover sheen */
+document.querySelectorAll('.proj[data-tilt]').forEach(card=>{
+  card.addEventListener('pointermove',e=>{const r=card.getBoundingClientRect();
+    card.style.setProperty('--mx',((e.clientX-r.left)/r.width*100)+'%');
+    card.style.setProperty('--my',((e.clientY-r.top)/r.height*100)+'%');});
+});
+
+/* hero signal canvas */
+const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const cv=document.getElementById('wave'),cx=cv.getContext('2d');
+let W,H,t=0,mouseY=0.5;
+function sz(){W=cv.width=cv.offsetWidth*devicePixelRatio;H=cv.height=cv.offsetHeight*devicePixelRatio;}
+sz();addEventListener('resize',sz);
+addEventListener('pointermove',e=>{mouseY=e.clientY/innerHeight;});
+function ln(off,amp,sp,col,al){cx.beginPath();
+  for(let x=0;x<=W;x+=6){const nx=x/W;
+    const y=H*.5+Math.sin(nx*9+t*sp+off)*amp*H*(.5+mouseY*.6)+Math.sin(nx*23+t*sp*1.7)*amp*H*.35+Math.sin(nx*3-t*sp*.6)*amp*H*.5;
+    x===0?cx.moveTo(x,y):cx.lineTo(x,y);}
+  cx.strokeStyle=col;cx.globalAlpha=al;cx.lineWidth=1.4*devicePixelRatio;cx.stroke();}
+function fr(){cx.clearRect(0,0,W,H);ln(0,.05,.9,'#55E6C6',.55);ln(2.1,.038,1.25,'#FFB454',.4);ln(4.2,.03,.7,'#FF7A6B',.22);cx.globalAlpha=1;t+=.016;requestAnimationFrame(fr);}
+if(!reduced)fr();else{ln(0,.05,0,'#55E6C6',.5);ln(2,.04,0,'#FFB454',.35);}
+
+/* ---------------- LEGO BUILDER (rewritten) ---------------- */
+(function(){
+  const N=16, board=document.getElementById('board');
+  const colors=['#E3000B','#F5C518','#0057A8','#00963A','#FF7A6B','#55E6C6','#B04FD0','#EAF0F5'];
+  let color=colors[1], bw=1, bh=1, painting=false, eraseMode=false;
+  const occ=new Set(), stack=[];
+  const key=(r,c)=>r+'-'+c;
+  const cs=()=>board.clientWidth/N;
+
+  /* palette */
+  const sw=document.getElementById('swatches');
+  colors.forEach((c,i)=>{const d=document.createElement('div');d.className='sw'+(i===1?' active':'');
+    d.style.background=c;d.tabIndex=0;d.setAttribute('role','button');d.setAttribute('aria-label','color');
+    const pick=()=>{color=c;eraseMode=false;board.classList.remove('erase');document.getElementById('erase').classList.remove('on');
+      document.querySelectorAll('.sw').forEach(x=>x.classList.remove('active'));d.classList.add('active');};
+    d.onclick=pick;d.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();pick();}};
+    sw.appendChild(d);});
+
+  /* sizes */
+  document.querySelectorAll('.szbtn').forEach(b=>b.onclick=()=>{bw=+b.dataset.w;bh=+b.dataset.h;
+    document.querySelectorAll('.szbtn').forEach(x=>x.classList.remove('active'));b.classList.add('active');sizeGhost();});
+
+  function canPlace(r,c){if(r<0||c<0||r+bh>N||c+bw>N)return false;
+    for(let i=0;i<bh;i++)for(let j=0;j<bw;j++)if(occ.has(key(r+i,c+j)))return false;return true;}
+  function studs(el,w,h){for(let i=0;i<h;i++)for(let j=0;j<w;j++){const s=document.createElement('div');s.className='stud';
+    s.style.left=((j+0.5)/w*100)+'%';s.style.top=(i/h*100+2)+'%';el.appendChild(s);}}
+  function place(r,c){if(!canPlace(r,c))return;const cells=[];
+    for(let i=0;i<bh;i++)for(let j=0;j<bw;j++){occ.add(key(r+i,c+j));cells.push(key(r+i,c+j));}
+    const s=cs();const b=document.createElement('div');b.className='brick';b.style.background=color;
+    b.style.left=c*s+'px';b.style.top=r*s+'px';b.style.width=bw*s+'px';b.style.height=bh*s+'px';
+    studs(b,bw,bh);board.appendChild(b);stack.push({el:b,cells,r,c,w:bw,h:bh,col:color});count();}
+  function eraseAt(r,c){for(let k=stack.length-1;k>=0;k--){const b=stack[k];
+    if(r>=b.r&&r<b.r+b.h&&c>=b.c&&c<b.c+b.w){b.cells.forEach(x=>occ.delete(x));b.el.remove();stack.splice(k,1);count();return;}}}
+  function count(){document.getElementById('count').textContent=stack.length+' brick'+(stack.length===1?'':'s')+' placed';}
+
+  /* ghost preview */
+  const ghost=document.createElement('div');ghost.className='ghost';ghost.style.display='none';board.appendChild(ghost);
+  function sizeGhost(){const s=cs();ghost.style.width=bw*s+'px';ghost.style.height=bh*s+'px';}
+  function cellAt(e){const r=board.getBoundingClientRect(),s=cs();return{r:Math.floor((e.clientY-r.top)/s),c:Math.floor((e.clientX-r.left)/s)};}
+
+  let last='';
+  function paint(e){const{r,c}=cellAt(e);if(eraseMode){eraseAt(r,c);return;}
+    const id=r+'-'+c;if(id===last)return;last=id;place(r,c);}
+  board.addEventListener('pointerdown',e=>{e.preventDefault();painting=true;last='';try{board.setPointerCapture(e.pointerId);}catch(_){}paint(e);});
+  board.addEventListener('pointermove',e=>{const{r,c}=cellAt(e);const s=cs();
+    if(!eraseMode){ghost.style.display='block';sizeGhost();ghost.style.left=c*s+'px';ghost.style.top=r*s+'px';
+      ghost.classList.toggle('bad',!canPlace(r,c));ghost.style.background=canPlace(r,c)?color+'55':'';}
+    if(painting)paint(e);});
+  board.addEventListener('pointerup',()=>painting=false);
+  board.addEventListener('pointerleave',()=>{painting=false;ghost.style.display='none';});
+
+  /* actions */
+  document.getElementById('undo').onclick=()=>{const b=stack.pop();if(!b)return;b.cells.forEach(x=>occ.delete(x));b.el.remove();count();};
+  document.getElementById('clear').onclick=()=>{stack.forEach(b=>b.el.style.animation='pop .18s reverse forwards');
+    setTimeout(()=>{stack.forEach(b=>b.el.remove());stack.length=0;occ.clear();count();},170);};
+  document.getElementById('erase').onclick=function(){eraseMode=!eraseMode;this.classList.toggle('on',eraseMode);
+    board.classList.toggle('erase',eraseMode);ghost.style.display='none';};
+  document.getElementById('wavebtn').onclick=()=>{const ow=bw,oh=bh,oc=color;bw=1;bh=1;color='#55E6C6';
+    for(let c=0;c<N;c++){const r=Math.round(N/2-1+Math.sin(c/N*Math.PI*2)*4);if(canPlace(r,c))place(r,c);}
+    bw=ow;bh=oh;color=oc;sizeGhost();};
+
+  /* keep bricks aligned on resize */
+  addEventListener('resize',()=>{const s=cs();ghost.style.display='none';
+    stack.forEach(b=>{b.el.style.left=b.c*s+'px';b.el.style.top=b.r*s+'px';b.el.style.width=b.w*s+'px';b.el.style.height=b.h*s+'px';});});
+
+  sizeGhost();
+})();
+</script>
+</body>
+</html>
